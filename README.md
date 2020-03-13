@@ -59,4 +59,6 @@ Also, these rules are all specific to pawns and can not be reused for other piec
 
 My goal for this project is to encode the rules of chess into a config file that requires as little code as possible to interpret.
 
+Check out [config.yml](config.yml) to see what I have so far.
+
 Once this is complete, this project can become an engine for creating custom chess games where new pieces can be defined by simply updating a config file. 

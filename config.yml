@@ -1,0 +1,109 @@
+# Offsets define how a piece can move and attack.
+#
+# Each offset has the following properties:
+#   - name: The unique identifier for the offset that is referenced by pieces.
+#
+#   - directions: A list of directions the offset can go in that may contain:
+#                   - Left
+#                   - Right
+#                   - Forward Left
+#                   - Forward
+#                   - Forward Right
+#                   - Backward Left
+#                   - Backward
+#                   - Backward Right
+#                 These are relative to the player's perspective. For example, "Forward" for white's side is equivalent
+#                 to "Backward" on black's side.
+#
+#   - ranges: A list of ranges representing how many tiles the offset covers where each range contains a "from" and "to"
+#             value. For example, a rook can travel from 1 to inf spaces. While this provides much more configurability
+#             than when is needed for normal chess, it will allow the creation of advanced custom pieces in the future.
+#
+#   - next: A list of the next offsets to compute after the current. Each next offset contains two values:
+#       - current_allowed: Whether the current offset being processed is allowed to be used. If this value is "No", then
+#                          this offset is simply used to allow non-linear patterns like the pattern of a knight.
+#
+#       - offset: The next offset to process after this one.
+offsets:
+  - name: Single Step Any Direction
+    directions:
+      - Left
+      - Right
+      - Forward Left
+      - Forward
+      - Forward Right
+      - Backward Left
+      - Backward
+      - Backward Right
+    ranges:
+      - from: 1
+        to: 1
+
+  - name: Single Step Forward
+      directions:
+        - Forward
+      ranges:
+        - from: 1
+          to: 1
+
+  - name: Double Step Forward
+      directions:
+        - Forward
+      ranges:
+        - from: 2
+          to: 2
+
+  - name: Single Step Diagonal Forward Left
+      directions:
+        - Left
+      ranges:
+        - from: 1
+          to: 1
+      next:
+        - current_allowed: No
+          offset: Single Step Forward
+
+  - name: Single Step Diagonal Forward Right
+      directions:
+        - Right
+      ranges:
+        - from: 1
+          to: 1
+      next:
+        - current_allowed: No
+          offset: Single Step Forward
+
+pieces:
+  - name: King
+    symbol: K
+    movements:
+      - offset: Single Step Any Direction
+        conditions:
+          - No Threat
+      # TODO: Implement castling once Rook is added.
+    attacks:
+      - offset: Single Step Any Direction
+        move: Yes
+        conditions:
+          - No Threat
+
+  - name: Pawn
+    symbol: P
+    movement:
+      - offset: Single Step Forward
+      - offset: Double Step Forward
+        conditions:
+          - First Turn
+        jump_over: No
+      # TODO: Implement promotion to Queen.
+    attacks:
+      - offset: Single Step Diagonal Forward Left
+        move: Yes
+      - offset: Single Step Diagonal Forward Right
+        move: Yes
+      # TODO: Implement en passant.
+
+  # TODO: Add Queen
+  # TODO: Add Rook
+  # TODO: Add Knight
+  # TODO: Add Bishop
