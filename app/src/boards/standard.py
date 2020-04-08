@@ -22,7 +22,7 @@ class Standard8x8(Board):
             self.get_player(Color.BLACK),
         ]
 
-        for player, row in zip(players, [0, 7]):
+        for player, row in zip(players, [7, 0]):
             board[0, row] = Rook(player)
             board[7, row] = Rook(player)
             board[1, row] = Knight(player)
@@ -33,7 +33,7 @@ class Standard8x8(Board):
             board[4, row] = King(player)
 
         for col in range(8):
-            for player, row in zip(players, [1, 6]):
+            for player, row in zip(players, [6, 1]):
                 board[col, row] = Pawn(player)
 
         return board
