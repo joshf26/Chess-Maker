@@ -63,6 +63,7 @@ class Network:
         payload = {}
         for parameter_name, parameter_type in parameters.items():
             if parameter_name not in data['parameters'] or type(data['parameters'][parameter_name]) is not parameter_type:
+                # TODO: Split above if statement and report errors individually.
                 await error(f'"{parameter_name}" parameter not specified.')
                 return
 

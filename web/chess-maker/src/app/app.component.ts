@@ -18,9 +18,9 @@ export class AppComponent {
         socket.next({
             command: 'create_game',
             parameters: {
-                player1: 'Alice',
-                player2: 'Bob',
-            }
+                pack: 'standard',
+                board: 'Standard8x8',
+            },
         });
     }
 }

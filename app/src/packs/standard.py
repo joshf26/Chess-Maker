@@ -2,8 +2,10 @@ from typing import Optional, Dict, Tuple, Set
 
 from board import Board
 from piece import Piece
-from pieces.standard import *
 from player import Player, Color
+
+
+# Boards
 
 
 class Standard8x8(Board):
@@ -50,3 +52,30 @@ class Standard8x8(Board):
 
         if player.color == Color.BLACK and y == 8:
             return Queen(player)
+
+
+# Pieces
+
+
+class Pawn(Piece):
+    pass
+
+
+class Rook(Piece):
+    pass
+
+
+class Knight(Piece):
+    pass
+
+
+class Bishop(Piece):
+    pass
+
+
+class Queen(Piece):
+    pass
+
+
+class King(Piece):
+    pass
