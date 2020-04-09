@@ -16,7 +16,11 @@ export class AppComponent {
         );
 
         socket.next({
-            command: 'test',
+            command: 'create_game',
+            parameters: {
+                player1: 'Alice',
+                player2: 'Bob',
+            }
         });
     }
 }

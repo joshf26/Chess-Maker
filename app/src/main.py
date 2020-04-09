@@ -1,16 +1,20 @@
-from network import Network, ReplyCallable
+from network import Network, ReplyCallable, ErrorCallable
 
 PORT = 8000
 
 
-async def test_command(reply: ReplyCallable, parameters: dict):
-    await reply({
-        'Hello': 'World',
-    })
+def main():
+    network = Network()
+    games = {}
+
+    @network.command
+    async def create_game(reply: ReplyCallable, error: ErrorCallable, player1: str, player2: str):
+        await reply({
+            'message': 'Success!',
+        })
+
+    network.serve(8000)
 
 
 if __name__ == '__main__':
-    network = Network()
-    network.commands['test'] = test_command
-
-    network.serve(8000)
+    main()
