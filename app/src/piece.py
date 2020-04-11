@@ -1,7 +1,7 @@
-from player import Player
+from color import Color
 
 
 class Piece:
 
-    def __init__(self, owner: Player):
-        self.owner = owner
+    def __init__(self, color: Color):
+        self.color = color

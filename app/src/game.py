@@ -1,14 +1,25 @@
+from typing import Dict
+
 from board import Board
-from network import Network, ReplyCallable, ErrorCallable
+from color import Color
+from network import Network, Connection
 
 
 class Game:
 
-    def __init__(self, board: Board, network: Network):
+    def __init__(self, game_id: str, board: Board, network: Network):
+        self.game_id = game_id
         self.board = board
         self.network = network
+        self.players: Dict[Color, Connection] = {}
 
-    def join_as_color(self, reply: ReplyCallable, error: ErrorCallable, parameters: dict):
-        if 'color' not in parameters:
-            error('Color Not Specified')
-            return
+        self.started = False
+
+        @self.network.command(game_id)
+        async def get_state(connection: Connection):
+            await connection.send({
+                'Here is': 'Some state!',
+            })
+
+    def add_player(self, connection: Connection, color: Color):
+        self.players[color] = connection

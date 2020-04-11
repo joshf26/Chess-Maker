@@ -5,12 +5,23 @@ import websockets
 
 from dataclasses import dataclass
 from itertools import islice
-from typing import Dict, Callable, Awaitable, Union
+from typing import Dict, Callable
 
-from player import Player
 
-ReplyCallable = Callable[[dict], Awaitable[None]]
-ErrorCallable = Callable[[str], Awaitable[None]]
+@dataclass
+class Connection:
+    socket: websockets.WebSocketServerProtocol
+
+    async def send(self, data: dict):
+        await self.socket.send(json.dumps(data))
+
+    async def error(self, message: str):
+        await self.socket.send(json.dumps({
+            'error': message,
+        }))
+
+    def __hash__(self):
+        return hash(self.socket)
 
 
 @dataclass
@@ -28,9 +39,10 @@ class Network:
         self.socket_by_player = {}
         self.player_by_socket = {}
 
-    def command(self, function: Callable):
+    def command(self, function: Callable, game_id: str):
+        print('Registering game command:', game_id)
         signature = inspect.signature(function)
-        parameters = {name: parameter.annotation for name, parameter in islice(signature.parameters.items(), 2, None)}
+        parameters = {name: parameter.annotation for name, parameter in islice(signature.parameters.items(), 1, None)}
 
         self.commands[function.__name__] = Command(function, parameters)
 
@@ -41,56 +53,48 @@ class Network:
         event_loop.run_until_complete(websockets.serve(self.server, '0.0.0.0', port))
         event_loop.run_forever()
 
-    def send(self, to: Union[websockets.WebSocketServerProtocol, Player], data: dict):
-        socket = self.socket_by_player[to] if isinstance(to, Player) else to
-        socket.send(json.dumps(data))
-
-    async def try_command(self, reply: ReplyCallable, error: ErrorCallable, data: dict):
+    async def try_command(self, connection: Connection, data: dict):
         if 'command' not in data:
-            await error('Command Not Specified')
+            await connection.error('Command Not Specified')
             return
 
         if data['command'] not in self.commands:
-            await error('Command Not Found')
+            await connection.error('Command Not Found')
             return
 
         parameters = self.commands[data['command']].parameters
 
         if parameters and 'parameters' not in data:
-            await error(f'This command requires the following parameters: {", ".join(parameters.keys())}.')
+            await connection.error(f'This command requires the following parameters: {", ".join(parameters.keys())}.')
             return
 
         payload = {}
         for parameter_name, parameter_type in parameters.items():
-            if parameter_name not in data['parameters'] or type(data['parameters'][parameter_name]) is not parameter_type:
-                # TODO: Split above if statement and report errors individually.
-                await error(f'"{parameter_name}" parameter not specified.')
+            if parameter_name not in data['parameters']:
+                await connection.error(f'"{parameter_name}" parameter not specified.')
+                return
+
+            if type(data['parameters'][parameter_name]) is not parameter_type:
+                await connection.error(f'"{parameter_name}" parameter needs to be of type {parameter_type.__name__}.')
                 return
 
             payload[parameter_name] = data['parameters'][parameter_name]
 
-        await self.commands[data['command']].function(reply, error, **payload)
+        await self.commands[data['command']].function(connection, **payload)
 
     async def server(self, websocket: websockets.WebSocketServerProtocol, path: str):
-        self.connections.add(websocket)
-
-        async def reply(reply_data: dict):
-            await websocket.send(json.dumps(reply_data))
-
-        async def error(message: str):
-            await websocket.send(json.dumps({
-                'error': message,
-            }))
+        connection = Connection(websocket)
+        self.connections.add(connection)
 
         try:
             async for raw_data in websocket:
                 try:
                     data = json.loads(raw_data)
                 except json.JSONDecodeError:
-                    await error('Invalid JSON')
+                    await connection.error('Invalid JSON')
                     continue
 
-                await self.try_command(reply, error, data)
+                await self.try_command(connection, data)
 
         finally:
-            self.connections.remove(websocket)
+            self.connections.remove(connection)

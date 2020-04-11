@@ -1,5 +1,5 @@
 import {Component} from '@angular/core';
-import {webSocket} from 'rxjs/webSocket';
+import {webSocket, WebSocketSubject} from 'rxjs/webSocket';
 
 @Component({
     selector: 'app-root',
@@ -7,20 +7,41 @@ import {webSocket} from 'rxjs/webSocket';
     styleUrls: ['./app.component.less']
 })
 export class AppComponent {
-    constructor() {
-        const socket = webSocket('ws://localhost:8000');
+    COMMANDS = [
+        {
+            label: 'Create Standard8x8',
+            body: JSON.stringify({
+                'command': 'create_game',
+                'parameters': {
+                    'pack': 'standard',
+                    'board': 'Standard8x8',
+                },
+            }),
+        },
+        {
+            label: 'Join Game',
+            body: JSON.stringify({
+                'command': 'join_game',
+                'parameters': {
+                    'game_id': '',
+                    'color': 0,
+                },
+            }),
+        },
+    ]
 
-        socket.subscribe(
+    private socket: WebSocketSubject<unknown>;
+
+    constructor() {
+        this.socket = webSocket('ws://localhost:8000');
+
+        this.socket.subscribe(
             console.log,
             console.error,
         );
+    }
 
-        socket.next({
-            command: 'create_game',
-            parameters: {
-                pack: 'standard',
-                board: 'Standard8x8',
-            },
-        });
+    submit(body: string) {
+        this.socket.next(JSON.parse(body));
     }
 }
