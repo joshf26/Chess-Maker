@@ -5,6 +5,25 @@ const EVEN_TILE_COLOR = '#F3C1A9';
 const HIGHLIGHT_COLOR = '#FFFA00';
 const ZOOM_FACTOR = 0.8;
 
+interface Piece {
+    color: string,
+    positionX: number,
+    positionY: number,
+}
+
+const PIECES: Piece[] = [
+    {
+        color: 'red',
+        positionX: 5,
+        positionY: 2,
+    },
+    {
+        color: 'blue',
+        positionX: 3,
+        positionY: 6,
+    },
+];
+
 @Component({
     selector: 'app-board',
     templateUrl: './board.component.html',
@@ -24,6 +43,8 @@ export class BoardComponent implements OnInit {
     mousePositionY = 0;
 
     panning = false;
+    dragging = false;
+    draggingPiece?: Piece = null;
     panX: number;
     panY: number;
 
@@ -46,18 +67,46 @@ export class BoardComponent implements OnInit {
         this.panY = event.offsetY;
     }
 
-    startPan(event: MouseEvent): void {
-        if (event.button != 2) return;
+    mouseDown(event: MouseEvent): void {
+        switch (event.button) {
+            case 0:
+                // Prevent the user from accidentally selecting the canvas.
+                event.preventDefault();
 
-        this.panning = true;
-        this.updatePan(event);
+                const mouseTileX = Math.floor(this.mousePositionX);
+                const mouseTileY = Math.floor(this.mousePositionY);
+
+                for (const piece of PIECES) {
+                    if (piece.positionX == mouseTileX && piece.positionY == mouseTileY) {
+                        this.dragging = true;
+                        this.draggingPiece = piece;
+
+                        break;
+                    }
+                }
+
+                break;
+            case 2:
+                this.panning = true;
+                this.updatePan(event);
+                break;
+        }
     }
 
-    endPan(): void {
+    mouseUp(): void {
+        if (this.dragging) {
+            const mouseTileX = Math.floor(this.mousePositionX);
+            const mouseTileY = Math.floor(this.mousePositionY);
+
+            this.dragging = false;
+
+            this.draggingPiece.positionX = mouseTileX;
+            this.draggingPiece.positionY = mouseTileY;
+        }
         this.panning = false;
     }
 
-    pan(event: MouseEvent): void {
+    mouseMove(event: MouseEvent): void {
         this.mousePositionX = (event.offsetX - this.positionX) / this.scale;
         this.mousePositionY = (event.offsetY - this.positionY) / this.scale;
 
@@ -84,6 +133,7 @@ export class BoardComponent implements OnInit {
 
         this.draw();
 
+        // Prevent the page from moving up or down.
         return false;
     }
 
@@ -92,6 +142,7 @@ export class BoardComponent implements OnInit {
 
         const mouseTileX = Math.floor(this.mousePositionX);
         const mouseTileY = Math.floor(this.mousePositionY);
+        const halfScale = this.scale / 2;
 
         for (let row = 0; row < 8; ++row) {
             for (let col = 0; col < 8; ++col) {
@@ -100,15 +151,33 @@ export class BoardComponent implements OnInit {
                 } else {
                     this.context.fillStyle = (col % 2 == row % 2) ? ODD_TILE_COLOR : EVEN_TILE_COLOR;
                 }
+
                 this.context.fillRect(col * this.scale + this.positionX, row * this.scale + this.positionY, this.scale, this.scale);
+
+                for (const piece of PIECES) {
+                    if (this.dragging && this.draggingPiece == piece) continue;
+
+                    if (piece.positionX == col && piece.positionY == row) {
+                        this.context.fillStyle = piece.color;
+                        this.context.fillRect(
+                            (col + 0.25) * this.scale + this.positionX,
+                            (row + 0.25) * this.scale + this.positionY,
+                            halfScale,
+                            halfScale,
+                        );
+                    }
+                }
             }
         }
 
-        for (let row = 0; row < 8; ++row) {
-            for (let col = -16; col < -8; ++col) {
-                this.context.fillStyle = (col % 2 == row % 2) ? ODD_TILE_COLOR : EVEN_TILE_COLOR;
-                this.context.fillRect(col * this.scale + this.positionX, row * this.scale + this.positionY, this.scale, this.scale);
-            }
+        if (this.dragging) {
+            this.context.fillStyle = this.draggingPiece.color;
+            this.context.fillRect(
+                (this.positionX + this.mousePositionX * this.scale) - halfScale / 2,
+                (this.positionY + this.mousePositionY * this.scale) - halfScale / 2,
+                halfScale,
+                halfScale,
+            );
         }
     }
 }

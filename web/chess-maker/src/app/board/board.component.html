@@ -13,8 +13,8 @@ mouse position: {{mousePositionX}}, {{mousePositionY}}
         width="500px"
         height="500px"
         (wheel)="zoom($event)"
-        (mousedown)="startPan($event)"
-        (mouseup)="endPan()"
-        (mouseleave)="endPan()"
-        (mousemove)="pan($event)"
+        (mousedown)="mouseDown($event)"
+        (mouseup)="mouseUp()"
+        (mouseleave)="mouseUp()"
+        (mousemove)="mouseMove($event)"
         (contextmenu)="hideContextMenu($event)"></canvas>
