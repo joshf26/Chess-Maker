@@ -39,12 +39,17 @@ class Network:
         self.socket_by_player = {}
         self.player_by_socket = {}
 
-    def command(self, function: Callable, game_id: str):
-        print('Registering game command:', game_id)
-        signature = inspect.signature(function)
-        parameters = {name: parameter.annotation for name, parameter in islice(signature.parameters.items(), 1, None)}
+    def command(self, game_id: str = None):
+        if game_id is not None:
+            print('Registering game command:', game_id)
 
-        self.commands[function.__name__] = Command(function, parameters)
+        def inner(function: Callable):
+            signature = inspect.signature(function)
+            parameters = {name: parameter.annotation for name, parameter in islice(signature.parameters.items(), 1, None)}
+
+            self.commands[function.__name__] = Command(function, parameters)
+
+        return inner
 
     def serve(self, port: int):
         print(f'Serving on port {port}...')

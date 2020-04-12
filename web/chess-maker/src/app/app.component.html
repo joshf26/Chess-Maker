@@ -5,7 +5,7 @@
     <br>
     <textarea id="{{command.label}}" cols="120" rows="5" [(ngModel)]="command.body"></textarea>
     <br>
-    <button (click)="submit(command.body)">Run</button>
+    <button (click)="submit(command.command, command.parameters)">Run</button>
     <br><br><br>
 </div>
 

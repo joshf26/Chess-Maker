@@ -2,8 +2,9 @@ from importlib import import_module
 from typing import Dict
 from uuid import uuid4
 
-from game import Game, Color
-from network import Network, Connection
+from .color import Color
+from .game import Game
+from .network import Network, Connection
 
 PORT = 8000
 
@@ -12,7 +13,7 @@ def main():
     network = Network()
     games: Dict[str, Game] = {}
 
-    @network.command
+    @network.command()
     async def create_game(connection: Connection, pack: str, board: str):
         try:
             pack = import_module(f'packs.{pack}')
@@ -37,7 +38,7 @@ def main():
             'game_id': game_id,
         })
 
-    @network.command
+    @network.command()
     async def join_game(connection: Connection, game_id: str, color: int):
         if game_id not in games:
             await connection.error('Game id does not exist.')

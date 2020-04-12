@@ -1,8 +1,8 @@
 from typing import Dict
 
-from board import Board
-from color import Color
-from network import Network, Connection
+from .board import Board
+from .color import Color
+from .network import Network, Connection
 
 
 class Game:
@@ -14,6 +14,8 @@ class Game:
         self.players: Dict[Color, Connection] = {}
 
         self.started = False
+        self.move = 0
+        self.ply = 0
 
         @self.network.command(game_id)
         async def get_state(connection: Connection):
