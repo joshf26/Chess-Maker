@@ -1,13 +1,13 @@
 import unittest
 
-from typing import Optional, Dict, Tuple, List, Type
+from typing import Optional, Dict, Tuple, List, Type, Callable
 
 from ..color import Color
 from ..testing.mock_network import MockNetwork
 from ..board import Board
 from ..game import Game
 from ..piece import Piece
-from ..ply_type import PlyType, MoveAction
+from ..ply_type import PlyType, MoveAction, DestroyAction
 
 
 # Pieces
@@ -48,14 +48,105 @@ class TestPawn(unittest.TestCase):
 
     def setUp(self):
         self.game = Game('test', Standard8x8(), MockNetwork())
-        print(self.game.board)
+
+    def _ply_types(self, from_row: int, from_col: int, to_row: int, to_col: int):
+        return self.game.board.tiles[from_row, from_col].ply_types(from_row, from_col, to_row, to_col, self.game)
 
     def test_single_advance(self):
-        # Make sure the white pawn can advance forward.
         self.assertEqual(
-            self.game.board.tiles[6, 0].ply_types(6, 0, 5, 0, self.game),
-            [PlyType([MoveAction(6, 0, 5, 0)])]
+            self._ply_types(6, 0, 5, 0),
+            [PlyType([MoveAction(6, 0, 5, 0)])],
+            'white pawn cannot single advance to empty space',
         )
+
+        self.assertEqual(
+            self._ply_types(1, 0, 2, 0),
+            [PlyType([MoveAction(1, 0, 2, 0)])],
+            'black pawn cannot single advance to empty space',
+        )
+
+    def test_double_advance(self):
+        self.assertEqual(
+            self._ply_types(6, 0, 4, 0),
+            [PlyType([MoveAction(6, 0, 4, 0)])],
+            'white pawn cannot double advance to empty space on its first move',
+        )
+
+        self.game.board.tiles[6, 0].moves += 1
+        self.assertEqual(
+            self._ply_types(6, 0, 4, 0),
+            [],
+            'white pawn can double advance to empty space on its second move',
+        )
+
+        self.assertEqual(
+            self._ply_types(1, 0, 3, 0),
+            [PlyType([MoveAction(1, 0, 3, 0)])],
+            'black pawn cannot double advance to empty space on its first move',
+        )
+
+        self.game.board.tiles[1, 0].moves += 1
+        self.assertEqual(
+            self._ply_types(1, 0, 3, 0),
+            [],
+            'black pawn can double advance to empty space on its second move',
+        )
+
+    def test_capture(self):
+        # Move the white pawn at (6, 1) to (2, 1).
+        self.game.board.tiles[2, 1] = self.game.board.tiles.pop((6, 1))
+        print(self.game.board)
+
+        self.assertEqual(
+            self._ply_types(2, 1, 1, 0),
+            [PlyType([DestroyAction(1, 0), MoveAction(2, 1, 1, 0)])],
+            'white pawn cannot capture left diagonally',
+        )
+
+        self.assertEqual(
+            self._ply_types(2, 1, 1, 2),
+            [PlyType([DestroyAction(1, 2), MoveAction(2, 1, 1, 2)])],
+            'white pawn cannot capture right diagonally',
+        )
+
+        # Move the black pawn at (1, 1) to (5, 1).
+        self.game.board.tiles[5, 1] = self.game.board.tiles.pop((1, 1))
+
+        self.assertEqual(
+            self._ply_types(5, 1, 6, 0),
+            [PlyType([DestroyAction(6, 0), MoveAction(5, 1, 6, 0)])],
+            'black pawn cannot capture right diagonally',
+        )
+
+        self.assertEqual(
+            self._ply_types(5, 1, 6, 2),
+            [PlyType([DestroyAction(6, 2), MoveAction(5, 1, 6, 2)])],
+            'black pawn cannot capture left diagonally',
+        )
+
+    def test_en_passant(self):
+        pass  # TODO
+
+    def test_illegal_moves(self):
+        # Move the white pawn at (6, 0) to (4, 0).
+        self.game.board.tiles[4, 0] = self.game.board.tiles.pop((6, 0))
+
+        self.assertEqual(
+            self._ply_types(4, 0, 5, 0),
+            [],
+            'white pawn can single advance backwards',
+        )
+
+        # Move the black pawn at (1, 0) to (3, 0).
+        self.game.board.tiles[3, 0] = self.game.board.tiles.pop((1, 0))
+
+        self.assertEqual(
+            self._ply_types(3, 0, 2, 0),
+            [],
+            'black pawn can single advance backwards',
+        )
+
+        # TODO: Test backwards capturing.
 
 
 class Rook(Piece):
