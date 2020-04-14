@@ -1,6 +1,6 @@
 import unittest
 
-from typing import Optional, Dict, Tuple, List, Type, Callable
+from typing import Optional, Dict, Tuple, List, Type
 
 from ..color import Color
 from ..testing.mock_network import MockNetwork
@@ -95,7 +95,6 @@ class TestPawn(unittest.TestCase):
     def test_capture(self):
         # Move the white pawn at (6, 1) to (2, 1).
         self.game.board.tiles[2, 1] = self.game.board.tiles.pop((6, 1))
-        print(self.game.board)
 
         self.assertEqual(
             self._ply_types(2, 1, 1, 0),
@@ -125,7 +124,30 @@ class TestPawn(unittest.TestCase):
         )
 
     def test_en_passant(self):
-        pass  # TODO
+        # Move the white pawn at (6, 1) to (3, 1).
+        self.game.board.tiles[3, 1] = self.game.board.tiles.pop((6, 1))
+
+        # Move the black pawn at (1, 0) to (3, 0).
+        self.game.board.tiles[3, 0] = self.game.board.tiles.pop((1, 0))
+
+        # Move the black pawn at (1, 2) to (3, 2).
+        self.game.board.tiles[3, 2] = self.game.board.tiles.pop((1, 2))
+
+        print(f'\n{self.game.board}')
+
+        self.assertEqual(
+            self._ply_types(3, 1, 2, 0),
+            [PlyType([DestroyAction(3, 0), MoveAction(3, 1, 2, 0)])],
+            'white pawn cannot en passant left',
+        )
+
+        self.assertEqual(
+            self._ply_types(3, 1, 2, 2),
+            [PlyType([DestroyAction(3, 2), MoveAction(3, 1, 2, 2)])],
+            'white pawn cannot en passant right',
+        )
+
+        # TODO: Test black en passant.
 
     def test_illegal_moves(self):
         # Move the white pawn at (6, 0) to (4, 0).

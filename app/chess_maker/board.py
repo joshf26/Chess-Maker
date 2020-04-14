@@ -21,6 +21,6 @@ class Board:
             grid[position[0]][position[1]] = str(piece.color)[6] + str(piece.__class__.__name__)[0]
 
         return (
-            '    ' + ''.join([f'{label:<2}' for label in range(self.size[1])]) + '\n' +
+            '   ' + ''.join([f'{label:<2}' for label in range(self.size[1])]) + '\n' +
             '\n'.join([f'{index:>2} {"".join(row)}' for index, row in enumerate(grid)])
         )
