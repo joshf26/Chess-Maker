@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING, Dict, Tuple
 if TYPE_CHECKING:
     from .piece import Piece
 
-
-Tiles = Dict[Tuple[int, int], Piece]
+    Tiles = Dict[Tuple[int, int], Piece]
 
 
 class Board:
     size = (0, 0)
+    colors = []
 
     def __init__(self):
         self.tiles = self.init_board()

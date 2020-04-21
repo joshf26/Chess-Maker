@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Tuple
 
 
 class Action:
@@ -8,16 +8,13 @@ class Action:
 
 @dataclass
 class MoveAction(Action):
-    from_x: int
-    from_y: int
-    to_x: int
-    to_y: int
+    from_pos: Tuple[int, int]
+    to_pos: Tuple[int, int]
 
 
 @dataclass
 class DestroyAction(Action):
-    x: int
-    y: int
+    pos: Tuple[int, int]
 
 
 Ply = List[Action]

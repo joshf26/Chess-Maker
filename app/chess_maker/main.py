@@ -46,10 +46,6 @@ def main():
 
         game = games[game_id]
 
-        if game.started:
-            await connection.error('That game has already started.')
-            return
-
         if connection in game.players.values():
             await connection.error('Player is already in this game.')
             return
