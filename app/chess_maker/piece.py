@@ -28,6 +28,9 @@ class Piece:
 
         self.moves = 0
 
+    def __repr__(self):
+        return f'<{self.color} {self.__class__.__name__} facing {self.direction}>'
+
     def ply_types(
         self,
         from_pos: Tuple[int, int],

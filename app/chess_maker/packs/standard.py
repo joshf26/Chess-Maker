@@ -27,6 +27,8 @@ class Pawn(Piece):
         row_diff = to_pos[0] - from_pos[0]
         col_diff = to_pos[1] - from_pos[1]
 
+        # This if statement is intentionally redundant since I do not know what it will look like when the other
+        # directions are added in.
         if self.direction == Direction.NORTH:
             if to_pos not in game.board.tiles:
                 # Check for single or double advance.
@@ -49,14 +51,39 @@ class Pawn(Piece):
                             result.append([DestroyAction(captured_pawn_pos), MoveAction(from_pos, to_pos)])
 
             # Check for diagonal capture.
-            # TODO: Add test for own color capture.
             elif row_diff == -1 and abs(col_diff) == 1 and game.board.tiles[to_pos].color != self.color:
+                result.append([DestroyAction(to_pos), MoveAction(from_pos, to_pos)])
+
+        elif self.direction == Direction.SOUTH:
+            if to_pos not in game.board.tiles:
+                # Check for single or double advance.
+                if col_diff == 0 and (row_diff == 1 or (self.moves == 0 and row_diff == 2)):
+                    result.append([MoveAction(from_pos, to_pos)])
+
+                # Check for en passant.
+                if abs(col_diff) == 1:
+                    captured_pawn_pos = to_pos[0] - 1, to_pos[1]
+                    if (
+                        captured_pawn_pos in game.board.tiles and
+                        isinstance(game.board.tiles[captured_pawn_pos], Pawn) and
+                        game.board.tiles[captured_pawn_pos].color != self.color
+                    ):
+                        event = game.n_event_by_color(game.board.tiles[captured_pawn_pos].color, 1, reverse=True)
+                        if (
+                            event is not None and
+                            event.ply == [MoveAction((to_pos[0] + 1, to_pos[1]), captured_pawn_pos)]
+                        ):
+                            result.append([DestroyAction(captured_pawn_pos), MoveAction(from_pos, to_pos)])
+
+            # Check for diagonal capture.
+            elif row_diff == 1 and abs(col_diff) == 1 and game.board.tiles[to_pos].color != self.color:
                 result.append([DestroyAction(to_pos), MoveAction(from_pos, to_pos)])
 
         return result
 
 
 class TestPawn(unittest.TestCase):
+    # TODO: Test directions other than North and South.
 
     def setUp(self):
         self.game = Game('test', Standard8x8(), MockNetwork())
@@ -135,7 +162,7 @@ class TestPawn(unittest.TestCase):
             'black pawn cannot capture left diagonally',
         )
 
-    def test_en_passant(self):
+    def test_white_en_passant(self):
         # Move the white pawn at (6, 1) to (3, 1).
         self.game.apply_ply([MoveAction((6, 1), (3, 1))])
 
@@ -160,11 +187,39 @@ class TestPawn(unittest.TestCase):
             'white pawn cannot en passant right',
         )
 
-        # TODO: Test black en passant.
+    def test_black_en_passant(self):
+        # Move the white pawn at (6, 3) to (5, 3). This move is only here to switch the current turn to black.
+        self.game.apply_ply([MoveAction((6, 3), (5, 3))])
+
+        # Move the black pawn at (1, 1) to (4, 1).
+        self.game.apply_ply([MoveAction((1, 1), (4, 1))])
+
+        # Move the white pawn at (6, 0) to (4, 0).
+        self.game.apply_ply([MoveAction((6, 0), (4, 0))])
+
+        self.assertEqual(
+            self._ply_types((4, 1), (5, 0)),
+            [[DestroyAction((4, 0)), MoveAction((4, 1), (5, 0))]],
+            'black pawn cannot en passant right',
+        )
+
+        # Move the black pawn at (1, 6) to (4, 6).
+        self.game.apply_ply([MoveAction((1, 6), (4, 6))])
+
+        # Move the white pawn at (6, 7) to (4, 7).
+        self.game.apply_ply([MoveAction((6, 7), (4, 7))])
+
+        print(f'\n\n{self.game.board}\n\n')
+
+        self.assertEqual(
+            self._ply_types((4, 6), (5, 7)),
+            [[DestroyAction((4, 7)), MoveAction((4, 6), (5, 7))]],
+            'black pawn cannot en passant left',
+        )
 
     def test_illegal_moves(self):
         # Move the white pawn at (6, 0) to (4, 0).
-        self.game.board.tiles[4, 0] = self.game.board.tiles.pop((6, 0))
+        self.game.apply_ply([MoveAction((6, 0), (4, 0))])
 
         self.assertEqual(
             self._ply_types((4, 0), (5, 0)),
@@ -173,7 +228,7 @@ class TestPawn(unittest.TestCase):
         )
 
         # Move the black pawn at (1, 0) to (3, 0).
-        self.game.board.tiles[3, 0] = self.game.board.tiles.pop((1, 0))
+        self.game.apply_ply([MoveAction((1, 0), (3, 0))])
 
         self.assertEqual(
             self._ply_types((3, 0), (2, 0)),
@@ -182,6 +237,7 @@ class TestPawn(unittest.TestCase):
         )
 
         # TODO: Test backwards capturing.
+        # TODO: Test own color capturing.
 
 
 class Rook(Piece):
