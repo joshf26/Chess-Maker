@@ -7,7 +7,7 @@ from ..testing.mock_network import MockNetwork
 from ..board import Board
 from ..game import Game
 from ..piece import Piece
-from ..ply_type import PlyType, MoveAction, DestroyAction
+from ..ply import Ply, MoveAction, DestroyAction
 
 
 # Pieces
@@ -23,8 +23,8 @@ class Pawn(Piece):
         to_row: int,
         to_col: int,
         game: Game,
-    ) -> List[PlyType]:
-        result: List[PlyType] = []
+    ) -> List[Ply]:
+        result: List[Ply] = []
 
         # Check if the offset is forward to a free space.
         if to_col == from_col and (to_row, to_col) not in game.board.tiles:
@@ -35,7 +35,7 @@ class Pawn(Piece):
                 (self.color == Color.WHITE and (forward_offset == -1 or (self.moves == 0 and forward_offset == -2))) or
                 (self.color == Color.BLACK and (forward_offset == 1 or (self.moves == 0 and forward_offset == 2)))
             ):
-                result.append(PlyType([MoveAction(from_row, from_col, to_row, to_col)]))
+                result.append([MoveAction(from_row, from_col, to_row, to_col)])
 
             # TODO: Check for en passant.
 
@@ -55,20 +55,20 @@ class TestPawn(unittest.TestCase):
     def test_single_advance(self):
         self.assertEqual(
             self._ply_types(6, 0, 5, 0),
-            [PlyType([MoveAction(6, 0, 5, 0)])],
+            [[MoveAction(6, 0, 5, 0)]],
             'white pawn cannot single advance to empty space',
         )
 
         self.assertEqual(
             self._ply_types(1, 0, 2, 0),
-            [PlyType([MoveAction(1, 0, 2, 0)])],
+            [[MoveAction(1, 0, 2, 0)]],
             'black pawn cannot single advance to empty space',
         )
 
     def test_double_advance(self):
         self.assertEqual(
             self._ply_types(6, 0, 4, 0),
-            [PlyType([MoveAction(6, 0, 4, 0)])],
+            [[MoveAction(6, 0, 4, 0)]],
             'white pawn cannot double advance to empty space on its first move',
         )
 
@@ -81,7 +81,7 @@ class TestPawn(unittest.TestCase):
 
         self.assertEqual(
             self._ply_types(1, 0, 3, 0),
-            [PlyType([MoveAction(1, 0, 3, 0)])],
+            [[MoveAction(1, 0, 3, 0)]],
             'black pawn cannot double advance to empty space on its first move',
         )
 
@@ -98,13 +98,13 @@ class TestPawn(unittest.TestCase):
 
         self.assertEqual(
             self._ply_types(2, 1, 1, 0),
-            [PlyType([DestroyAction(1, 0), MoveAction(2, 1, 1, 0)])],
+            [[DestroyAction(1, 0), MoveAction(2, 1, 1, 0)]],
             'white pawn cannot capture left diagonally',
         )
 
         self.assertEqual(
             self._ply_types(2, 1, 1, 2),
-            [PlyType([DestroyAction(1, 2), MoveAction(2, 1, 1, 2)])],
+            [[DestroyAction(1, 2), MoveAction(2, 1, 1, 2)]],
             'white pawn cannot capture right diagonally',
         )
 
@@ -113,13 +113,13 @@ class TestPawn(unittest.TestCase):
 
         self.assertEqual(
             self._ply_types(5, 1, 6, 0),
-            [PlyType([DestroyAction(6, 0), MoveAction(5, 1, 6, 0)])],
+            [[DestroyAction(6, 0), MoveAction(5, 1, 6, 0)]],
             'black pawn cannot capture right diagonally',
         )
 
         self.assertEqual(
             self._ply_types(5, 1, 6, 2),
-            [PlyType([DestroyAction(6, 2), MoveAction(5, 1, 6, 2)])],
+            [[DestroyAction(6, 2), MoveAction(5, 1, 6, 2)]],
             'black pawn cannot capture left diagonally',
         )
 
@@ -137,13 +137,13 @@ class TestPawn(unittest.TestCase):
 
         self.assertEqual(
             self._ply_types(3, 1, 2, 0),
-            [PlyType([DestroyAction(3, 0), MoveAction(3, 1, 2, 0)])],
+            [[DestroyAction(3, 0), MoveAction(3, 1, 2, 0)]],
             'white pawn cannot en passant left',
         )
 
         self.assertEqual(
             self._ply_types(3, 1, 2, 2),
-            [PlyType([DestroyAction(3, 2), MoveAction(3, 1, 2, 2)])],
+            [[DestroyAction(3, 2), MoveAction(3, 1, 2, 2)]],
             'white pawn cannot en passant right',
         )
 
@@ -229,8 +229,8 @@ class Standard8x8(Board):
         to_y: int,
         color: Color,
         piece: Piece,
-    ) -> List[Type[PlyType]]:
-        result: List[Type[PlyType]] = []
+    ) -> List[Type[Ply]]:
+        result: List[Type[Ply]] = []
 
         return result
 

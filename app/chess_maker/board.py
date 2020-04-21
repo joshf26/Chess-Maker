@@ -5,13 +5,16 @@ if TYPE_CHECKING:
     from .piece import Piece
 
 
+Tiles = Dict[Tuple[int, int], Piece]
+
+
 class Board:
     size = (0, 0)
 
     def __init__(self):
         self.tiles = self.init_board()
 
-    def init_board(self) -> Dict[Tuple[int, int], Piece]:
+    def init_board(self) -> Tiles:
         raise NotImplementedError
 
     def __repr__(self) -> str:

@@ -1,8 +1,11 @@
-from typing import Dict
+from __future__ import annotations
+from typing import TYPE_CHECKING, Dict, List
 
-from .board import Board
-from .color import Color
-from .network import Network, Connection
+if TYPE_CHECKING:
+    from .ply import Ply
+    from .color import Color
+    from .network import Network, Connection
+    from .board import Board, Tiles
 
 
 class Game:
@@ -14,8 +17,8 @@ class Game:
         self.players: Dict[Color, Connection] = {}
 
         self.started = False
-        self.move = 0
-        self.ply = 0
+        self.plies: List[Ply] = []
+        self.history: List[Tiles] = []
 
         @self.network.command(game_id)
         async def get_state(connection: Connection):

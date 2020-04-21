@@ -20,6 +20,4 @@ class DestroyAction(Action):
     y: int
 
 
-@dataclass
-class PlyType:
-    actions: List[Action]
+Ply = List[Action]

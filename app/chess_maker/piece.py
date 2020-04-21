@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Set
 
 if TYPE_CHECKING:
-    from chess_maker.ply_type import PlyType
+    from chess_maker.ply import Ply
     from chess_maker.color import Color
     from chess_maker.game import Game
 
@@ -20,5 +20,5 @@ class Piece:
         to_x: int,
         to_y: int,
         game: Game,
-    ) -> Set[PlyType]:
+    ) -> Set[Ply]:
         raise NotImplementedError
