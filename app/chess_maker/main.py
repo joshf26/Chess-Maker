@@ -2,9 +2,9 @@ from importlib import import_module
 from typing import Dict
 from uuid import uuid4
 
-from .color import Color
-from .game import Game
-from .network import Network, Connection
+from color import Color
+from game import Game
+from network import Network, Connection
 
 PORT = 8000
 

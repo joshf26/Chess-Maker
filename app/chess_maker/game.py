@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Dict, List, Optional
 
-from .ply import Ply, MoveAction, DestroyAction
+from ply import Ply, MoveAction, DestroyAction
 
 if TYPE_CHECKING:
     from .color import Color

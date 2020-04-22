@@ -4,9 +4,9 @@ from enum import Enum
 from typing import TYPE_CHECKING, Set, Tuple
 
 if TYPE_CHECKING:
-    from chess_maker.ply import Ply
-    from chess_maker.color import Color
-    from chess_maker.game import Game
+    from ply import Ply
+    from color import Color
+    from game import Game
 
 
 class Direction(Enum):

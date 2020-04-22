@@ -5,16 +5,27 @@ import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
 import {FormsModule} from '@angular/forms';
 import { BoardComponent } from './board/board.component';
+import { MenuComponent } from './menu/menu.component';
+import { LobbyComponent } from './lobby/lobby.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {MatSidenavModule} from '@angular/material/sidenav';
+import {MatCardModule} from '@angular/material/card';
 
 @NgModule({
     declarations: [
         AppComponent,
         BoardComponent,
+        MenuComponent,
+        LobbyComponent,
     ],
     imports: [
         BrowserModule,
         AppRoutingModule,
-        FormsModule, // Temp for ngModel
+        FormsModule,
+        BrowserAnimationsModule,
+        MatSidenavModule,
+        MatCardModule,
+        // Temp for ngModel
     ],
     providers: [],
     bootstrap: [AppComponent],

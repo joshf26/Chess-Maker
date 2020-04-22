@@ -29,16 +29,25 @@ interface GameUpdateData {
 }
 
 @Injectable({
-    providedIn: 'root'
+    providedIn: 'root',
 })
 export class ApiService {
     private socket: WebSocketSubject<unknown>;
     private gameObservables: {[key: string]: Observable<GameUpdateData>}
 
-    constructor() {
-        this.socket = webSocket('ws://localhost:8000');
-        this.socket.pipe(filter());
-        this.socket.next('hello');
+    connect(address: string) {
+        this.socket = webSocket(`ws://${address}`);
+        this.socket.subscribe(
+            message => console.log(`Hey you got a message: `, message),
+            error => {
+                if (error instanceof CloseEvent) {
+                    console.log('The server has closed.')
+                } else {
+                    console.log('Cannot reach the server.')
+                }
+            },
+            console.log,
+        );
     }
 
     run(command: string, parameters: {[key: string]: any}): void {

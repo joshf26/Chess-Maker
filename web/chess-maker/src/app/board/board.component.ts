@@ -18,7 +18,32 @@ const PIECES: Piece[] = [
         positionY: 2,
     },
     {
+        color: 'orange',
+        positionX: 3,
+        positionY: 6,
+    },
+    {
+        color: 'green',
+        positionX: 3,
+        positionY: 6,
+    },
+    {
         color: 'blue',
+        positionX: 3,
+        positionY: 6,
+    },
+    {
+        color: 'purple',
+        positionX: 3,
+        positionY: 6,
+    },
+    {
+        color: 'black',
+        positionX: 3,
+        positionY: 6,
+    },
+    {
+        color: 'white',
         positionX: 3,
         positionY: 6,
     },

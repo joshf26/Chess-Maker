@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, Tuple
 
 if TYPE_CHECKING:
-    from .piece import Piece
+    from piece import Piece
 
     Tiles = Dict[Tuple[int, int], Piece]
 

@@ -93,6 +93,8 @@ class Network:
 
         try:
             async for raw_data in websocket:
+                print(f'Received {raw_data}.')
+
                 try:
                     data = json.loads(raw_data)
                 except json.JSONDecodeError:
