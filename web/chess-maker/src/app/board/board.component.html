@@ -1,17 +1,4 @@
-<h1>Board</h1>
-
-scale: <input type="number" [(ngModel)]="scale" (ngModelChange)="draw()">
-positionX: <input type="number" [(ngModel)]="positionX" (ngModelChange)="draw()">
-positionY: <input type="number" [(ngModel)]="positionY" (ngModelChange)="draw()">
-<br>
-mouse position: {{mousePositionX}}, {{mousePositionY}}
-
-
-<br>
-
 <canvas #canvas
-        width="500px"
-        height="500px"
         (wheel)="zoom($event)"
         (mousedown)="mouseDown($event)"
         (mouseup)="mouseUp()"

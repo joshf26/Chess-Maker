@@ -1,11 +1,12 @@
 <mat-sidenav-container>
     <mat-sidenav #sidenav mode="side" opened>
+        <button (click)="sidenav.toggle(); board.updateCanvasSize()"><-></button>
         <h1>Chess Maker</h1>
-        <mat-card *ngFor="let game of games">
+        <mat-card *ngFor="let game of games" (click)="showGame(game.name)">
             <mat-card-header>
                 <div mat-card-avatar class="example-header-image"></div>
                 <mat-card-title>{{game.name}}</mat-card-title>
-                <mat-card-subtitle>{{game.creator}}</mat-card-subtitle>
+                <mat-card-subtitle>Created by {{game.creator}}</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
                 A {{game.board}} game with <strong>{{game.filled}}/{{game.slots}}</strong> players.
@@ -13,20 +14,7 @@
         </mat-card>
     </mat-sidenav>
     <mat-sidenav-content>
-        <button (click)="sidenav.toggle()"><-></button>
-        <h1>Lobby</h1>
-        <p>content</p>
-        <p>content</p>
-        <p>content</p>
-        <p>content</p>
-        <p>content</p>
-        <p>content</p>
-        <p>content</p>
-        <p>content</p>
-        <p>content</p>
-        <p>content</p>
-        <p>content</p>
-        <p>content</p>
+        <app-board #board></app-board>
     </mat-sidenav-content>
 </mat-sidenav-container>
 

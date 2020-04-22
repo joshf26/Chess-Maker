@@ -63,7 +63,6 @@ export class BoardComponent implements OnInit {
     positionY = 0;
     scale = 40;
 
-    // Temp
     mousePositionX = 0;
     mousePositionY = 0;
 
@@ -80,7 +79,13 @@ export class BoardComponent implements OnInit {
     ngAfterViewInit(): void {
         this.canvas = <HTMLCanvasElement>this.canvas_element.nativeElement;
         this.context = this.canvas.getContext('2d');
+        this.updateCanvasSize();
         this.draw();
+    }
+
+    updateCanvasSize(): void {
+        this.canvas.width = this.canvas.offsetWidth;
+        this.canvas.height = this.canvas.offsetHeight;
     }
 
     hideContextMenu(event: Event): void {

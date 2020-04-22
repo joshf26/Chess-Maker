@@ -25,4 +25,8 @@ export class LobbyComponent implements OnInit {
 
     ngOnInit(): void {
     }
+
+    showGame(game: any) {
+        alert(`showing game ${game}`);
+    }
 }
