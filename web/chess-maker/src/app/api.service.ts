@@ -2,40 +2,7 @@ import {Injectable} from '@angular/core';
 import {webSocket, WebSocketSubject} from 'rxjs/webSocket';
 import {Observable} from 'rxjs';
 import {Router} from '@angular/router';
-import {filter} from 'rxjs/operators';
-
-interface PieceData {
-    id: number,
-    image: string,
-}
-
-interface GameInitData {
-    board_size_x: number,
-    board_size_y: number,
-    pieces: PieceData[],
-}
-
-interface TileData {
-    piece_id?: number,
-    color_id?: number,
-}
-
-interface GameUpdateData {
-    move?: number,
-    ply?: number,
-
-    boardX?: number,
-    boardY?: number,
-    board?: TileData[][],
-}
-
-interface GameMetaData {
-    name: string,
-    creator: string,
-    board: string,
-    current_players: number,
-    total_players: number,
-}
+import {map, filter} from 'rxjs/operators';
 
 @Injectable({
     providedIn: 'root',
@@ -43,7 +10,6 @@ interface GameMetaData {
 export class ApiService {
     private socket: WebSocketSubject<unknown>;
     private commands: Observable<unknown>;
-    private gameObservables: {[key: string]: Observable<GameUpdateData>}
 
     constructor(private router: Router) {}
 
@@ -69,6 +35,7 @@ export class ApiService {
     getCommand(command: string): Observable<unknown> {
         return this.commands.pipe(
             filter(message => message['command'] == command),
+            map(message => message['parameters']),
         );
     }
 

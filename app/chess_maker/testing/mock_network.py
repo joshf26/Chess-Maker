@@ -1,6 +1,6 @@
 from typing import Callable
 
-from ..network import Network
+from network import Network
 
 
 class MockNetwork(Network):

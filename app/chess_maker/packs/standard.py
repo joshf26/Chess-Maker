@@ -2,12 +2,12 @@ import unittest
 
 from typing import Optional, Dict, Tuple, List, Type
 
-from ..color import Color
-from ..testing.mock_network import MockNetwork
-from ..board import Board
-from ..game import Game
-from ..piece import Piece, Direction
-from ..ply import Ply, MoveAction, DestroyAction
+from color import Color
+from testing.mock_network import MockNetwork
+from board import Board
+from game import Game
+from piece import Piece, Direction
+from ply import Ply, MoveAction, DestroyAction
 
 
 # Pieces

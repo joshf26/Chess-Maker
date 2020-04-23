@@ -1,13 +1,13 @@
-import {Component, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {ApiService} from '../api.service';
 
 
-interface GameData {
+interface GameMetaData {
     name: string,
     creator: string,
     board: string,
-    slots: number,
-    filled: number,
+    current_players: number,
+    total_players: number,
 }
 
 
@@ -17,25 +17,34 @@ interface GameData {
     styleUrls: ['./lobby.component.less']
 })
 export class LobbyComponent implements OnInit {
-    games: GameData[] = [
-        {name: 'My First Game', creator: 'Josh', board: 'Standard 8x8', slots: 2, filled: 0},
-        {name: 'My Second Game', creator: 'Josh', board: 'Standard 4x4', slots: 2, filled: 1},
-    ];
+    games: {[key: string]: GameMetaData};
 
-    constructor(private api: ApiService) {
-        api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata);
+    constructor(
+        private api: ApiService,
+        private changeDetector: ChangeDetectorRef,
+    ) {
+        api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
     }
 
     ngOnInit(): void {
         this.api.run('get_games', {});
     }
 
-    updateGameMetadata(gameData: {[key: string]: GameData}) {
-        console.log('Received the following game data!!!');
-        console.log(gameData);
+    updateGameMetadata(parameters: {[key: string]: any}): void {
+        this.games = parameters.game_metadata;
+        this.changeDetector.detectChanges();
+        console.log(this.games);
     }
 
-    showGame(game: any) {
+    createGame(): void {
+        this.api.run('create_game', {
+            name: 'My Cool Game',
+            pack: 'standard',
+            board: 'Standard8x8',
+        })
+    }
+
+    showGame(game: any): void {
         alert(`showing game ${game}`);
     }
 }
