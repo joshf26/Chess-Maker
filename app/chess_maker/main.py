@@ -14,7 +14,32 @@ def main():
     games: Dict[str, Game] = {}
 
     @network.command()
-    async def create_game(connection: Connection, pack: str, board: str):
+    async def login(connection: Connection, nickname: str):
+        print(f'{nickname} logged in!')
+        connection.nickname = nickname
+
+    @network.command()
+    async def get_games(connection: Connection):
+        data = {}
+
+        for game_id, game in games.items():
+            data[game_id] = {
+                'name': game.name,
+                'creator': game.owner.nickname,
+                'board': game.board.name,
+                'current_players': len(game.players),
+                'total_players': len(game.board.colors),
+            }
+
+        await connection.send({
+            'command': 'update_game_metadata',
+            'parameters': {
+                'data': data,
+            },
+        })
+
+    @network.command()
+    async def create_game(connection: Connection, name: str, pack: str, board: str):
         try:
             pack = import_module(f'packs.{pack}')
         except ModuleNotFoundError:
@@ -31,7 +56,7 @@ def main():
         while (game_id := str(uuid4())) in games:
             pass
 
-        game = Game(game_id, board_class(), network)
+        game = Game(game_id, name, board_class(), network)
         games[game_id] = game
 
         await connection.send({

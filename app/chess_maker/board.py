@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
 
 class Board:
+    name = 'Custom'
     size = (0, 0)
     colors = []
 

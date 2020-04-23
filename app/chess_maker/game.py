@@ -20,8 +20,9 @@ class HistoryEvent:
 
 class Game:
 
-    def __init__(self, game_id: str, board: Board, network: Network):
-        self.game_id = game_id
+    def __init__(self, game_id: str, name: str, owner: Connection, board: Board, network: Network):
+        self.name = name
+        self.owner = owner
         self.board = board
         self.network = network
         self.players: Dict[Color, Connection] = {}

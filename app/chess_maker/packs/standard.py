@@ -314,6 +314,7 @@ class King(Piece):
 
 
 class Standard8x8(Board):
+    name = 'Standard 8x8'
     size = (8, 8)
     colors = [
         Color.WHITE,

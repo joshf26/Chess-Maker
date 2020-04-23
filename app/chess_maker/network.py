@@ -1,16 +1,21 @@
 import asyncio
 import inspect
 import json
+import uuid
+
 import websockets
 
 from dataclasses import dataclass
 from itertools import islice
-from typing import Dict, Callable
+from typing import Dict, Callable, Set
 
 
-@dataclass
 class Connection:
-    socket: websockets.WebSocketServerProtocol
+
+    def __init__(self, socket: websockets.WebSocketServerProtocol):
+        self.socket = socket
+        self.id = uuid.uuid4()
+        self.nickname = 'Player'
 
     async def send(self, data: dict):
         await self.socket.send(json.dumps(data))
@@ -35,7 +40,7 @@ class Network:
     def __init__(self):
         self.commands: Dict[str, Command] = {}
 
-        self.connections = set()
+        self.connections: Set[Connection] = set()
         self.socket_by_player = {}
         self.player_by_socket = {}
 

@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {webSocket, WebSocketSubject} from 'rxjs/webSocket';
 import {Observable} from 'rxjs';
+import {Router} from '@angular/router';
 import {filter} from 'rxjs/operators';
 
 interface PieceData {
@@ -28,25 +29,46 @@ interface GameUpdateData {
     board?: TileData[][],
 }
 
+interface GameMetaData {
+    name: string,
+    creator: string,
+    board: string,
+    current_players: number,
+    total_players: number,
+}
+
 @Injectable({
     providedIn: 'root',
 })
 export class ApiService {
     private socket: WebSocketSubject<unknown>;
+    private commands: Observable<unknown>;
     private gameObservables: {[key: string]: Observable<GameUpdateData>}
+
+    constructor(private router: Router) {}
 
     connect(address: string) {
         this.socket = webSocket(`ws://${address}`);
-        this.socket.subscribe(
-            message => console.log(`Hey you got a message: `, message),
+        this.commands = this.socket.pipe(
+            filter(message => message.hasOwnProperty('command') && message.hasOwnProperty('parameters')),
+        );
+
+        this.commands.subscribe(
+            message => {},
             error => {
                 if (error instanceof CloseEvent) {
-                    console.log('The server has closed.')
+                    alert('The server has closed.')
                 } else {
-                    console.log('Cannot reach the server.')
+                    alert('Cannot reach the server.')
                 }
+                this.router.navigate(['/']);
             },
-            console.log,
+        );
+    }
+
+    getCommand(command: string): Observable<unknown> {
+        return this.commands.pipe(
+            filter(message => message['command'] == command),
         );
     }
 
@@ -55,22 +77,5 @@ export class ApiService {
             command: command,
             parameters: parameters,
         });
-    }
-
-    addBoardObservable(gameId: string) {
-        this.gameObservables[gameId] = new Observable<GameUpdateData>(observer => {
-            this.socket.subscribe(console.log);
-            observer.next()
-        })
-    }
-
-    getBoard(gameId: string, startX: number, startY: number, width: number, height: number) {
-        this.run('get_board', {
-            game_id: gameId,
-            start_x: startX,
-            start_y: startY,
-            width: width,
-            height: height,
-        })
     }
 }

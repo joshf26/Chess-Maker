@@ -1,4 +1,5 @@
 import {Component, OnInit} from '@angular/core';
+import {ApiService} from '../api.service';
 
 
 interface GameData {
@@ -21,9 +22,17 @@ export class LobbyComponent implements OnInit {
         {name: 'My Second Game', creator: 'Josh', board: 'Standard 4x4', slots: 2, filled: 1},
     ];
 
-    constructor() {}
+    constructor(private api: ApiService) {
+        api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata);
+    }
 
     ngOnInit(): void {
+        this.api.run('get_games', {});
+    }
+
+    updateGameMetadata(gameData: {[key: string]: GameData}) {
+        console.log('Received the following game data!!!');
+        console.log(gameData);
     }
 
     showGame(game: any) {

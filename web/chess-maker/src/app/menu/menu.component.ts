@@ -9,6 +9,7 @@ import {Router} from '@angular/router';
 })
 export class MenuComponent implements OnInit {
     address: string = 'localhost:8000';
+    nickname: string = 'Josh';
 
     constructor(
         private apiService: ApiService,
@@ -20,6 +21,9 @@ export class MenuComponent implements OnInit {
 
     connect() {
         this.apiService.connect(this.address);
+        this.apiService.run('login', {
+            nickname: this.nickname,
+        })
         this.router.navigate(['/lobby']);
     }
 }
