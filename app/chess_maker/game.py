@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, Set
 
 from ply import Ply, MoveAction, DestroyAction
 
@@ -20,21 +20,31 @@ class HistoryEvent:
 
 class Game:
 
-    def __init__(self, game_id: str, name: str, owner: Connection, board: Board, network: Network):
+    def __init__(self, name: str, owner: Connection, board: Board, network: Network):
         self.name = name
         self.owner = owner
         self.board = board
         self.network = network
+
+        self.subscribers: Set[Connection] = set()
         self.players: Dict[Color, Connection] = {}
 
         self.plies: List[Ply] = []
         self.history: List[HistoryEvent] = []
 
-        @self.network.command(game_id)
-        async def get_state(connection: Connection):
-            await connection.send({
-                'Here is': 'Some state!',
-            })
+    def add_subscriber(self, connection: Connection):
+        self.subscribers.add(connection)
+
+    def get_full_data(self):
+        # TODO: Maybe make this nested dictionaries instead of strings.
+        return {
+            'tiles': [{
+                'row': position[0],
+                'col': position[1],
+                'color': piece.color.value,
+                'direction': piece.direction.value,
+            } for position, piece in self.board.tiles.items()]
+        }
 
     def apply_ply(self, ply: Ply):
         self.history.append(HistoryEvent(self.current_color(), self.board.tiles.copy(), ply))

@@ -3,7 +3,7 @@
         <button (click)="sidenav.toggle(); board.updateCanvasSize()"><-></button>
         <button (click)="createGame()">+</button>
         <h1>Chess Maker</h1>
-        <mat-card *ngFor="let game of games | keyvalue" (click)="showGame(game.value.name)">
+        <mat-card *ngFor="let game of games | keyvalue" (click)="showGame(game.key)">
             <mat-card-header>
                 <div mat-card-avatar class="example-header-image"></div>
                 <mat-card-title>{{game.value.name}}</mat-card-title>

@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {ApiService} from '../api.service';
 
 
@@ -21,7 +21,6 @@ export class LobbyComponent implements OnInit {
 
     constructor(
         private api: ApiService,
-        private changeDetector: ChangeDetectorRef,
     ) {
         api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
     }
@@ -32,8 +31,6 @@ export class LobbyComponent implements OnInit {
 
     updateGameMetadata(parameters: {[key: string]: any}): void {
         this.games = parameters.game_metadata;
-        this.changeDetector.detectChanges();
-        console.log(this.games);
     }
 
     createGame(): void {
@@ -44,7 +41,9 @@ export class LobbyComponent implements OnInit {
         })
     }
 
-    showGame(game: any): void {
-        alert(`showing game ${game}`);
+    showGame(gameId: string): void {
+        this.api.run('subscribe_to_game', {
+            game_id: gameId,
+        })
     }
 }

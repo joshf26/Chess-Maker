@@ -32,7 +32,14 @@ export class ApiService {
         );
     }
 
+    // TODO: This could be a decorator.
     getCommand(command: string): Observable<unknown> {
+        if (this.commands == undefined) {
+            // Command was queried before connection was established. Forward user back to login.
+            this.router.navigate(['/']);
+            return;
+        }
+
         return this.commands.pipe(
             filter(message => message['command'] == command),
             map(message => message['parameters']),

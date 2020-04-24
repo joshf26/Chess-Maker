@@ -1,53 +1,24 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {ApiService} from '../api.service';
+import {filter} from 'rxjs/operators';
 
 const ODD_TILE_COLOR = '#A85738';
 const EVEN_TILE_COLOR = '#F3C1A9';
 const HIGHLIGHT_COLOR = '#FFFA00';
 const ZOOM_FACTOR = 0.8;
 
+const COLORS = ['white', 'black'];
+
 interface Piece {
-    color: string,
-    positionX: number,
-    positionY: number,
+    row: number,
+    col: number,
+    color: number,
+    direction: number,
 }
 
-const PIECES: Piece[] = [
-    {
-        color: 'red',
-        positionX: 5,
-        positionY: 2,
-    },
-    {
-        color: 'orange',
-        positionX: 3,
-        positionY: 6,
-    },
-    {
-        color: 'green',
-        positionX: 3,
-        positionY: 6,
-    },
-    {
-        color: 'blue',
-        positionX: 3,
-        positionY: 6,
-    },
-    {
-        color: 'purple',
-        positionX: 3,
-        positionY: 6,
-    },
-    {
-        color: 'black',
-        positionX: 3,
-        positionY: 6,
-    },
-    {
-        color: 'white',
-        positionX: 3,
-        positionY: 6,
-    },
-];
+interface GameData {
+    tiles: Piece[],
+}
 
 @Component({
     selector: 'app-board',
@@ -68,11 +39,17 @@ export class BoardComponent implements OnInit {
 
     panning = false;
     dragging = false;
-    draggingPiece?: Piece = null;
+    draggingPiece?: Piece = undefined;
     panX: number;
     panY: number;
 
-    constructor() {}
+    pieces: Piece[] = [];
+
+    constructor(
+        private api: ApiService,
+    ) {
+        api.getCommand('full_game_data').subscribe(this.gameDataHandler.bind(this));
+    }
 
     ngOnInit(): void {}
 
@@ -81,6 +58,11 @@ export class BoardComponent implements OnInit {
         this.context = this.canvas.getContext('2d');
         this.updateCanvasSize();
         this.draw();
+    }
+
+    gameDataHandler(gameData: GameData): void {
+        this.pieces = gameData.tiles;
+        console.log(`Received game data: ${JSON.stringify(gameData)}.`);
     }
 
     updateCanvasSize(): void {
@@ -106,8 +88,8 @@ export class BoardComponent implements OnInit {
                 const mouseTileX = Math.floor(this.mousePositionX);
                 const mouseTileY = Math.floor(this.mousePositionY);
 
-                for (const piece of PIECES) {
-                    if (piece.positionX == mouseTileX && piece.positionY == mouseTileY) {
+                for (const piece of this.pieces) {
+                    if (piece.row == mouseTileY && piece.col == mouseTileX) {
                         this.dragging = true;
                         this.draggingPiece = piece;
 
@@ -130,8 +112,8 @@ export class BoardComponent implements OnInit {
 
             this.dragging = false;
 
-            this.draggingPiece.positionX = mouseTileX;
-            this.draggingPiece.positionY = mouseTileY;
+            this.draggingPiece.row = mouseTileY;
+            this.draggingPiece.col = mouseTileX;
         }
         this.panning = false;
     }
@@ -184,11 +166,11 @@ export class BoardComponent implements OnInit {
 
                 this.context.fillRect(col * this.scale + this.positionX, row * this.scale + this.positionY, this.scale, this.scale);
 
-                for (const piece of PIECES) {
+                for (const piece of this.pieces) {
                     if (this.dragging && this.draggingPiece == piece) continue;
 
-                    if (piece.positionX == col && piece.positionY == row) {
-                        this.context.fillStyle = piece.color;
+                    if (piece.row == row && piece.col == col) {
+                        this.context.fillStyle = COLORS[piece.color];
                         this.context.fillRect(
                             (col + 0.25) * this.scale + this.positionX,
                             (row + 0.25) * this.scale + this.positionY,
@@ -201,7 +183,7 @@ export class BoardComponent implements OnInit {
         }
 
         if (this.dragging) {
-            this.context.fillStyle = this.draggingPiece.color;
+            this.context.fillStyle = COLORS[this.draggingPiece.color];
             this.context.fillRect(
                 (this.positionX + this.mousePositionX * this.scale) - halfScale / 2,
                 (this.positionY + this.mousePositionY * this.scale) - halfScale / 2,

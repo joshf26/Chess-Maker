@@ -28,11 +28,8 @@ def main():
             'total_players': len(game.board.colors),
         } for game_id, game in games.items()}
 
-        await connection.send({
-            'command': 'update_game_metadata',
-            'parameters': {
-                'game_metadata': game_metadata,
-            },
+        await connection.run('update_game_metadata', {
+            'game_metadata': game_metadata,
         })
 
     @network.command()
@@ -53,12 +50,23 @@ def main():
         while (game_id := str(uuid4())) in games:
             pass
 
-        game = Game(game_id, name, connection, board_class(), network)
-        games[game_id] = game
+        games[game_id] = Game(name, connection, board_class(), network)
 
         await connection.send({
             'game_id': game_id,
         })
+
+    @network.command()
+    async def subscribe_to_game(connection: Connection, game_id: str):
+        if game_id not in games:
+            await connection.error('Game does not exist.')
+
+        game = games[game_id]
+        game.add_subscriber(connection)
+
+        game_data = game.get_full_data()
+        game_data['id'] = game_id
+        await connection.run('full_game_data', game_data)
 
     @network.command()
     async def join_game(connection: Connection, game_id: str, color: int):

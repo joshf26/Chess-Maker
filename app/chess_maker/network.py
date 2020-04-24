@@ -17,6 +17,12 @@ class Connection:
         self.id = uuid.uuid4()
         self.nickname = 'Player'
 
+    async def run(self, command: str, parameters: dict):
+        await self.socket.send(json.dumps({
+            'command': command,
+            'parameters': parameters,
+        }))
+
     async def send(self, data: dict):
         await self.socket.send(json.dumps(data))
 
@@ -44,13 +50,12 @@ class Network:
         self.socket_by_player = {}
         self.player_by_socket = {}
 
-    def command(self, game_id: str = None):
-        if game_id is not None:
-            print('Registering game command:', game_id)
-
+    def command(self):
         def inner(function: Callable):
             signature = inspect.signature(function)
-            parameters = {name: parameter.annotation for name, parameter in islice(signature.parameters.items(), 1, None)}
+            parameters = {
+                name: parameter.annotation for name, parameter in islice(signature.parameters.items(), 1, None)
+            }
 
             self.commands[function.__name__] = Command(function, parameters)
 
