@@ -22,7 +22,7 @@ class Board:
         grid = [['  '] * self.size[0] for _ in range(self.size[0])]
 
         for position, piece in self.tiles.items():
-            grid[position[0]][position[1]] = str(piece.color)[6] + str(piece.__class__.__name__)[0]
+            grid[position[0]][position[1]] = str(piece.color)[6] + str(piece.name)[0]
 
         return (
             '   ' + ''.join([f'{label:<2}' for label in range(self.size[1])]) + '\n' +

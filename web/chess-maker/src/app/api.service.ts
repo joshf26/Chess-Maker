@@ -20,7 +20,7 @@ export class ApiService {
         );
 
         this.commands.subscribe(
-            message => {},
+            console.log, //message => {},
             error => {
                 if (error instanceof CloseEvent) {
                     alert('The server has closed.')

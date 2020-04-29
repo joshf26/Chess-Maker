@@ -1,13 +1,14 @@
+from __future__ import annotations
 from typing import Tuple, List
 
 from game import Game
-from piece import Piece, Direction
+from piece import Piece, Direction, load_image
 from ply import Ply, MoveAction, DestroyAction
 
 
 class Pawn(Piece):
     name = 'Pawn'
-    image = 'images/pawn.svg'
+    image = load_image('standard', 'images/pawn.svg')
 
     def ply_types(
         self,

@@ -59,6 +59,8 @@ class Network:
 
             self.commands[function.__name__] = Command(function, parameters)
 
+            return function
+
         return inner
 
     def serve(self, port: int):

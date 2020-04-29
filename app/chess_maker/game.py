@@ -41,6 +41,8 @@ class Game:
             'tiles': [{
                 'row': position[0],
                 'col': position[1],
+                'pack': piece.__module__.split('.')[1],  # TODO: Extract into function?
+                'piece': piece.__class__.__name__,
                 'color': piece.color.value,
                 'direction': piece.direction.value,
             } for position, piece in self.board.tiles.items()]

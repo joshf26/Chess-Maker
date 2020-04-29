@@ -20,7 +20,14 @@ class Direction(Enum):
     NORTH_WEST = 7
 
 
+def load_image(pack_path: str, image_path: str) -> str:
+    with open(f'chess_maker/packs/{pack_path}/{image_path}') as file:
+        return file.read()
+
+
 class Piece:
+    name = 'Piece'
+    image = ''
 
     def __init__(self, color: Color, direction: Direction):
         self.color = color

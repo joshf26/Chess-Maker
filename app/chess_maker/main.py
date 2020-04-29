@@ -5,6 +5,7 @@ from uuid import uuid4
 from color import Color
 from game import Game
 from network import Network, Connection
+from pack import load_packs
 
 PORT = 8000
 
@@ -12,11 +13,27 @@ PORT = 8000
 def main():
     network = Network()
     games: Dict[str, Game] = {}
+    packs = load_packs()
 
     @network.command()
     async def login(connection: Connection, nickname: str):
         print(f'{nickname} logged in!')
         connection.nickname = nickname
+
+        await send_pieces(connection)
+
+    @network.command()
+    async def send_pieces(connection: Connection):
+        piece_data = {
+            pack: {piece.name: {
+                'image': piece.image,
+            } for piece in pieces}
+            for pack, (boards, pieces) in packs.items()
+        }
+
+        await connection.run('update_pieces', {
+            'pieces': piece_data,
+        })
 
     @network.command()
     async def get_games(connection: Connection):
@@ -56,6 +73,8 @@ def main():
             'game_id': game_id,
         })
 
+        await get_games(connection)
+
     @network.command()
     async def subscribe_to_game(connection: Connection, game_id: str):
         if game_id not in games:
@@ -66,6 +85,7 @@ def main():
 
         game_data = game.get_full_data()
         game_data['id'] = game_id
+
         await connection.run('full_game_data', game_data)
 
     @network.command()

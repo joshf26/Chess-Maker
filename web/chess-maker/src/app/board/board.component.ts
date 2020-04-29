@@ -1,6 +1,5 @@
-import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
 import {ApiService} from '../api.service';
-import {filter} from 'rxjs/operators';
 
 const ODD_TILE_COLOR = '#A85738';
 const EVEN_TILE_COLOR = '#F3C1A9';
@@ -12,6 +11,8 @@ const COLORS = ['white', 'black'];
 interface Piece {
     row: number,
     col: number,
+    pack: string,
+    piece: string,
     color: number,
     direction: number,
 }
@@ -27,6 +28,7 @@ interface GameData {
 })
 export class BoardComponent implements OnInit {
     @ViewChild('canvas') private canvas_element: ElementRef<HTMLElement>;
+    @Input('pieceTypes') pieceTypes: {[key: string]: {[key: string]: {image: HTMLImageElement}}};
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
 
@@ -154,7 +156,6 @@ export class BoardComponent implements OnInit {
 
         const mouseTileX = Math.floor(this.mousePositionX);
         const mouseTileY = Math.floor(this.mousePositionY);
-        const halfScale = this.scale / 2;
 
         for (let row = 0; row < 8; ++row) {
             for (let col = 0; col < 8; ++col) {
@@ -171,11 +172,11 @@ export class BoardComponent implements OnInit {
 
                     if (piece.row == row && piece.col == col) {
                         this.context.fillStyle = COLORS[piece.color];
-                        this.context.fillRect(
-                            (col + 0.25) * this.scale + this.positionX,
-                            (row + 0.25) * this.scale + this.positionY,
-                            halfScale,
-                            halfScale,
+                        this.drawImage(
+                            this.pieceTypes[piece.pack][piece.piece].image,
+                            (col + 0.5) * this.scale + this.positionX,
+                            (row + 0.5) * this.scale + this.positionY,
+                            piece.direction * Math.PI / 4,
                         );
                     }
                 }
@@ -184,12 +185,22 @@ export class BoardComponent implements OnInit {
 
         if (this.dragging) {
             this.context.fillStyle = COLORS[this.draggingPiece.color];
-            this.context.fillRect(
-                (this.positionX + this.mousePositionX * this.scale) - halfScale / 2,
-                (this.positionY + this.mousePositionY * this.scale) - halfScale / 2,
-                halfScale,
-                halfScale,
+            this.drawImage(
+                this.pieceTypes[this.draggingPiece.pack][this.draggingPiece.piece].image,
+                this.positionX + (this.mousePositionX - 0.125) * this.scale,
+                this.positionY + (this.mousePositionY - 0.125) * this.scale,
+                this.draggingPiece.direction * Math.PI / 4,
             );
         }
+    }
+
+    private drawImage(image: HTMLImageElement, x: number, y: number, rotationAmount: number) {
+        this.context.translate(x, y);
+        this.context.rotate(rotationAmount);
+
+        this.context.drawImage(image, -this.scale / 2, -this.scale / 2, this.scale, this.scale);
+
+        this.context.rotate(-rotationAmount);
+        this.context.translate(-x, -y);
     }
 }

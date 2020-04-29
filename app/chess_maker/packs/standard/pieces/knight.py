@@ -1,6 +1,7 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple, List
 
-from piece import Piece
+from piece import Piece, load_image
 from ply import Ply
 
 if TYPE_CHECKING:
@@ -9,7 +10,7 @@ if TYPE_CHECKING:
 
 class Knight(Piece):
     name = 'Knight'
-    image = 'images/knight.svg'
+    image = load_image('standard', 'images/knight.svg')
 
     # TODO
 
