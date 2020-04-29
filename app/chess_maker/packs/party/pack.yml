@@ -1,0 +1,4 @@
+name: Party
+description: Variations of standard chess for more than two players.
+depends_on:
+  - Standard
