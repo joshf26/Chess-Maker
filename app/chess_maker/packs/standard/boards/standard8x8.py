@@ -1,4 +1,5 @@
-from typing import Dict, Tuple
+from __future__ import annotations
+from typing import TYPE_CHECKING, Dict, Tuple, List
 
 from board import Board
 from color import Color
@@ -9,6 +10,9 @@ from packs.standard.pieces.pawn import Pawn
 from packs.standard.pieces.queen import Queen
 from packs.standard.pieces.rook import Rook
 from piece import Piece, Direction
+
+if TYPE_CHECKING:
+    from ply import Ply
 
 
 class Standard8x8(Board):
@@ -37,3 +41,6 @@ class Standard8x8(Board):
                 board[row, col] = Pawn(color, direction)
 
         return board
+
+    def process_plies(self, plies: List[Ply]) -> List[Ply]:
+        return plies

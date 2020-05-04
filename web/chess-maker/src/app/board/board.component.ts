@@ -1,12 +1,11 @@
 import {Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
-import {ApiService} from '../api.service';
+import {ApiService} from '../services/api/api.service';
+import {PiecesService, PieceTypes} from '../services/pieces/pieces.service';
 
 const ODD_TILE_COLOR = '#A85738';
 const EVEN_TILE_COLOR = '#F3C1A9';
 const HIGHLIGHT_COLOR = '#FFFA00';
 const ZOOM_FACTOR = 0.8;
-
-const COLORS = ['white', 'black'];
 
 interface Piece {
     row: number,
@@ -28,7 +27,6 @@ interface GameData {
 })
 export class BoardComponent implements OnInit {
     @ViewChild('canvas') private canvas_element: ElementRef<HTMLElement>;
-    @Input('pieceTypes') pieceTypes: {[key: string]: {[key: string]: {image: HTMLImageElement}}};
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
 
@@ -49,6 +47,7 @@ export class BoardComponent implements OnInit {
 
     constructor(
         private api: ApiService,
+        private piecesService: PiecesService,
     ) {
         api.getCommand('full_game_data').subscribe(this.gameDataHandler.bind(this));
     }
@@ -171,9 +170,8 @@ export class BoardComponent implements OnInit {
                     if (this.dragging && this.draggingPiece == piece) continue;
 
                     if (piece.row == row && piece.col == col) {
-                        this.context.fillStyle = COLORS[piece.color];
                         this.drawImage(
-                            this.pieceTypes[piece.pack][piece.piece].image,
+                            this.piecesService.pieceTypes[piece.pack][piece.piece][piece.color].image,
                             (col + 0.5) * this.scale + this.positionX,
                             (row + 0.5) * this.scale + this.positionY,
                             piece.direction * Math.PI / 4,
@@ -184,11 +182,10 @@ export class BoardComponent implements OnInit {
         }
 
         if (this.dragging) {
-            this.context.fillStyle = COLORS[this.draggingPiece.color];
             this.drawImage(
-                this.pieceTypes[this.draggingPiece.pack][this.draggingPiece.piece].image,
-                this.positionX + (this.mousePositionX - 0.125) * this.scale,
-                this.positionY + (this.mousePositionY - 0.125) * this.scale,
+                this.piecesService.pieceTypes[this.draggingPiece.pack][this.draggingPiece.piece][this.draggingPiece.color].image,
+                this.positionX + this.mousePositionX * this.scale,
+                this.positionY + this.mousePositionY * this.scale,
                 this.draggingPiece.direction * Math.PI / 4,
             );
         }

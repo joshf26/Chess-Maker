@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple
 
 from ply import Ply, MoveAction, DestroyAction
 
@@ -18,6 +18,26 @@ class HistoryEvent:
     ply: Ply
 
 
+class ColorConnections:
+
+    def __init__(self):
+        self.color_to_connection = {}
+        self.connection_to_color = {}
+
+    def __len__(self):
+        return len(self.color_to_connection)
+
+    def set(self, color: Color, connection: Connection):
+        self.color_to_connection[color] = connection
+        self.connection_to_color[connection] = color
+
+    def get_color(self, connection: Connection):
+        return self.connection_to_color.get(connection, None)
+
+    def get_connection(self, color: Color):
+        return self.color_to_connection.get(color, None)
+
+
 class Game:
 
     def __init__(self, name: str, owner: Connection, board: Board, network: Network):
@@ -27,7 +47,7 @@ class Game:
         self.network = network
 
         self.subscribers: Set[Connection] = set()
-        self.players: Dict[Color, Connection] = {}
+        self.players = ColorConnections()
 
         self.plies: List[Ply] = []
         self.history: List[HistoryEvent] = []
@@ -35,7 +55,13 @@ class Game:
     def add_subscriber(self, connection: Connection):
         self.subscribers.add(connection)
 
-    def get_full_data(self):
+    def get_available_colors(self) -> Set[Color]:
+        colors = set(self.board.colors.copy())
+        taken_colors = set(self.players.color_to_connection.keys())
+
+        return colors - taken_colors
+
+    def get_full_data(self) -> dict:
         # TODO: Maybe make this nested dictionaries instead of strings.
         return {
             'tiles': [{
@@ -47,6 +73,12 @@ class Game:
                 'direction': piece.direction.value,
             } for position, piece in self.board.tiles.items()]
         }
+
+    # TODO: Make this a generator.
+    def get_plies(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:
+        piece_plies = self.board.tiles[from_pos].ply_types(from_pos, to_pos, self)
+
+        return self.board.process_plies(piece_plies)
 
     def apply_ply(self, ply: Ply):
         self.history.append(HistoryEvent(self.current_color(), self.board.tiles.copy(), ply))
@@ -60,7 +92,7 @@ class Game:
                 self.board.tiles.pop(action.pos)
 
     def add_player(self, connection: Connection, color: Color):
-        self.players[color] = connection
+        self.players.set(color, connection)
 
     def current_color(self) -> Color:
         if len(self.history) == 0:

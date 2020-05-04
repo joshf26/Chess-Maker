@@ -1,7 +1,7 @@
 <mat-sidenav-container>
     <mat-sidenav #sidenav mode="side" opened>
-        <button (click)="sidenav.toggle(); board.updateCanvasSize()"><-></button>
-        <button (click)="createGame()">+</button>
+        <button mat-button (click)="sidenav.toggle(); board.updateCanvasSize()"><-></button>
+        <button mat-button (click)="createGame()">+</button>
         <h1>Chess Maker</h1>
         <mat-card *ngFor="let game of games | keyvalue" (click)="showGame(game.key)">
             <mat-card-header>
@@ -10,12 +10,23 @@
                 <mat-card-subtitle>Created by {{game.value.creator}}</mat-card-subtitle>
             </mat-card-header>
             <mat-card-content>
-                A <strong>{{game.value.board}}</strong> game with <strong>{{game.value.current_players}}/{{game.value.total_players}}</strong> players.
+                A <strong>{{game.value.board}}</strong> game with <strong>{{game.value.total_players - game.value.available_colors.length}}/{{game.value.total_players}}</strong> players.
             </mat-card-content>
         </mat-card>
     </mat-sidenav>
     <mat-sidenav-content>
-        <app-board #board [pieceTypes]="pieces"></app-board>
+        <app-board #board></app-board>
+        <mat-card id="join-game-box" *ngIf="selectedGameId">
+            <mat-card-content>
+                <h1>Join As</h1>
+                <mat-chip-list>
+                    <mat-chip *ngFor="let color of games[selectedGameId].available_colors"
+                              [ngStyle]="{backgroundColor: colorNames[color], color: color ? 'white' : 'black'}">
+                        {{colorNames[color]}}
+                    </mat-chip>
+                </mat-chip-list>
+            </mat-card-content>
+        </mat-card>
     </mat-sidenav-content>
 </mat-sidenav-container>
 

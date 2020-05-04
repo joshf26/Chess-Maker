@@ -4,12 +4,14 @@ import {NgModule} from '@angular/core';
 import {AppRoutingModule} from './app-routing.module';
 import {AppComponent} from './app.component';
 import {FormsModule} from '@angular/forms';
-import { BoardComponent } from './board/board.component';
-import { MenuComponent } from './menu/menu.component';
-import { LobbyComponent } from './lobby/lobby.component';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {BoardComponent} from './board/board.component';
+import {MenuComponent} from './menu/menu.component';
+import {LobbyComponent} from './lobby/lobby.component';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MatSidenavModule} from '@angular/material/sidenav';
 import {MatCardModule} from '@angular/material/card';
+import {MatButtonModule} from '@angular/material/button';
+import {MatChipsModule} from '@angular/material/chips';
 
 @NgModule({
     declarations: [
@@ -25,7 +27,8 @@ import {MatCardModule} from '@angular/material/card';
         BrowserAnimationsModule,
         MatSidenavModule,
         MatCardModule,
-        // Temp for ngModel
+        MatButtonModule,
+        MatChipsModule,
     ],
     providers: [],
     bootstrap: [AppComponent],

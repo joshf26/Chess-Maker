@@ -6,6 +6,7 @@ from color import Color
 from game import Game
 from network import Network, Connection
 from pack import load_packs
+from ply import ply_to_json
 
 PORT = 8000
 
@@ -41,7 +42,7 @@ def main():
             'name': game.name,
             'creator': game.owner.nickname,
             'board': game.board.name,
-            'current_players': len(game.players),
+            'available_colors': list(map(lambda color: color.value, game.get_available_colors())),
             'total_players': len(game.board.colors),
         } for game_id, game in games.items()}
 
@@ -79,6 +80,7 @@ def main():
     async def subscribe_to_game(connection: Connection, game_id: str):
         if game_id not in games:
             await connection.error('Game does not exist.')
+            return
 
         game = games[game_id]
         game.add_subscriber(connection)
@@ -112,7 +114,65 @@ def main():
 
         game.add_player(connection, color_object)
 
-        await connection.send({})
+        await connection.run('joined_game', {
+            'game_id': game_id,
+            'color': color,
+        })
+
+    ''' Note to Self:
+    
+    This should work by the user first requesting all available plys (ordered).
+    Then the user can send back the index of which ply they are interested in for
+    each specific from/to pair.
+    '''
+
+    @network.command()
+    async def ply_scan(connection: Connection, game_id: str, row: int, col: int):
+        pass  # TODO
+
+    @network.command()
+    async def get_plies(connection: Connection, game_id: str, from_row: int, from_col: int, to_row: int, to_col: int):
+        if game_id not in games:
+            await connection.error('Game id does not exist.')
+            return
+
+        plies = games[game_id].get_plies((from_row, from_col), (to_row, to_col))
+        result = [ply_to_json(ply) for ply in plies]
+
+        await connection.run('plies')
+        # TODO: Format and send plies back to client.
+
+    @network.command()
+    async def submit_turn(connection: Connection, game_id: str, from_row: int, from_col: int, to_row: int, to_col: int):
+        if game_id not in games:
+            await connection.error('Game id does not exist.')
+            return
+
+        game = games[game_id]
+
+        if connection not in game.players.values():
+            await connection.error('Player is not in this game.')
+            return
+
+        color = game.players.get_color(connection)
+
+        if game.current_color() != color:
+            await connection.error("It is not this player's turn.")
+            return
+
+        from_pos = (from_row, from_col)
+        to_pos = (to_row, to_col)
+
+        if from_pos not in game.board.tiles:
+            await connection.error('There is no piece on that tile.')
+            return
+
+        if game.board.tiles[from_pos].color != color:
+            await connection.error("That piece does not belong to this player.")
+            return
+
+        if game.board.tiles[from_pos].ply_types(from_pos, to_pos, game):
+            pass  # TODO
 
     network.serve(8000)
 

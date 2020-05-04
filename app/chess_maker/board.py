@@ -1,8 +1,10 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, Tuple
+from typing import TYPE_CHECKING, Dict, Tuple, List
+
 
 if TYPE_CHECKING:
     from piece import Piece
+    from ply import Ply
 
     Tiles = Dict[Tuple[int, int], Piece]
 
@@ -15,9 +17,6 @@ class Board:
     def __init__(self):
         self.tiles = self.init_board()
 
-    def init_board(self) -> Tiles:
-        raise NotImplementedError
-
     def __repr__(self) -> str:
         grid = [['  '] * self.size[0] for _ in range(self.size[0])]
 
@@ -28,3 +27,9 @@ class Board:
             '   ' + ''.join([f'{label:<2}' for label in range(self.size[1])]) + '\n' +
             '\n'.join([f'{index:>2} {"".join(row)}' for index, row in enumerate(grid)])
         )
+
+    def init_board(self) -> Tiles:
+        raise NotImplementedError
+
+    def process_plies(self, plies: List[Ply]) -> List[Ply]:
+        raise NotImplementedError

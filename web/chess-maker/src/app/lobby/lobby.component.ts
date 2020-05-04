@@ -1,12 +1,25 @@
 import {Component, OnInit} from '@angular/core';
-import {ApiService} from '../api.service';
+import {ApiService} from '../services/api/api.service';
+import {PiecesService} from '../services/pieces/pieces.service';
+
+
+const COLOR_NAMES = [
+    'White',
+    'Black',
+    'Red',
+    'Orange',
+    'Yellow',
+    'Green',
+    'Blue',
+    'Purple',
+]
 
 
 interface GameMetaData {
     name: string,
     creator: string,
     board: string,
-    current_players: number,
+    available_colors: number[],
     total_players: number,
 }
 
@@ -17,10 +30,12 @@ interface GameMetaData {
 })
 export class LobbyComponent implements OnInit {
     games: {[key: string]: GameMetaData};
-    pieces: {[key: string]: {[key: string]: {image: HTMLImageElement}}} = {};
+    selectedGameId: string;
+    colorNames = COLOR_NAMES;
 
     constructor(
         private api: ApiService,
+        private piecesService: PiecesService,
     ) {
         api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
         api.getCommand('update_pieces').subscribe(this.updatePieces.bind(this));
@@ -35,20 +50,7 @@ export class LobbyComponent implements OnInit {
     }
 
     updatePieces(parameters: {[key: string]: any}): void {
-        for (let [pack, packData] of Object.entries(parameters.pieces)) {
-            for (let [piece, pieceData] of Object.entries(packData)) {
-                const image = new Image();
-                image.src = `data:image/svg+xml,${pieceData.image}`;
-
-                if (!this.pieces.hasOwnProperty(pack)) {
-                    this.pieces[pack] = {};
-                }
-
-                this.pieces[pack][piece] = {image: image};
-            }
-        }
-
-        console.log('Piece data', this.pieces);
+        this.piecesService.updatePieceTypes(parameters.pieces);
     }
 
     createGame(): void {
@@ -63,5 +65,7 @@ export class LobbyComponent implements OnInit {
         this.api.run('subscribe_to_game', {
             game_id: gameId,
         })
+
+        this.selectedGameId = gameId;
     }
 }
