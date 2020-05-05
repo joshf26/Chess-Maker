@@ -13,6 +13,8 @@ from piece import Piece, Direction
 
 if TYPE_CHECKING:
     from ply import Ply
+    from game import Game
+    from board import Tiles
 
 
 class Standard8x8(Board):
@@ -23,8 +25,8 @@ class Standard8x8(Board):
         Color.BLACK,
     ]
 
-    def init_board(self) -> Dict[Tuple[int, int], Piece]:
-        board: Dict[Tuple[int, int], Piece] = {}
+    def init_board(self) -> Tiles:
+        board: Tiles = {}
 
         for color, direction, row in zip([Color.WHITE, Color.BLACK], [Direction.NORTH, Direction.SOUTH], [7, 0]):
             board[row, 0] = Rook(color, direction)
@@ -42,5 +44,14 @@ class Standard8x8(Board):
 
         return board
 
-    def process_plies(self, plies: List[Ply]) -> List[Ply]:
-        return plies
+    def process_plies(
+        self,
+        plies: List[Ply],
+        from_pos: Tuple[int, int],
+        to_pos: Tuple[int, int],
+        game: Game,
+    ) -> List[Ply]:
+        if self.tiles[from_pos].color == game.current_color():
+            return plies
+
+        return []

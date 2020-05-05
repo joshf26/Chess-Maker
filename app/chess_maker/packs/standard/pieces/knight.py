@@ -12,8 +12,6 @@ class Knight(Piece):
     name = 'Knight'
     image = load_image('standard', 'images/knight.svg')
 
-    # TODO
-
     def ply_types(
         self,
         from_pos: Tuple[int, int],

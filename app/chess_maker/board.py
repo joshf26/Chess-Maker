@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Dict, Tuple, List
 if TYPE_CHECKING:
     from piece import Piece
     from ply import Ply
+    from game import Game
 
     Tiles = Dict[Tuple[int, int], Piece]
 
@@ -31,5 +32,11 @@ class Board:
     def init_board(self) -> Tiles:
         raise NotImplementedError
 
-    def process_plies(self, plies: List[Ply]) -> List[Ply]:
+    def process_plies(
+        self,
+        plies: List[Ply],
+        from_pos: Tuple[int, int],
+        to_pos: Tuple[int, int],
+        game: Game,
+    ):
         raise NotImplementedError

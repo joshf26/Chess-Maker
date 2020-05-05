@@ -84,7 +84,7 @@ class Game:
     def get_plies(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:
         piece_plies = self.board.tiles[from_pos].ply_types(from_pos, to_pos, self)
 
-        return self.board.process_plies(piece_plies)
+        return self.board.process_plies(piece_plies, from_pos, to_pos, self)
 
     def apply_ply(self, ply: Ply):
         self.history.append(HistoryEvent(self.current_color(), self.board.tiles.copy(), ply))

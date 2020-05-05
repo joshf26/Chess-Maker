@@ -120,4 +120,5 @@ class Network:
                 await self.try_command(connection, data)
 
         finally:
+            print('Client disconnected.')
             self.connections.remove(connection)

@@ -39,7 +39,7 @@ def main():
         game_data = game.get_full_data()
         game_data['id'] = game_id
 
-        for connection in game.players.connection_to_color:
+        for connection in game.subscribers:
             await connection.run('full_game_data', game_data)
 
     @network.command()
