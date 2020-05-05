@@ -2,7 +2,6 @@ import {Component, OnInit} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
 import {PiecesService} from '../services/pieces/pieces.service';
 
-
 const COLOR_NAMES = [
     'White',
     'Black',
@@ -14,13 +13,13 @@ const COLOR_NAMES = [
     'Purple',
 ]
 
-
 interface GameMetaData {
     name: string,
     creator: string,
     board: string,
     available_colors: number[],
     total_players: number,
+    playing_as?: number,
 }
 
 @Component({
@@ -39,6 +38,7 @@ export class LobbyComponent implements OnInit {
     ) {
         api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
         api.getCommand('update_pieces').subscribe(this.updatePieces.bind(this));
+        api.getCommand('joined_game').subscribe(this.onJoinGame.bind(this));
     }
 
     ngOnInit(): void {
@@ -51,6 +51,10 @@ export class LobbyComponent implements OnInit {
 
     updatePieces(parameters: {[key: string]: any}): void {
         this.piecesService.updatePieceTypes(parameters.pieces);
+    }
+
+    onJoinGame(parameters: {[key: string]: any}): void {
+
     }
 
     createGame(): void {
@@ -67,5 +71,13 @@ export class LobbyComponent implements OnInit {
         })
 
         this.selectedGameId = gameId;
+    }
+
+    joinGame(gameId: string, color: number): void {
+        console.log(`Joining game ${gameId} as ${this.colorNames[color]}.`);
+        this.api.run('join_game', {
+            game_id: gameId,
+            color: color,
+        })
     }
 }

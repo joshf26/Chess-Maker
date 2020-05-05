@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Dict
 
 from ply import Ply, MoveAction, DestroyAction
+from color import Color
 
 if TYPE_CHECKING:
-    from .color import Color
-    from .network import Network, Connection
-    from .board import Board, Tiles
+    from network import Network, Connection
+    from board import Board, Tiles
 
 
 @dataclass
@@ -21,11 +21,17 @@ class HistoryEvent:
 class ColorConnections:
 
     def __init__(self):
-        self.color_to_connection = {}
-        self.connection_to_color = {}
+        self.color_to_connection: Dict[Color, Connection] = {}
+        self.connection_to_color: Dict[Connection, Color] = {}
 
     def __len__(self):
         return len(self.color_to_connection)
+
+    def __contains__(self, item):
+        if isinstance(item, Color):
+            return item in self.color_to_connection
+        else:
+            return item in self.connection_to_color
 
     def set(self, color: Color, connection: Connection):
         self.color_to_connection[color] = connection

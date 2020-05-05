@@ -63,6 +63,10 @@ class Network:
 
         return inner
 
+    async def run_all(self, command: str, parameters: dict):
+        for connection in self.connections:
+            await connection.run(command, parameters)
+
     def serve(self, port: int):
         print(f'Serving on port {port}...')
 

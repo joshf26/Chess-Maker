@@ -15,6 +15,11 @@ export class ApiService {
 
     connect(address: string) {
         this.socket = webSocket(`ws://${address}`);
+
+        this.socket.pipe(
+            filter(message => message.hasOwnProperty('error'))
+        ).subscribe(console.error);
+
         this.commands = this.socket.pipe(
             filter(message => message.hasOwnProperty('command') && message.hasOwnProperty('parameters')),
         );

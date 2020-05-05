@@ -16,6 +16,24 @@ def main():
     games: Dict[str, Game] = {}
     packs = load_packs()
 
+    def make_game_metadata(connection: Connection) -> dict:
+        return {game_id: {
+            'name': game.name,
+            'creator': game.owner.nickname,
+            'board': game.board.name,
+            'available_colors': list(map(lambda color: color.value, game.get_available_colors())),
+            'total_players': len(game.board.colors),
+            'playing_as': None if (
+                  color := game.players.connection_to_color.get(connection, None)
+            ) is None else color.value,
+        } for game_id, game in games.items()}
+
+    async def send_metadata_update_to_all():
+        for connection in network.connections:
+            await connection.run('update_game_metadata', {
+                'game_metadata': make_game_metadata(connection),
+            })
+
     @network.command()
     async def login(connection: Connection, nickname: str):
         print(f'{nickname} logged in!')
@@ -38,16 +56,8 @@ def main():
 
     @network.command()
     async def get_games(connection: Connection):
-        game_metadata = {game_id: {
-            'name': game.name,
-            'creator': game.owner.nickname,
-            'board': game.board.name,
-            'available_colors': list(map(lambda color: color.value, game.get_available_colors())),
-            'total_players': len(game.board.colors),
-        } for game_id, game in games.items()}
-
         await connection.run('update_game_metadata', {
-            'game_metadata': game_metadata,
+            'game_metadata': make_game_metadata(connection),
         })
 
     @network.command()
@@ -74,7 +84,7 @@ def main():
             'game_id': game_id,
         })
 
-        await get_games(connection)
+        await send_metadata_update_to_all()
 
     @network.command()
     async def subscribe_to_game(connection: Connection, game_id: str):
@@ -98,7 +108,7 @@ def main():
 
         game = games[game_id]
 
-        if connection in game.players.values():
+        if connection in game.players:
             await connection.error('Player is already in this game.')
             return
 
@@ -119,9 +129,11 @@ def main():
             'color': color,
         })
 
+        await send_metadata_update_to_all()
+
     ''' Note to Self:
     
-    This should work by the user first requesting all available plys (ordered).
+    This should work by the user first requesting all available plies (ordered).
     Then the user can send back the index of which ply they are interested in for
     each specific from/to pair.
     '''
