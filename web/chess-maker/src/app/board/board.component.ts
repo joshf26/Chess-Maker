@@ -26,7 +26,9 @@ interface GameData {
     styleUrls: ['./board.component.less']
 })
 export class BoardComponent implements OnInit {
-    @ViewChild('canvas') private canvas_element: ElementRef<HTMLElement>;
+    @ViewChild('canvas') private canvasElement: ElementRef<HTMLElement>;
+    @Input('playingAs') private playingAs: number;
+
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
 
@@ -55,7 +57,7 @@ export class BoardComponent implements OnInit {
     ngOnInit(): void {}
 
     ngAfterViewInit(): void {
-        this.canvas = <HTMLCanvasElement>this.canvas_element.nativeElement;
+        this.canvas = <HTMLCanvasElement>this.canvasElement.nativeElement;
         this.context = this.canvas.getContext('2d');
         this.updateCanvasSize();
         this.draw();
@@ -91,8 +93,10 @@ export class BoardComponent implements OnInit {
 
                 for (const piece of this.pieces) {
                     if (piece.row == mouseTileY && piece.col == mouseTileX) {
-                        this.dragging = true;
-                        this.draggingPiece = piece;
+                        if (piece.color == this.playingAs) {
+                            this.dragging = true;
+                            this.draggingPiece = piece;
+                        }
 
                         break;
                     }
