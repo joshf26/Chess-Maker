@@ -26,7 +26,9 @@ class Pawn(Piece):
         if self.direction == Direction.NORTH:
             if to_pos not in game.board.tiles:
                 # Check for single or double advance.
-                if col_diff == 0 and (row_diff == -1 or (self.moves == 0 and row_diff == -2)):
+                if col_diff == 0 and (row_diff == -1 or (
+                    self.moves == 0 and row_diff == -2 and (to_pos[0] + 1, to_pos[1]) not in game.board.tiles
+                )):
                     result.append([MoveAction(from_pos, to_pos)])
 
                 # Check for en passant.
@@ -51,7 +53,9 @@ class Pawn(Piece):
         elif self.direction == Direction.SOUTH:
             if to_pos not in game.board.tiles:
                 # Check for single or double advance.
-                if col_diff == 0 and (row_diff == 1 or (self.moves == 0 and row_diff == 2)):
+                if col_diff == 0 and (row_diff == 1 or (
+                    self.moves == 0 and row_diff == 2 and (to_pos[0] - 1, to_pos[1]) not in game.board.tiles
+                )):
                     result.append([MoveAction(from_pos, to_pos)])
 
                 # Check for en passant.

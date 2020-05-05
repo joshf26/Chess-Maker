@@ -66,8 +66,10 @@ export class BoardComponent implements OnInit {
     }
 
     gameDataHandler(gameData: GameData): void {
-        this.pieces = gameData.tiles;
         console.log(`Received game data: ${JSON.stringify(gameData)}.`);
+
+        this.pieces = gameData.tiles;
+        this.draw();
     }
 
     updateCanvasSize(): void {

@@ -162,3 +162,4 @@ class TestPawn(unittest.TestCase):
 
         # TODO: Test backwards capturing.
         # TODO: Test own color capturing.
+        # TODO: Test jumping over piece.

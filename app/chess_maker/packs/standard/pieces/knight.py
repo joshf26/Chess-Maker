@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple, List
 
 from piece import Piece, load_image
-from ply import Ply
+from ply import Ply, DestroyAction, MoveAction
 
 if TYPE_CHECKING:
     from game import Game
@@ -20,4 +20,18 @@ class Knight(Piece):
         to_pos: Tuple[int, int],
         game: Game,
     ) -> List[Ply]:
+        row_dist = abs(to_pos[0] - from_pos[0])
+        col_dist = abs(to_pos[1] - from_pos[1])
+
+        if (row_dist == 2 and col_dist == 1) or (row_dist == 1 and col_dist == 2):
+            if to_pos in game.board.tiles:
+                if game.board.tiles[to_pos].color != self.color:
+                    return [[DestroyAction(to_pos), MoveAction(from_pos, to_pos)]]
+
+            else:
+                return [[MoveAction(from_pos, to_pos)]]
+
         return []
+
+
+# TODO: Add unit tests.

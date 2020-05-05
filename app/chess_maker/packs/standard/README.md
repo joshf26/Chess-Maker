@@ -9,7 +9,7 @@ Everything you need to play a standard game of chess.
    - *A standard King. Moves and captures in any direction one square. Can be put in check and checkmated, and can also
       castle.*
  - Knight
-   - *A standard Knight. Moves and captures diagonally two squares on one axis and one on the other. Can also jump over
+   - *A standard Knight. Moves and captures diagonally two squares on one axis and one on the other. Can jump over
       pieces.*
  - Pawn
    - *A standard Pawn. Moves one square forward, or two on it's first move. Captures forward diagonally and can also en
