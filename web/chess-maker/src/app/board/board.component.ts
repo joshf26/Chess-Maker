@@ -1,6 +1,7 @@
 import {Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
-import {PiecesService, PieceTypes} from '../services/pieces/pieces.service';
+import {PiecesService} from '../services/pieces/pieces.service';
+import {GameMetaData} from '../lobby/lobby.component';
 
 const ODD_TILE_COLOR = '#A85738';
 const EVEN_TILE_COLOR = '#F3C1A9';
@@ -27,7 +28,8 @@ interface GameData {
 })
 export class BoardComponent implements OnInit {
     @ViewChild('canvas') private canvasElement: ElementRef<HTMLElement>;
-    @Input('playingAs') private playingAs: number;
+    @Input('game') private game: GameMetaData;
+    @Input('gameId') private gameId: string;
 
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
@@ -93,7 +95,7 @@ export class BoardComponent implements OnInit {
 
                 for (const piece of this.pieces) {
                     if (piece.row == mouseTileY && piece.col == mouseTileX) {
-                        if (piece.color == this.playingAs) {
+                        if (this.game && piece.color == this.game.playing_as) {
                             this.dragging = true;
                             this.draggingPiece = piece;
                         }
@@ -117,8 +119,18 @@ export class BoardComponent implements OnInit {
 
             this.dragging = false;
 
-            this.draggingPiece.row = mouseTileY;
-            this.draggingPiece.col = mouseTileX;
+            if (this.draggingPiece.row != mouseTileY || this.draggingPiece.col != mouseTileX) {
+                this.api.run('get_plies', {
+                    'game_id': this.gameId,
+                    'from_row': this.draggingPiece.row,
+                    'from_col': this.draggingPiece.col,
+                    'to_row': mouseTileY,
+                    'to_col': mouseTileX,
+                })
+            }
+
+            // this.draggingPiece.row = mouseTileY;
+            // this.draggingPiece.col = mouseTileX;
         }
         this.panning = false;
     }

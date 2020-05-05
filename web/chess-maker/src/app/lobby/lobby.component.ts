@@ -13,7 +13,7 @@ const COLOR_NAMES = [
     'Purple',
 ]
 
-interface GameMetaData {
+export interface GameMetaData {
     name: string,
     creator: string,
     board: string,

@@ -34,6 +34,14 @@ def main():
                 'game_metadata': make_game_metadata(connection),
             })
 
+    async def send_game_update_to_subscribers(game_id: str):
+        game = games[game_id]
+        game_data = game.get_full_data()
+        game_data['id'] = game_id
+
+        for connection in game.players.connection_to_color:
+            await connection.run('full_game_data', game_data)
+
     @network.command()
     async def login(connection: Connection, nickname: str):
         print(f'{nickname} logged in!')
@@ -139,20 +147,26 @@ def main():
     '''
 
     @network.command()
-    async def ply_scan(connection: Connection, game_id: str, row: int, col: int):
-        pass  # TODO
-
-    @network.command()
     async def get_plies(connection: Connection, game_id: str, from_row: int, from_col: int, to_row: int, to_col: int):
         if game_id not in games:
             await connection.error('Game id does not exist.')
             return
 
-        plies = games[game_id].get_plies((from_row, from_col), (to_row, to_col))
-        result = [ply_to_json(ply) for ply in plies]
+        game = games[game_id]
+        plies = game.get_plies((from_row, from_col), (to_row, to_col))
 
-        await connection.run('plies')
-        # TODO: Format and send plies back to client.
+        if len(plies) == 1:
+            # There is only one ply available, so just apply it immediately.
+            game.apply_ply(plies[0])
+            await send_game_update_to_subscribers(game_id)
+        else:
+            # There are multiple plies available, so present the user with a choice.
+            # TODO
+            result = [ply_to_json(ply) for ply in plies]
+
+            await connection.run('plies', {
+                'plies': result,
+            })
 
     @network.command()
     async def submit_turn(connection: Connection, game_id: str, from_row: int, from_col: int, to_row: int, to_col: int):

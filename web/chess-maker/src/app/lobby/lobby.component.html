@@ -14,7 +14,9 @@
         </mat-card>
     </mat-sidenav>
     <mat-sidenav-content>
-        <app-board #board [playingAs]="selectedGameId ? games[selectedGameId].playing_as : null"></app-board>
+        <app-board #board
+                   [gameId]="selectedGameId"
+                   [game]="selectedGameId ? games[selectedGameId] : null"></app-board>
         <mat-card id="join-game-box" *ngIf="selectedGameId && games[selectedGameId].playing_as == null">
             <mat-card-content>
                 <h1>{{games[selectedGameId].available_colors.length ? 'Join As' : 'Spectating'}}</h1>
