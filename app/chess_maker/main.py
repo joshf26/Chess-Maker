@@ -159,7 +159,7 @@ def main():
             # There is only one ply available, so just apply it immediately.
             game.apply_ply(plies[0])
             await send_game_update_to_subscribers(game_id)
-        else:
+        elif len(plies) > 1:
             # There are multiple plies available, so present the user with a choice.
             # TODO
             result = [ply_to_json(ply) for ply in plies]

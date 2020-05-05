@@ -12,6 +12,7 @@ import {MatSidenavModule} from '@angular/material/sidenav';
 import {MatCardModule} from '@angular/material/card';
 import {MatButtonModule} from '@angular/material/button';
 import {MatChipsModule} from '@angular/material/chips';
+import {MatBadgeModule} from '@angular/material/badge';
 
 @NgModule({
     declarations: [
@@ -29,6 +30,7 @@ import {MatChipsModule} from '@angular/material/chips';
         MatCardModule,
         MatButtonModule,
         MatChipsModule,
+        MatBadgeModule,
     ],
     providers: [],
     bootstrap: [AppComponent],

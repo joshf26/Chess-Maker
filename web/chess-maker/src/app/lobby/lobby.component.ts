@@ -11,7 +11,7 @@ const COLOR_NAMES = [
     'Green',
     'Blue',
     'Purple',
-]
+];
 
 export interface GameMetaData {
     name: string,
@@ -29,6 +29,7 @@ export interface GameMetaData {
 })
 export class LobbyComponent implements OnInit {
     games: {[key: string]: GameMetaData};
+    hasNotification: {[key: string]: boolean} = {};
     selectedGameId: string;
     colorNames = COLOR_NAMES;
 
@@ -53,6 +54,11 @@ export class LobbyComponent implements OnInit {
         this.piecesService.updatePieceTypes(parameters.pieces);
     }
 
+    notify(gameId: string) {
+        this.hasNotification[gameId] = true;
+        console.log(`${gameId} has a move.`);
+    }
+
     onJoinGame(parameters: {[key: string]: any}): void {
 
     }
@@ -70,6 +76,7 @@ export class LobbyComponent implements OnInit {
             game_id: gameId,
         })
 
+        this.hasNotification[gameId] = false;
         this.selectedGameId = gameId;
     }
 

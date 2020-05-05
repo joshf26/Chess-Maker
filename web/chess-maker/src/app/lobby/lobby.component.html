@@ -7,7 +7,7 @@
                   (click)="showGame(game.key)"
                   [ngStyle]="{backgroundColor: game.key == selectedGameId ? 'darkred' : 'black'}">
             <mat-card-content>
-                <h1>{{game.value.name}}</h1>
+                <h1>{{hasNotification[game.key] ? '*' : ''}}{{game.value.name}}</h1>
                 Created by {{game.value.creator}}<br>
                 A <strong>{{game.value.board}}</strong> game with <strong>{{game.value.total_players - game.value.available_colors.length}}/{{game.value.total_players}}</strong> players.
             </mat-card-content>
@@ -16,7 +16,8 @@
     <mat-sidenav-content>
         <app-board #board
                    [gameId]="selectedGameId"
-                   [game]="selectedGameId ? games[selectedGameId] : null"></app-board>
+                   [game]="selectedGameId ? games[selectedGameId] : null"
+                   [notify]="notify.bind(this)"></app-board>
         <mat-card id="join-game-box" *ngIf="selectedGameId && games[selectedGameId].playing_as == null">
             <mat-card-content>
                 <h1>{{games[selectedGameId].available_colors.length ? 'Join As' : 'Spectating'}}</h1>

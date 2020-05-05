@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, Tuple, List
+from typing import TYPE_CHECKING, Tuple, List
 
 from board import Board
 from color import Color
@@ -9,7 +9,7 @@ from packs.standard.pieces.knight import Knight
 from packs.standard.pieces.pawn import Pawn
 from packs.standard.pieces.queen import Queen
 from packs.standard.pieces.rook import Rook
-from piece import Piece, Direction
+from piece import Direction
 
 if TYPE_CHECKING:
     from ply import Ply

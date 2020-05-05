@@ -1,4 +1,4 @@
-import {Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
 import {PiecesService} from '../services/pieces/pieces.service';
 import {GameMetaData} from '../lobby/lobby.component';
@@ -18,6 +18,7 @@ interface Piece {
 }
 
 interface GameData {
+    id: string,
     tiles: Piece[],
 }
 
@@ -30,6 +31,7 @@ export class BoardComponent implements OnInit {
     @ViewChild('canvas') private canvasElement: ElementRef<HTMLElement>;
     @Input('game') private game: GameMetaData;
     @Input('gameId') private gameId: string;
+    @Input('notify') private notify: (gameId: string) => void;  // TODO: Maybe this should be an @Output?
 
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
@@ -68,8 +70,12 @@ export class BoardComponent implements OnInit {
     gameDataHandler(gameData: GameData): void {
         console.log(`Received game data: ${JSON.stringify(gameData)}.`);
 
-        this.pieces = gameData.tiles;
-        this.draw();
+        if (gameData.id == this.gameId) {
+            this.pieces = gameData.tiles;
+            this.draw();
+        } else {
+            this.notify(gameData.id);
+        }
     }
 
     updateCanvasSize(): void {
@@ -130,10 +136,8 @@ export class BoardComponent implements OnInit {
                     'to_col': mouseTileX,
                 })
             }
-
-            // this.draggingPiece.row = mouseTileY;
-            // this.draggingPiece.col = mouseTileX;
         }
+
         this.panning = false;
     }
 
