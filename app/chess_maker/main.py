@@ -107,7 +107,7 @@ def main():
 
         game = games[game_id]
 
-        if game.owner != connection:
+        if game.owner.nickname != connection.nickname:
             await connection.error('Only the owner of this game can delete it.')
             return
 

@@ -48,6 +48,7 @@ export class BoardComponent implements OnInit {
     draggingPiece?: Piece = undefined;
     panX: number;
     panY: number;
+    angle = 0;
 
     pieces: Piece[] = [];
 
@@ -67,6 +68,15 @@ export class BoardComponent implements OnInit {
         this.draw();
     }
 
+    private get_rotated_coordinates(event: MouseEvent): number[] {
+        const rad_angle = -this.angle * Math.PI / 4;
+
+        return [
+            event.offsetX * Math.cos(rad_angle) - event.offsetY * Math.sin(rad_angle),
+            event.offsetY * Math.cos(rad_angle) + event.offsetX * Math.sin(rad_angle),
+        ];
+    }
+
     gameDataHandler(gameData: GameData): void {
         console.log(`Received game data: ${JSON.stringify(gameData)}.`);
 
@@ -78,6 +88,13 @@ export class BoardComponent implements OnInit {
         }
     }
 
+    rotate(): void {
+        this.angle = (this.angle + 1) % 8;
+        console.log(`Set angle to ${this.angle * Math.PI / 4}.`);
+
+        this.draw();
+    }
+
     updateCanvasSize(): void {
         this.canvas.width = this.canvas.offsetWidth;
         this.canvas.height = this.canvas.offsetHeight;
@@ -87,9 +104,9 @@ export class BoardComponent implements OnInit {
         event.preventDefault();
     }
 
-    private updatePan(event: MouseEvent): void {
-        this.panX = event.offsetX;
-        this.panY = event.offsetY;
+    private updatePan(offsetX: number, offsetY: number): void {
+        this.panX = offsetX;
+        this.panY = offsetY;
     }
 
     mouseDown(event: MouseEvent): void {
@@ -115,7 +132,10 @@ export class BoardComponent implements OnInit {
                 break;
             case 2:
                 this.panning = true;
-                this.updatePan(event);
+
+                const [offsetX, offsetY] = this.get_rotated_coordinates(event);
+                this.updatePan(offsetX, offsetY);
+
                 break;
         }
     }
@@ -142,17 +162,19 @@ export class BoardComponent implements OnInit {
     }
 
     mouseMove(event: MouseEvent): void {
-        this.mousePositionX = (event.offsetX - this.positionX) / this.scale;
-        this.mousePositionY = (event.offsetY - this.positionY) / this.scale;
+        const [offsetX, offsetY] = this.get_rotated_coordinates(event);
+
+        this.mousePositionX = (offsetX - this.positionX) / this.scale;
+        this.mousePositionY = (offsetY - this.positionY) / this.scale;
 
         if (this.panning) {
-            const deltaX = this.panX - event.offsetX;
-            const deltaY = this.panY - event.offsetY;
+            const deltaX = this.panX - offsetX;
+            const deltaY = this.panY - offsetY;
 
             this.positionX -= deltaX;
             this.positionY -= deltaY;
 
-            this.updatePan(event);
+            this.updatePan(offsetX, offsetY);
         }
 
         this.draw();
@@ -174,6 +196,8 @@ export class BoardComponent implements OnInit {
 
     draw(): void {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.context.rotate(this.angle * Math.PI / 4);
 
         const mouseTileX = Math.floor(this.mousePositionX);
         const mouseTileY = Math.floor(this.mousePositionY);
@@ -211,6 +235,8 @@ export class BoardComponent implements OnInit {
                 this.draggingPiece.direction * Math.PI / 4,
             );
         }
+
+        this.context.rotate(-this.angle * Math.PI / 4);
     }
 
     private drawImage(image: HTMLImageElement, x: number, y: number, rotationAmount: number) {
