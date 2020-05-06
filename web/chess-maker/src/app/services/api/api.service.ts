@@ -8,6 +8,8 @@ import {map, filter} from 'rxjs/operators';
     providedIn: 'root',
 })
 export class ApiService {
+    nickname: string;
+
     private socket: WebSocketSubject<unknown>;
     private commands: Observable<unknown>;
 
@@ -25,7 +27,7 @@ export class ApiService {
         );
 
         this.commands.subscribe(
-            console.log, //message => {},
+            console.log,
             error => {
                 if (error instanceof CloseEvent) {
                     alert('The server has closed.')
@@ -35,6 +37,8 @@ export class ApiService {
                 this.router.navigate(['/']);
             },
         );
+
+        this.getCommand('set_nickname').subscribe(this.setNickname.bind(this));
     }
 
     // TODO: This could be a decorator.
@@ -56,5 +60,9 @@ export class ApiService {
             command: command,
             parameters: parameters,
         });
+    }
+
+    setNickname(parameters: {[key: string]: any}): void {
+        this.nickname = parameters.nickname;
     }
 }

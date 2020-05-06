@@ -3,15 +3,19 @@
         <button mat-button (click)="sidenav.toggle(); board.updateCanvasSize()"><-></button>
         <button mat-button (click)="createGame()">+</button>
         <h1>Chess Maker</h1>
-        <mat-card *ngFor="let game of games | keyvalue"
-                  (click)="showGame(game.key)"
-                  [ngStyle]="{backgroundColor: game.key == selectedGameId ? 'darkred' : 'black'}">
-            <mat-card-content>
-                <h1>{{hasNotification[game.key] ? '*' : ''}}{{game.value.name}}</h1>
-                Created by {{game.value.creator}}<br>
-                A <strong>{{game.value.board}}</strong> game with <strong>{{game.value.total_players - game.value.available_colors.length}}/{{game.value.total_players}}</strong> players.
-            </mat-card-content>
-        </mat-card>
+        <ng-template ngFor let-game [ngForOf]="games | keyvalue">
+            <button mat-button
+                    *ngIf="game.value.creator == api.nickname"
+                    (click)="api.run('delete_game', {game_id: game.key})">X</button>
+            <mat-card (click)="showGame(game.key)"
+                      [ngStyle]="{backgroundColor: game.key == selectedGameId ? 'darkred' : 'black'}">
+                <mat-card-content>
+                    <h1>{{hasNotification[game.key] ? '*' : ''}}{{game.value.name}}</h1>
+                    Created by {{game.value.creator}}<br>
+                    A <strong>{{game.value.board}}</strong> game with <strong>{{game.value.total_players - game.value.available_colors.length}}/{{game.value.total_players}}</strong> players.
+                </mat-card-content>
+            </mat-card>
+        </ng-template>
     </mat-sidenav>
     <mat-sidenav-content>
         <app-board #board

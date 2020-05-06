@@ -44,9 +44,14 @@ def main():
 
     @network.command()
     async def login(connection: Connection, nickname: str):
+        nicknames = {connection.nickname for connection in network.connections}
+        while nickname in nicknames:
+            nickname += ' 2'
+
         print(f'{nickname} logged in!')
         connection.nickname = nickname
 
+        await connection.run('set_nickname', {'nickname': nickname})
         await send_pieces(connection)
 
     @network.command()
@@ -91,6 +96,22 @@ def main():
         await connection.send({
             'game_id': game_id,
         })
+
+        await send_metadata_update_to_all()
+
+    @network.command()
+    async def delete_game(connection: Connection, game_id: str):
+        if game_id not in games:
+            await connection.error('Game does not exist.')
+            return
+
+        game = games[game_id]
+
+        if game.owner != connection:
+            await connection.error('Only the owner of this game can delete it.')
+            return
+
+        del games[game_id]
 
         await send_metadata_update_to_all()
 

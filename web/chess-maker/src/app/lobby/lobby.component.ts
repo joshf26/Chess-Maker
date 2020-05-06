@@ -34,7 +34,7 @@ export class LobbyComponent implements OnInit {
     colorNames = COLOR_NAMES;
 
     constructor(
-        private api: ApiService,
+        public api: ApiService,
         private piecesService: PiecesService,
     ) {
         api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
@@ -48,6 +48,10 @@ export class LobbyComponent implements OnInit {
 
     updateGameMetadata(parameters: {[key: string]: any}): void {
         this.games = parameters.game_metadata;
+
+        if (!this.games.hasOwnProperty(this.selectedGameId)) {
+            this.selectedGameId = '';
+        }
     }
 
     updatePieces(parameters: {[key: string]: any}): void {
