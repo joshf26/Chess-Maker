@@ -43,6 +43,9 @@ export class BoardComponent implements OnInit {
     mousePositionX = 0;
     mousePositionY = 0;
 
+    boardSizeRows = 8;
+    boardSizeCols = 8;
+
     panning = false;
     dragging = false;
     draggingPiece?: Piece = undefined;
@@ -65,15 +68,15 @@ export class BoardComponent implements OnInit {
         this.canvas = <HTMLCanvasElement>this.canvasElement.nativeElement;
         this.context = this.canvas.getContext('2d');
         this.updateCanvasSize();
-        this.draw();
+        this.centerBoard();
     }
 
-    private get_rotated_coordinates(event: MouseEvent): number[] {
+    private rotateVector(x: number, y: number): number[] {
         const rad_angle = -this.angle * Math.PI / 4;
 
         return [
-            event.offsetX * Math.cos(rad_angle) - event.offsetY * Math.sin(rad_angle),
-            event.offsetY * Math.cos(rad_angle) + event.offsetX * Math.sin(rad_angle),
+            x * Math.cos(rad_angle) - y * Math.sin(rad_angle),
+            y * Math.cos(rad_angle) + x * Math.sin(rad_angle),
         ];
     }
 
@@ -88,11 +91,23 @@ export class BoardComponent implements OnInit {
         }
     }
 
+    centerBoard(): void {
+        const [x, y] = this.rotateVector(
+            (this.canvas.width) / 2,
+            (this.canvas.height) / 2,
+        )
+
+        this.positionX = x - this.boardSizeCols * this.scale / 2;
+        this.positionY = y - this.boardSizeRows * this.scale / 2;
+
+        this.draw();
+    }
+
     rotate(): void {
         this.angle = (this.angle + 1) % 8;
         console.log(`Set angle to ${this.angle * Math.PI / 4}.`);
 
-        this.draw();
+        this.centerBoard();
     }
 
     updateCanvasSize(): void {
@@ -133,7 +148,7 @@ export class BoardComponent implements OnInit {
             case 2:
                 this.panning = true;
 
-                const [offsetX, offsetY] = this.get_rotated_coordinates(event);
+                const [offsetX, offsetY] = this.rotateVector(event.offsetX, event.offsetY);
                 this.updatePan(offsetX, offsetY);
 
                 break;
@@ -162,7 +177,7 @@ export class BoardComponent implements OnInit {
     }
 
     mouseMove(event: MouseEvent): void {
-        const [offsetX, offsetY] = this.get_rotated_coordinates(event);
+        const [offsetX, offsetY] = this.rotateVector(event.offsetX, event.offsetY);
 
         this.mousePositionX = (offsetX - this.positionX) / this.scale;
         this.mousePositionY = (offsetY - this.positionY) / this.scale;
@@ -202,8 +217,8 @@ export class BoardComponent implements OnInit {
         const mouseTileX = Math.floor(this.mousePositionX);
         const mouseTileY = Math.floor(this.mousePositionY);
 
-        for (let row = 0; row < 8; ++row) {
-            for (let col = 0; col < 8; ++col) {
+        for (let row = 0; row < this.boardSizeRows; ++row) {
+            for (let col = 0; col < this.boardSizeCols; ++col) {
                 if (mouseTileX == col && mouseTileY == row) {
                     this.context.fillStyle = HIGHLIGHT_COLOR;
                 } else {

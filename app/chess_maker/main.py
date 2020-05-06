@@ -221,7 +221,7 @@ def main():
         if game.board.tiles[from_pos].ply_types(from_pos, to_pos, game):
             pass  # TODO
 
-    network.serve(8000)
+    network.serve(PORT)
 
 
 if __name__ == '__main__':
