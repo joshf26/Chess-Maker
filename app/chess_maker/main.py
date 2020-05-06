@@ -12,9 +12,24 @@ PORT = 8000
 
 
 def main():
-    network = Network()
     games: Dict[str, Game] = {}
     packs = load_packs()
+
+    async def on_disconnect(connection: Connection):
+        change_made = False
+        for game in games.values():
+            if connection in game.subscribers:
+                game.subscribers.remove(connection)
+                change_made = True
+
+            if connection in game.players:
+                game.players.remove_connection(connection)
+                change_made = True
+
+        if change_made:
+            await send_metadata_update_to_all()
+
+    network = Network(on_disconnect)
 
     def make_game_metadata(connection: Connection) -> dict:
         return {game_id: {
@@ -122,7 +137,7 @@ def main():
             return
 
         game = games[game_id]
-        game.add_subscriber(connection)
+        game.subscribers.add(connection)
 
         game_data = game.get_full_data()
         game_data['id'] = game_id

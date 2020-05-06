@@ -105,8 +105,6 @@ export class BoardComponent implements OnInit {
 
     rotate(): void {
         this.angle = (this.angle + 1) % 8;
-        console.log(`Set angle to ${this.angle * Math.PI / 4}.`);
-
         this.centerBoard();
     }
 

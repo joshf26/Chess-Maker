@@ -37,6 +37,12 @@ class ColorConnections:
         self.color_to_connection[color] = connection
         self.connection_to_color[connection] = color
 
+    def remove_connection(self, connection: Connection):
+        color = self.connection_to_color[connection]
+
+        del self.connection_to_color[connection]
+        del self.color_to_connection[color]
+
     def get_color(self, connection: Connection):
         return self.connection_to_color.get(connection, None)
 
@@ -57,9 +63,6 @@ class Game:
 
         self.plies: List[Ply] = []
         self.history: List[HistoryEvent] = []
-
-    def add_subscriber(self, connection: Connection):
-        self.subscribers.add(connection)
 
     def get_available_colors(self) -> Set[Color]:
         colors = set(self.board.colors.copy())

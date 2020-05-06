@@ -7,7 +7,7 @@ import websockets
 
 from dataclasses import dataclass
 from itertools import islice
-from typing import Dict, Callable, Set
+from typing import Dict, Callable, Set, Awaitable
 
 
 class Connection:
@@ -43,7 +43,9 @@ class Command:
 
 class Network:
 
-    def __init__(self):
+    def __init__(self, on_disconnect: Callable[[Connection], Awaitable[None]]):
+        self.on_disconnect = on_disconnect
+
         self.commands: Dict[str, Command] = {}
 
         self.connections: Set[Connection] = set()
@@ -122,3 +124,4 @@ class Network:
         finally:
             print('Client disconnected.')
             self.connections.remove(connection)
+            await self.on_disconnect(connection)
