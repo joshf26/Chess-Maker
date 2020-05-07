@@ -133,11 +133,9 @@ export class BoardComponent implements OnInit {
 
         this.piecesContext.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
         for (const piece of this.pieces) {
-            if (this.dragging && this.draggingPiece == piece) continue;
-
             this.drawImage(
                 this.piecesContext,
-                this.packDataService.pieceTypes[piece.pack][piece.piece][piece.color].image,
+                this.packDataService.pieceTypes[piece.pack][piece.piece][piece.color == 8 ? 0 : piece.color].image,
                 (piece.col + 0.5) * this.scale,
                 (piece.row + 0.5) * this.scale,
                 piece.direction * Math.PI / 4,

@@ -10,3 +10,4 @@ class Color(Enum):
     GREEN = 5
     BLUE = 6
     PURPLE = 7
+    NONE = 8
