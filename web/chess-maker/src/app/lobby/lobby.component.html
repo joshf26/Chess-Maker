@@ -32,7 +32,7 @@
                 <h1>{{games[selectedGameId].available_colors.length ? 'Join As' : 'Spectating'}}</h1>
                 <mat-chip-list>
                     <mat-chip *ngFor="let color of games[selectedGameId].available_colors"
-                              [ngStyle]="{backgroundColor: colorNames[color], color: color ? 'white' : 'black'}"
+                              [ngStyle]="{backgroundColor: colorNames[color], color: color == 0 || color == 3 || color == 4 ? 'black' : 'white'}"
                               (click)="joinGame(selectedGameId, color)">
                         {{colorNames[color]}}
                     </mat-chip>
