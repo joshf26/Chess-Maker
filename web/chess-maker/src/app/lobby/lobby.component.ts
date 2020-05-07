@@ -1,7 +1,8 @@
-import {Component, Inject, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
 import {PackDataService} from '../services/pieces/pack-data.service';
 import {MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
+import {BoardComponent} from '../board/board.component';
 
 const COLOR_NAMES = [
     'White',
@@ -17,6 +18,7 @@ const COLOR_NAMES = [
 export interface GameMetaData {
     name: string,
     creator: string,
+    pack: string,
     board: string,
     available_colors: number[],
     total_players: number,
@@ -34,6 +36,7 @@ export interface CreateGameDialogData {
     styleUrls: ['./lobby.component.less']
 })
 export class LobbyComponent implements OnInit {
+    @ViewChild('board') private board: BoardComponent;
     games: {[key: string]: GameMetaData};
     hasNotification: {[key: string]: boolean} = {};
     selectedGameId: string;
@@ -43,6 +46,7 @@ export class LobbyComponent implements OnInit {
         public dialog: MatDialog,
         public api: ApiService,
         private packDataService: PackDataService,
+        private changeDetectorRef: ChangeDetectorRef,
     ) {
         api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
         api.getCommand('update_pack_data').subscribe(this.updatePackData.bind(this));
@@ -85,6 +89,8 @@ export class LobbyComponent implements OnInit {
 
         this.hasNotification[gameId] = false;
         this.selectedGameId = gameId;
+        this.changeDetectorRef.detectChanges();
+        this.board.updateBoardSize();
     }
 
     joinGame(gameId: string, color: number): void {

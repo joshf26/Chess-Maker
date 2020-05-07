@@ -34,6 +34,7 @@ def main():
         return {game_id: {
             'name': game.name,
             'creator': game.owner.nickname,
+            'pack': game.board.__module__.split('.')[1],
             'board': game.board.name,
             'available_colors': list(map(lambda color: color.value, game.get_available_colors())),
             'total_players': len(game.board.colors),

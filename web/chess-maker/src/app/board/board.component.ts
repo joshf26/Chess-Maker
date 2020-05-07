@@ -35,6 +35,10 @@ export class BoardComponent implements OnInit {
 
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
+    private boardCanvas: OffscreenCanvas;
+    private boardContext: OffscreenCanvasRenderingContext2D;
+    private piecesCanvas: OffscreenCanvas;
+    private piecesContext: OffscreenCanvasRenderingContext2D;
 
     positionX = 0;
     positionY = 0;
@@ -57,7 +61,7 @@ export class BoardComponent implements OnInit {
 
     constructor(
         private api: ApiService,
-        private piecesService: PackDataService,
+        private packDataService: PackDataService,
     ) {
         api.getCommand('full_game_data').subscribe(this.gameDataHandler.bind(this));
     }
@@ -67,7 +71,11 @@ export class BoardComponent implements OnInit {
     ngAfterViewInit(): void {
         this.canvas = <HTMLCanvasElement>this.canvasElement.nativeElement;
         this.context = this.canvas.getContext('2d');
-        this.updateCanvasSize();
+        this.boardCanvas = new OffscreenCanvas(0, 0);
+        this.boardContext = this.boardCanvas.getContext('2d');
+        this.piecesCanvas = new OffscreenCanvas(0, 0);
+        this.piecesContext = this.piecesCanvas.getContext('2d');
+        this.updateBackgroundCanvases();
         this.centerBoard();
     }
 
@@ -80,9 +88,18 @@ export class BoardComponent implements OnInit {
         ];
     }
 
+    updateBoardSize(): void {
+        const board = this.packDataService.boardTypes[this.game.pack][this.game.board];
+        this.boardSizeRows = board.rows;
+        this.boardSizeCols = board.cols;
+
+        this.centerBoard();
+    }
+
     gameDataHandler(gameData: GameData): void {
         if (gameData.id == this.gameId) {
             this.pieces = gameData.tiles;
+            this.updateBackgroundCanvases();
             this.draw();
         } else {
             this.notify(gameData.id);
@@ -106,9 +123,34 @@ export class BoardComponent implements OnInit {
         this.centerBoard();
     }
 
-    updateCanvasSize(): void {
+    updateBackgroundCanvases(): void {
         this.canvas.width = this.canvas.offsetWidth;
         this.canvas.height = this.canvas.offsetHeight;
+        this.boardCanvas.width = this.scale * this.boardSizeRows;
+        this.boardCanvas.height = this.scale * this.boardSizeCols;
+        this.piecesCanvas.width = this.scale * this.boardSizeRows;
+        this.piecesCanvas.height = this.scale * this.boardSizeCols;
+
+        this.piecesContext.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
+        for (const piece of this.pieces) {
+            if (this.dragging && this.draggingPiece == piece) continue;
+
+            this.drawImage(
+                this.piecesContext,
+                this.packDataService.pieceTypes[piece.pack][piece.piece][piece.color].image,
+                (piece.col + 0.5) * this.scale,
+                (piece.row + 0.5) * this.scale,
+                piece.direction * Math.PI / 4,
+            );
+        }
+
+        this.boardContext.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
+        for (let row = 0; row < this.boardSizeRows; ++row) {
+            for (let col = 0; col < this.boardSizeCols; ++col) {
+                this.boardContext.fillStyle = (col % 2 == row % 2) ? ODD_TILE_COLOR : EVEN_TILE_COLOR;
+                this.boardContext.fillRect(col * this.scale, row * this.scale, this.scale, this.scale);
+            }
+        }
     }
 
     hideContextMenu(event: Event): void {
@@ -199,6 +241,7 @@ export class BoardComponent implements OnInit {
         this.positionX -= this.mousePositionX * deltaScale;
         this.positionY -= this.mousePositionY * deltaScale;
 
+        this.updateBackgroundCanvases();
         this.draw();
 
         // Prevent the page from moving up or down.
@@ -211,37 +254,13 @@ export class BoardComponent implements OnInit {
 
         this.context.rotate(this.angle * Math.PI / 4);
 
-        const mouseTileX = Math.floor(this.mousePositionX);
-        const mouseTileY = Math.floor(this.mousePositionY);
-
-        for (let row = 0; row < this.boardSizeRows; ++row) {
-            for (let col = 0; col < this.boardSizeCols; ++col) {
-                if (mouseTileX == col && mouseTileY == row) {
-                    this.context.fillStyle = HIGHLIGHT_COLOR;
-                } else {
-                    this.context.fillStyle = (col % 2 == row % 2) ? ODD_TILE_COLOR : EVEN_TILE_COLOR;
-                }
-
-                this.context.fillRect(col * this.scale + this.positionX, row * this.scale + this.positionY, this.scale, this.scale);
-
-                for (const piece of this.pieces) {
-                    if (this.dragging && this.draggingPiece == piece) continue;
-
-                    if (piece.row == row && piece.col == col) {
-                        this.drawImage(
-                            this.piecesService.pieceTypes[piece.pack][piece.piece][piece.color].image,
-                            (col + 0.5) * this.scale + this.positionX,
-                            (row + 0.5) * this.scale + this.positionY,
-                            piece.direction * Math.PI / 4,
-                        );
-                    }
-                }
-            }
-        }
+        this.context.drawImage(this.boardCanvas, this.positionX, this.positionY);
+        this.context.drawImage(this.piecesCanvas, this.positionX, this.positionY);
 
         if (this.dragging) {
             this.drawImage(
-                this.piecesService.pieceTypes[this.draggingPiece.pack][this.draggingPiece.piece][this.draggingPiece.color].image,
+                this.context,
+                this.packDataService.pieceTypes[this.draggingPiece.pack][this.draggingPiece.piece][this.draggingPiece.color].image,
                 this.positionX + this.mousePositionX * this.scale,
                 this.positionY + this.mousePositionY * this.scale,
                 this.draggingPiece.direction * Math.PI / 4,
@@ -251,13 +270,19 @@ export class BoardComponent implements OnInit {
         this.context.rotate(-this.angle * Math.PI / 4);
     }
 
-    private drawImage(image: HTMLImageElement, x: number, y: number, rotationAmount: number) {
-        this.context.translate(x, y);
-        this.context.rotate(rotationAmount);
+    private drawImage(
+        context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+        image: HTMLImageElement,
+        x: number,
+        y: number,
+        rotationAmount: number,
+    ) {
+        context.translate(x, y);
+        context.rotate(rotationAmount);
 
-        this.context.drawImage(image, -this.scale / 2, -this.scale / 2, this.scale, this.scale);
+        context.drawImage(image, -this.scale / 2, -this.scale / 2, this.scale, this.scale);
 
-        this.context.rotate(-rotationAmount);
-        this.context.translate(-x, -y);
+        context.rotate(-rotationAmount);
+        context.translate(-x, -y);
     }
 }

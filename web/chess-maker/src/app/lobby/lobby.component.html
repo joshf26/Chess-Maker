@@ -24,7 +24,8 @@
         </ng-template>
     </mat-sidenav>
     <mat-sidenav-content>
-        <app-board [gameId]="selectedGameId"
+        <app-board #board
+                   [gameId]="selectedGameId"
                    [game]="selectedGameId ? games[selectedGameId] : null"
                    [notify]="notify.bind(this)"></app-board>
         <mat-card id="join-game-box" *ngIf="selectedGameId && games[selectedGameId].playing_as == null">
