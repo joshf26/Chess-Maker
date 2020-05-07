@@ -19,7 +19,7 @@ class Rook(Piece):
         to_pos: Tuple[int, int],
         game: Game,
     ) -> List[Ply]:
-        # Make sure the rook is moving alone the same axis.
+        # Make sure the rook is moving along the same axis.
         if to_pos == from_pos or (to_pos[0] != from_pos[0] and to_pos[1] != from_pos[1]):
             return []
 
