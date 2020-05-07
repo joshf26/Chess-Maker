@@ -81,8 +81,6 @@ export class BoardComponent implements OnInit {
     }
 
     gameDataHandler(gameData: GameData): void {
-        console.log(`Received game data: ${JSON.stringify(gameData)}.`);
-
         if (gameData.id == this.gameId) {
             this.pieces = gameData.tiles;
             this.draw();

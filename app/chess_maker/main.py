@@ -172,11 +172,6 @@ def main():
 
         game.add_player(connection, color_object)
 
-        await connection.run('joined_game', {
-            'game_id': game_id,
-            'color': color,
-        })
-
         await send_metadata_update_to_all()
 
     ''' Note to Self:

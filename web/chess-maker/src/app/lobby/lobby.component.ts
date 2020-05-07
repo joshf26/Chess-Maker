@@ -46,7 +46,6 @@ export class LobbyComponent implements OnInit {
     ) {
         api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
         api.getCommand('update_pack_data').subscribe(this.updatePackData.bind(this));
-        api.getCommand('joined_game').subscribe(this.onJoinGame.bind(this));
     }
 
     ngOnInit(): void {
@@ -68,10 +67,6 @@ export class LobbyComponent implements OnInit {
     notify(gameId: string) {
         this.hasNotification[gameId] = true;
         console.log(`${gameId} has a move.`);
-    }
-
-    onJoinGame(parameters: {[key: string]: any}): void {
-
     }
 
     createGame(): void {
@@ -108,7 +103,6 @@ export class LobbyComponent implements OnInit {
 export class CreateGameDialog {
     constructor(
         public packDataService: PackDataService,
-        public dialogRef: MatDialogRef<CreateGameDialog>,
         public api: ApiService,
         @Inject(MAT_DIALOG_DATA) public data: CreateGameDialogData,
     ) {}
