@@ -1,7 +1,7 @@
-import {Component, ElementRef, Inject, OnInit, ViewChild} from '@angular/core';
+import {Component, Inject, OnInit} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
 import {PackDataService} from '../services/pieces/pack-data.service';
-import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
+import {MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
 
 const COLOR_NAMES = [
     'White',
