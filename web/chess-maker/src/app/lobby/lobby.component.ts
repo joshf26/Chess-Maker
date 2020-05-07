@@ -38,7 +38,6 @@ export class LobbyComponent implements OnInit {
     hasNotification: {[key: string]: boolean} = {};
     selectedGameId: string;
     colorNames = COLOR_NAMES;
-    createGameDialogData: CreateGameDialogData = {name: 'New Game', board: {pack: '', name: ''}};
 
     constructor(
         public dialog: MatDialog,
@@ -77,13 +76,11 @@ export class LobbyComponent implements OnInit {
 
     createGame(): void {
         this.dialog.open(CreateGameDialog, {
-            data: this.createGameDialogData,
+            data: {
+                name: 'New Game',
+                board: {pack: '', name: ''},
+            },
         });
-        // this.api.run('create_game', {
-        //     name: 'My Cool Game',
-        //     pack: 'standard',
-        //     board: 'KnightParty',
-        // })
     }
 
     showGame(gameId: string): void {
