@@ -1,13 +1,13 @@
 import {TestBed} from '@angular/core/testing';
 
-import {PiecesService} from './pieces.service';
+import {PackDataService} from './pack-data.service';
 
-describe('PiecesService', () => {
-    let service: PiecesService;
+describe('PackDataService', () => {
+    let service: PackDataService;
 
     beforeEach(() => {
         TestBed.configureTestingModule({});
-        service = TestBed.inject(PiecesService);
+        service = TestBed.inject(PackDataService);
     });
 
     it('should be created', () => {

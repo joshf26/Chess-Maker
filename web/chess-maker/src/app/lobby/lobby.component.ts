@@ -1,6 +1,7 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, Inject, OnInit} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
-import {PiecesService} from '../services/pieces/pieces.service';
+import {PackDataService} from '../services/pieces/pack-data.service';
+import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
 
 const COLOR_NAMES = [
     'White',
@@ -22,6 +23,11 @@ export interface GameMetaData {
     playing_as?: number,
 }
 
+export interface CreateGameDialogData {
+    name: string,
+    board: {pack: string, name: string},
+}
+
 @Component({
     selector: 'app-lobby',
     templateUrl: './lobby.component.html',
@@ -32,13 +38,15 @@ export class LobbyComponent implements OnInit {
     hasNotification: {[key: string]: boolean} = {};
     selectedGameId: string;
     colorNames = COLOR_NAMES;
+    createGameDialogData: CreateGameDialogData = {name: 'New Game', board: {pack: '', name: ''}};
 
     constructor(
+        public dialog: MatDialog,
         public api: ApiService,
-        private piecesService: PiecesService,
+        private packDataService: PackDataService,
     ) {
         api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
-        api.getCommand('update_pieces').subscribe(this.updatePieces.bind(this));
+        api.getCommand('update_pack_data').subscribe(this.updatePackData.bind(this));
         api.getCommand('joined_game').subscribe(this.onJoinGame.bind(this));
     }
 
@@ -54,8 +62,8 @@ export class LobbyComponent implements OnInit {
         }
     }
 
-    updatePieces(parameters: {[key: string]: any}): void {
-        this.piecesService.updatePieceTypes(parameters.pieces);
+    updatePackData(parameters: {[key: string]: any}): void {
+        this.packDataService.updatePackData(parameters.pack_data);
     }
 
     notify(gameId: string) {
@@ -68,11 +76,14 @@ export class LobbyComponent implements OnInit {
     }
 
     createGame(): void {
-        this.api.run('create_game', {
-            name: 'My Cool Game',
-            pack: 'standard',
-            board: 'Standard8x8',
-        })
+        this.dialog.open(CreateGameDialog, {
+            data: this.createGameDialogData,
+        });
+        // this.api.run('create_game', {
+        //     name: 'My Cool Game',
+        //     pack: 'standard',
+        //     board: 'KnightParty',
+        // })
     }
 
     showGame(gameId: string): void {
@@ -89,6 +100,27 @@ export class LobbyComponent implements OnInit {
         this.api.run('join_game', {
             game_id: gameId,
             color: color,
+        })
+    }
+}
+
+@Component({
+    selector: 'create-game-dialog',
+    templateUrl: 'create-game.dialog.html',
+})
+export class CreateGameDialog {
+    constructor(
+        public packDataService: PackDataService,
+        public dialogRef: MatDialogRef<CreateGameDialog>,
+        public api: ApiService,
+        @Inject(MAT_DIALOG_DATA) public data: CreateGameDialogData,
+    ) {}
+
+    createGame(): void {
+        this.api.run('create_game', {
+            name: this.data.name,
+            pack: this.data.board.pack,
+            board: this.data.board.name,
         })
     }
 }

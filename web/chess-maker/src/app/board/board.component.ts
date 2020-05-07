@@ -1,6 +1,6 @@
 import {Component, ElementRef, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
-import {PiecesService} from '../services/pieces/pieces.service';
+import {PackDataService} from '../services/pieces/pack-data.service';
 import {GameMetaData} from '../lobby/lobby.component';
 
 const ODD_TILE_COLOR = '#A85738';
@@ -57,7 +57,7 @@ export class BoardComponent implements OnInit {
 
     constructor(
         private api: ApiService,
-        private piecesService: PiecesService,
+        private piecesService: PackDataService,
     ) {
         api.getCommand('full_game_data').subscribe(this.gameDataHandler.bind(this));
     }

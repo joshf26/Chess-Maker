@@ -1,4 +1,3 @@
-from importlib import import_module
 from typing import Dict
 from uuid import uuid4
 
@@ -67,19 +66,26 @@ def main():
         connection.nickname = nickname
 
         await connection.run('set_nickname', {'nickname': nickname})
-        await send_pieces(connection)
+        await send_pack_data(connection)
 
     @network.command()
-    async def send_pieces(connection: Connection):
-        piece_data = {
-            pack: {piece.name: {
-                'image': piece.image,
-            } for piece in pieces}
-            for pack, (boards, pieces) in packs.items()
-        }
+    async def send_pack_data(connection: Connection):
+        pack_data: Dict[str, dict] = {}
 
-        await connection.run('update_pieces', {
-            'pieces': piece_data,
+        for pack, (boards, pieces) in packs.items():
+            pack_data[pack] = {
+                'pieces': {piece.name: {
+                    'image': piece.image,
+                } for piece in pieces},
+
+                'boards': {board.name: {
+                    'rows': board.size[1],
+                    'cols': board.size[0],
+                } for board in boards},
+            }
+
+        await connection.run('update_pack_data', {
+            'pack_data': pack_data,
         })
 
     @network.command()
@@ -90,16 +96,14 @@ def main():
 
     @network.command()
     async def create_game(connection: Connection, name: str, pack: str, board: str):
-        try:
-            pack = import_module(f'packs.{pack}')
-        except ModuleNotFoundError:
-            await connection.error(f'Package "{pack}" does not exist.')
+        if pack not in packs:
+            await connection.error('Package does not exist.')
             return
 
-        try:
-            board_class = getattr(pack, board)
-        except AttributeError:
-            await connection.error(f'Board {board} does not exist in package {pack}.')
+        board_class = next(filter(lambda b: b.name == board, packs[pack][0]), None)
+
+        if board_class is None:
+            await connection.error('Board does not exist.')
             return
 
         # Ensure there are no duplicate game ids.
