@@ -16,6 +16,7 @@ import {MatBadgeModule} from '@angular/material/badge';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatSelectModule} from '@angular/material/select';
 import {MatInputModule} from '@angular/material/input';
+import {MatIconModule} from '@angular/material/icon';
 
 @NgModule({
     declarations: [
@@ -38,6 +39,7 @@ import {MatInputModule} from '@angular/material/input';
         MatDialogModule,
         MatSelectModule,
         MatInputModule,
+        MatIconModule,
     ],
     providers: [],
     bootstrap: [AppComponent],

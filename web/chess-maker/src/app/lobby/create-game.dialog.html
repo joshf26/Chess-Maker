@@ -16,7 +16,8 @@
 
 <div mat-dialog-actions>
   <button mat-button mat-dialog-close="true">Cancel</button>
-  <button mat-button
+  <button mat-raised-button
+          color="primary"
           [mat-dialog-close]="data.board"
           (click)="createGame()">Create</button>
 </div>

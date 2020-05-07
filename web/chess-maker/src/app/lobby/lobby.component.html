@@ -1,14 +1,20 @@
 <mat-sidenav-container>
-    <mat-sidenav #sidenav mode="side" opened>
-        <button mat-button (click)="sidenav.toggle(); board.updateCanvasSize()"><-></button>
-        <button mat-button (click)="createGame()">+</button>
-        <h1>Chess Maker</h1>
+    <mat-sidenav mode="side" opened>
+        <div class="center">
+            <h1 class="header">Chess Maker</h1>
+            <button mat-raised-button color="primary" (click)="createGame()">New Game</button>
+        </div>
+        <br><br>
         <ng-template ngFor let-game [ngForOf]="games | keyvalue">
-            <button mat-button
+            <button mat-mini-fab
+                    color="accent"
+                    class="delete-game-button"
                     *ngIf="game.value.creator == api.nickname"
-                    (click)="api.run('delete_game', {game_id: game.key})">X</button>
+                    (click)="api.run('delete_game', {game_id: game.key})">
+                <mat-icon>close</mat-icon>
+            </button>
             <mat-card (click)="showGame(game.key)"
-                      [ngStyle]="{backgroundColor: game.key == selectedGameId ? 'darkred' : 'black'}">
+                      [ngStyle]="{backgroundColor: game.key == selectedGameId ? '#c2185b' : '#303030'}">
                 <mat-card-content>
                     <h1>{{hasNotification[game.key] ? '*' : ''}}{{game.value.name}}</h1>
                     Created by {{game.value.creator}}<br>
@@ -18,8 +24,7 @@
         </ng-template>
     </mat-sidenav>
     <mat-sidenav-content>
-        <app-board #board
-                   [gameId]="selectedGameId"
+        <app-board [gameId]="selectedGameId"
                    [game]="selectedGameId ? games[selectedGameId] : null"
                    [notify]="notify.bind(this)"></app-board>
         <mat-card id="join-game-box" *ngIf="selectedGameId && games[selectedGameId].playing_as == null">

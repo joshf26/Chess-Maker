@@ -206,7 +206,8 @@ export class BoardComponent implements OnInit {
     }
 
     draw(): void {
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.context.fillStyle = '#303030';
+        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.context.rotate(this.angle * Math.PI / 4);
 

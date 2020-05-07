@@ -23,7 +23,7 @@ class Rook(Piece):
         if to_pos == from_pos or (to_pos[0] != from_pos[0] and to_pos[1] != from_pos[1]):
             return []
 
-        # Check for collisions.
+        # Check for collisions. TODO: Extract this and bishop code for queen to use.
         if to_pos[0] != from_pos[0]:
             if any((row, to_pos[1]) in game.board.tiles for row in signed_range(from_pos[0], to_pos[0])):
                 return []

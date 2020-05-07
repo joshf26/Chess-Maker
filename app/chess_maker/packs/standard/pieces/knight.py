@@ -36,7 +36,6 @@ class Knight(Piece):
             if to_pos in game.board.tiles:
                 if game.board.tiles[to_pos].color != self.color:
                     return [[DestroyAction(to_pos), MoveAction(from_pos, to_pos)]]
-
             else:
                 return [[MoveAction(from_pos, to_pos)]]
 
