@@ -30,7 +30,9 @@ class Knight(Piece):
         row_dist = abs(to_pos[0] - from_pos[0])
         col_dist = abs(to_pos[1] - from_pos[1])
 
+        # Check for valid knight move.
         if (row_dist == 2 and col_dist == 1) or (row_dist == 1 and col_dist == 2):
+            # Check for capture.
             if to_pos in game.board.tiles:
                 if game.board.tiles[to_pos].color != self.color:
                     return [[DestroyAction(to_pos), MoveAction(from_pos, to_pos)]]

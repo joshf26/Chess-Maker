@@ -31,6 +31,7 @@ class Rook(Piece):
             if any((to_pos[0], col) in game.board.tiles for col in signed_range(from_pos[1], to_pos[1])):
                 return []
 
+        # Check for capture.
         if to_pos in game.board.tiles:
             if game.board.tiles[to_pos].color != self.color:
                 return [[DestroyAction(to_pos), MoveAction(from_pos, to_pos)]]

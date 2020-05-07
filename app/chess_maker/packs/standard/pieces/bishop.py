@@ -32,6 +32,7 @@ class Bishop(Piece):
         ) in game.board.tiles for offset in range(1, abs(row_diff))):
             return []
 
+        # Check for capture.
         if to_pos in game.board.tiles:
             if game.board.tiles[to_pos].color != self.color:
                 return [[DestroyAction(to_pos), MoveAction(from_pos, to_pos)]]
