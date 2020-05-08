@@ -1,6 +1,8 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, Tuple, List
+from typing import TYPE_CHECKING, Dict, Tuple, List, Callable, Awaitable
+from uuid import uuid4
 
+from color import Color
 
 if TYPE_CHECKING:
     from piece import Piece
@@ -10,12 +12,48 @@ if TYPE_CHECKING:
     Tiles = Dict[Tuple[int, int], Piece]
 
 
+class InfoElement:
+
+    def to_dict(self):
+        raise NotImplementedError
+
+
+class InfoText(InfoElement):
+
+    def __init__(self, text: str):
+        self.text = text
+
+    def to_dict(self):
+        return {
+            'type': 'text',
+            'text': self.text,
+        }
+
+
+class InfoButton(InfoElement):
+
+    def __init__(self, text: str, callback: Callable[[], Awaitable[None]]):
+        self.text = text
+        self.callback = callback
+
+        self.id = str(uuid4())
+
+    def to_dict(self):
+        return {
+            'type': 'button',
+            'id': self.id,
+            'text': self.text,
+        }
+
+
 class Board:
     name = 'Custom'
     size = (0, 0)
     colors = []
 
-    def __init__(self):
+    def __init__(self, game: Game):
+        self.game = game
+
         self.tiles = self.init_board()
 
     def __repr__(self) -> str:
@@ -32,11 +70,13 @@ class Board:
     def init_board(self) -> Tiles:
         raise NotImplementedError
 
+    def get_info(self, color: Color) -> List[InfoElement]:
+        return []
+
     def process_plies(
         self,
         plies: List[Ply],
         from_pos: Tuple[int, int],
         to_pos: Tuple[int, int],
-        game: Game,
     ):
         raise NotImplementedError

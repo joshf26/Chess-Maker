@@ -1,7 +1,9 @@
 from __future__ import annotations
+
+import asyncio
 from typing import TYPE_CHECKING, Tuple, List
 
-from board import Board
+from board import Board, InfoElement, InfoButton, InfoText
 from color import Color
 from packs.standard.pieces.knight import Knight
 from piece import Direction
@@ -26,6 +28,15 @@ class Jousting(Board):
         Color.PURPLE,
     ]
 
+    def __init__(self, game: Game):
+        super().__init__(game)
+
+        self.game_started = False
+        self.countdown_started = False
+        self.start_timer = 3
+
+        self.start_button = InfoButton('Start Game', self.start_game)
+
     def init_board(self) -> Tiles:
         board: Tiles = {
             (0, 2): Knight(Color.WHITE, Direction.NORTH),
@@ -40,11 +51,29 @@ class Jousting(Board):
 
         return board
 
+    async def start_game(self):
+        self.countdown_started = True
+        await self.game.send_update_to_subscribers()
+        await asyncio.sleep(1)
+        self.start_timer -= 1
+        await self.game.send_update_to_subscribers()
+        await asyncio.sleep(1)
+        self.start_timer -= 1
+        await self.game.send_update_to_subscribers()
+        await asyncio.sleep(1)
+        self.game_started = True
+        await self.game.send_update_to_subscribers()
+
+    def get_info(self, color: Color) -> List[InfoElement]:
+        if self.countdown_started and not self.game_started:
+            return [InfoText(f'Game starting in {self.start_timer}')]
+
+        return [] if self.game_started else [self.start_button]
+
     def process_plies(
         self,
         plies: List[Ply],
         from_pos: Tuple[int, int],
         to_pos: Tuple[int, int],
-        game: Game,
     ) -> List[Ply]:
-        return plies
+        return plies if self.game_started else []

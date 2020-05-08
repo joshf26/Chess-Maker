@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Dict
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Dict, Type
+from uuid import uuid4
 
 from ply import Ply, MoveAction, DestroyAction
 from color import Color
+from board import InfoButton
 
 if TYPE_CHECKING:
     from network import Network, Connection
@@ -52,11 +54,12 @@ class ColorConnections:
 
 class Game:
 
-    def __init__(self, name: str, owner: Connection, board: Board, network: Network):
+    def __init__(self, name: str, owner: Connection, board_class: Type[Board], network: Network):
         self.name = name
         self.owner = owner
-        self.board = board
         self.network = network
+
+        self.id = str(uuid4())
 
         self.subscribers: Set[Connection] = set()
         self.players = ColorConnections()
@@ -64,13 +67,16 @@ class Game:
         self.plies: List[Ply] = []
         self.history: List[HistoryEvent] = []
 
+        self.board = board_class(self)
+
     def get_available_colors(self) -> Set[Color]:
         colors = set(self.board.colors.copy())
         taken_colors = set(self.players.color_to_connection.keys())
 
         return colors - taken_colors
 
-    def get_full_data(self) -> dict:
+    def get_full_data(self, connection: Connection) -> dict:
+        color = self.players.get_color(connection)
         # TODO: Maybe make this nested dictionaries instead of strings.
         return {
             'tiles': [{
@@ -80,14 +86,21 @@ class Game:
                 'piece': piece.__class__.__name__,
                 'color': piece.color.value,
                 'direction': piece.direction.value,
-            } for position, piece in self.board.tiles.items()]
+            } for position, piece in self.board.tiles.items()],
+            'info': [info_element.to_dict() for info_element in self.board.get_info(color)]
         }
+
+    async def send_update_to_subscribers(self):
+        for connection in self.subscribers:
+            game_data = self.get_full_data(connection)
+            game_data['id'] = self.id
+            await connection.run('full_game_data', game_data)
 
     # TODO: Make this a generator.
     def get_plies(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:
         piece_plies = self.board.tiles[from_pos].ply_types(from_pos, to_pos, self)
 
-        return self.board.process_plies(piece_plies, from_pos, to_pos, self)
+        return self.board.process_plies(piece_plies, from_pos, to_pos)
 
     def apply_ply(self, ply: Ply):
         self.history.append(HistoryEvent(self.current_color(), self.board.tiles.copy(), ply))
@@ -122,3 +135,12 @@ class Game:
                     return history_event
 
         return None
+
+    async def click_button(self, connection: Connection, button_id: str):
+        color = self.players.get_color(connection)
+
+        info_elements = self.board.get_info(color)
+        for info_element in info_elements:
+            if isinstance(info_element, InfoButton) and info_element.id == button_id:
+                await info_element.callback()
+                break

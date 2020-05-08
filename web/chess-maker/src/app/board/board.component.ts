@@ -20,6 +20,13 @@ interface Piece {
 interface GameData {
     id: string,
     tiles: Piece[],
+    info: InfoElement[],
+}
+
+interface InfoElement {
+    type: string,
+    text: string,
+    id?: string,
 }
 
 @Component({
@@ -58,6 +65,7 @@ export class BoardComponent implements OnInit {
     angle = 0;
 
     pieces: Piece[] = [];
+    infoElements: InfoElement[] = [];
 
     constructor(
         private api: ApiService,
@@ -99,6 +107,7 @@ export class BoardComponent implements OnInit {
     gameDataHandler(gameData: GameData): void {
         if (gameData.id == this.gameId) {
             this.pieces = gameData.tiles;
+            this.infoElements = gameData.info
             this.updateBackgroundCanvases();
             this.draw();
         } else {
@@ -282,5 +291,12 @@ export class BoardComponent implements OnInit {
 
         context.rotate(-rotationAmount);
         context.translate(-x, -y);
+    }
+
+    click_button(id: string): void {
+        this.api.run('click_button', {
+            'game_id': this.gameId,
+            'button_id': id,
+        });
     }
 }

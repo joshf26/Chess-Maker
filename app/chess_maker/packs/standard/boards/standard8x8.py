@@ -49,9 +49,8 @@ class Standard8x8(Board):
         plies: List[Ply],
         from_pos: Tuple[int, int],
         to_pos: Tuple[int, int],
-        game: Game,
     ) -> List[Ply]:
-        if self.tiles[from_pos].color == game.current_color():
+        if self.tiles[from_pos].color == self.game.current_color():
             return plies
 
         return []

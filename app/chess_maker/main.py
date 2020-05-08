@@ -38,9 +38,7 @@ def main():
             'board': game.board.name,
             'available_colors': list(map(lambda color: color.value, game.get_available_colors())),
             'total_players': len(game.board.colors),
-            'playing_as': None if (
-                  color := game.players.connection_to_color.get(connection, None)
-            ) is None else color.value,
+            'playing_as': None if (color := game.players.get_color(connection)) is None else color.value,
         } for game_id, game in games.items()}
 
     async def send_metadata_update_to_all():
@@ -48,14 +46,6 @@ def main():
             await connection.run('update_game_metadata', {
                 'game_metadata': make_game_metadata(connection),
             })
-
-    async def send_game_update_to_subscribers(game_id: str):
-        game = games[game_id]
-        game_data = game.get_full_data()
-        game_data['id'] = game_id
-
-        for connection in game.subscribers:
-            await connection.run('full_game_data', game_data)
 
     @network.command()
     async def login(connection: Connection, nickname: str):
@@ -107,14 +97,11 @@ def main():
             await connection.error('Board does not exist.')
             return
 
-        # Ensure there are no duplicate game ids.
-        while (game_id := str(uuid4())) in games:
-            pass
-
-        games[game_id] = Game(name, connection, board_class(), network)
+        game = Game(name, connection, board_class, network)
+        games[game.id] = game
 
         await connection.send({
-            'game_id': game_id,
+            'game_id': game.id,
         })
 
         await send_metadata_update_to_all()
@@ -144,7 +131,7 @@ def main():
         game = games[game_id]
         game.subscribers.add(connection)
 
-        game_data = game.get_full_data()
+        game_data = game.get_full_data(connection)
         game_data['id'] = game_id
 
         await connection.run('full_game_data', game_data)
@@ -194,7 +181,7 @@ def main():
         if len(plies) == 1:
             # There is only one ply available, so just apply it immediately.
             game.apply_ply(plies[0])
-            await send_game_update_to_subscribers(game_id)
+            await game.send_update_to_subscribers()
         elif len(plies) > 1:
             # There are multiple plies available, so present the user with a choice.
             # TODO
@@ -235,6 +222,15 @@ def main():
 
         if game.board.tiles[from_pos].ply_types(from_pos, to_pos, game):
             pass  # TODO
+
+    @network.command()
+    async def click_button(connection: Connection, game_id: str, button_id: str):
+        if game_id not in games:
+            await connection.error('Game id does not exist.')
+            return
+
+        game = games[game_id]
+        await game.click_button(connection, button_id)
 
     network.serve(PORT)
 

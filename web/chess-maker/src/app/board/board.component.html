@@ -6,6 +6,18 @@
         (mousemove)="mouseMove($event)"
         (contextmenu)="hideContextMenu($event)"></canvas>
 
+<mat-card id="info-box" *ngIf="infoElements.length">
+    <mat-card-content>
+        <ng-template ngFor let-infoElement [ngForOf]="infoElements">
+            <button mat-raised-button
+                    color="primary"
+                    *ngIf="infoElement.type == 'button'"
+                    (click)="click_button(infoElement.id)">{{infoElement.text}}</button>
+            <p *ngIf="infoElement.type == 'text'">{{infoElement.text}}</p>
+        </ng-template>
+    </mat-card-content>
+</mat-card>
+
 <button mat-raised-button
         class="rotate-button"
         (click)="rotate()">Rotate</button>
