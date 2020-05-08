@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class InfoElement:
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         raise NotImplementedError
 
 
@@ -23,7 +23,7 @@ class InfoText(InfoElement):
     def __init__(self, text: str):
         self.text = text
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             'type': 'text',
             'text': self.text,
@@ -38,7 +38,7 @@ class InfoButton(InfoElement):
 
         self.id = str(uuid4())
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             'type': 'button',
             'id': self.id,
@@ -73,10 +73,11 @@ class Board:
     def get_info(self, color: Color) -> List[InfoElement]:
         return []
 
-    def process_plies(
-        self,
-        plies: List[Ply],
-        from_pos: Tuple[int, int],
-        to_pos: Tuple[int, int],
-    ):
-        raise NotImplementedError
+    def get_inventory(self, color: Color) -> List[Tuple[Piece, int]]:
+        return []
+
+    def process_plies(self, plies: List[Ply], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:
+        return plies
+
+    def inventory_plies(self, piece: Piece, pos: Tuple[int, int]) -> List[Ply]:
+        return []

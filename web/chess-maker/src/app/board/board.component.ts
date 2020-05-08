@@ -5,8 +5,8 @@ import {GameMetaData} from '../lobby/lobby.component';
 
 const ODD_TILE_COLOR = '#A85738';
 const EVEN_TILE_COLOR = '#F3C1A9';
-const HIGHLIGHT_COLOR = '#FFFA00';
 const ZOOM_FACTOR = 0.8;
+const PIECE_SIZE = 45;
 
 interface Piece {
     row: number,
@@ -17,10 +17,19 @@ interface Piece {
     direction: number,
 }
 
+interface InventoryPiece {
+    pack: string,
+    name: string,
+    color: number,
+    direction: number,
+    quantity: number,
+}
+
 interface GameData {
     id: string,
     tiles: Piece[],
     info: InfoElement[],
+    inventory: InventoryPiece[],
 }
 
 interface InfoElement {
@@ -46,6 +55,8 @@ export class BoardComponent implements OnInit {
     private boardContext: OffscreenCanvasRenderingContext2D;
     private piecesCanvas: OffscreenCanvas;
     private piecesContext: OffscreenCanvasRenderingContext2D;
+    private inventoryCanvas: OffscreenCanvas;
+    private inventoryContext: OffscreenCanvasRenderingContext2D;
 
     positionX = 0;
     positionY = 0;
@@ -66,10 +77,11 @@ export class BoardComponent implements OnInit {
 
     pieces: Piece[] = [];
     infoElements: InfoElement[] = [];
+    inventoryPieces: InventoryPiece[] = [];
 
     constructor(
         private api: ApiService,
-        private packDataService: PackDataService,
+        public packDataService: PackDataService,
     ) {
         api.getCommand('full_game_data').subscribe(this.gameDataHandler.bind(this));
     }
@@ -83,6 +95,8 @@ export class BoardComponent implements OnInit {
         this.boardContext = this.boardCanvas.getContext('2d');
         this.piecesCanvas = new OffscreenCanvas(0, 0);
         this.piecesContext = this.piecesCanvas.getContext('2d');
+        this.inventoryCanvas = new OffscreenCanvas(PIECE_SIZE, 0);
+        this.inventoryContext = this.inventoryCanvas.getContext('2d');
         this.updateBackgroundCanvases();
         this.centerBoard();
     }
@@ -107,7 +121,8 @@ export class BoardComponent implements OnInit {
     gameDataHandler(gameData: GameData): void {
         if (gameData.id == this.gameId) {
             this.pieces = gameData.tiles;
-            this.infoElements = gameData.info
+            this.infoElements = gameData.info;
+            this.inventoryPieces = gameData.inventory;
             this.updateBackgroundCanvases();
             this.draw();
         } else {
@@ -129,6 +144,7 @@ export class BoardComponent implements OnInit {
 
     rotate(): void {
         this.angle = (this.angle + 1) % 8;
+        this.updateBackgroundCanvases();
         this.centerBoard();
     }
 
@@ -139,24 +155,35 @@ export class BoardComponent implements OnInit {
         this.boardCanvas.height = this.scale * this.boardSizeCols;
         this.piecesCanvas.width = this.scale * this.boardSizeRows;
         this.piecesCanvas.height = this.scale * this.boardSizeCols;
+        this.inventoryCanvas.height = this.canvas.offsetHeight;
 
+        // Pieces
         this.piecesContext.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
         for (const piece of this.pieces) {
             this.drawImage(
                 this.piecesContext,
-                this.packDataService.pieceTypes[piece.pack][piece.piece][piece.color == 8 ? 0 : piece.color].image,
+                this.packDataService.pieceTypes[piece.pack][piece.piece][piece.color].image,
                 (piece.col + 0.5) * this.scale,
                 (piece.row + 0.5) * this.scale,
                 piece.direction * Math.PI / 4,
             );
         }
 
+        // Board
         this.boardContext.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
         for (let row = 0; row < this.boardSizeRows; ++row) {
             for (let col = 0; col < this.boardSizeCols; ++col) {
                 this.boardContext.fillStyle = (col % 2 == row % 2) ? ODD_TILE_COLOR : EVEN_TILE_COLOR;
                 this.boardContext.fillRect(col * this.scale, row * this.scale, this.scale, this.scale);
             }
+        }
+
+        // Inventory
+        this.inventoryContext.clearRect(0, 0, this.inventoryCanvas.width, this.inventoryCanvas.height);
+        for (const [index, piece] of this.inventoryPieces.entries()) {
+            const image = this.packDataService.pieceTypes[piece.pack][piece.name][piece.color].image;
+            const rotation = ((piece.direction + this.angle) % 8) * Math.PI / 4;
+            this.drawImage(this.inventoryContext, image, PIECE_SIZE / 2, index * PIECE_SIZE + PIECE_SIZE / 2, rotation, true);
         }
     }
 
@@ -174,6 +201,22 @@ export class BoardComponent implements OnInit {
             case 0:
                 // Prevent the user from accidentally selecting the canvas.
                 event.preventDefault();
+
+                if (event.offsetX > this.canvas.width - PIECE_SIZE && event.offsetY < this.inventoryPieces.length * PIECE_SIZE) {
+                    const piece = this.inventoryPieces[Math.floor(event.offsetY / PIECE_SIZE)];
+
+                    this.dragging = true;
+                    this.draggingPiece = {
+                        row: -1,
+                        col: -1,
+                        color: piece.color,
+                        pack: piece.pack,
+                        piece: piece.name,
+                        direction: piece.direction
+                    };
+
+                    break;
+                }
 
                 const mouseTileX = Math.floor(this.mousePositionX);
                 const mouseTileY = Math.floor(this.mousePositionY);
@@ -207,7 +250,21 @@ export class BoardComponent implements OnInit {
 
             this.dragging = false;
 
-            if (this.draggingPiece.row != mouseTileY || this.draggingPiece.col != mouseTileX) {
+            if (this.draggingPiece.row == -1 && this.draggingPiece.col == -1) {
+                // The piece came from the inventory.
+                // TODO: Use a different system for this.
+
+                this.api.run('get_inventory_plies', {
+                    'game_id': this.gameId,
+                    'pack_name': this.draggingPiece.pack,
+                    'piece_name': this.draggingPiece.piece,
+                    'piece_color': this.draggingPiece.color,
+                    'piece_direction': this.draggingPiece.direction,
+                    'to_row': mouseTileY,
+                    'to_col': mouseTileX,
+                })
+            }
+            else if (this.draggingPiece.row != mouseTileY || this.draggingPiece.col != mouseTileX) {
                 this.api.run('get_plies', {
                     'game_id': this.gameId,
                     'from_row': this.draggingPiece.row,
@@ -275,6 +332,8 @@ export class BoardComponent implements OnInit {
         }
 
         this.context.rotate(-this.angle * Math.PI / 4);
+
+        this.context.drawImage(this.inventoryCanvas, this.canvas.width - PIECE_SIZE, 0);
     }
 
     private drawImage(
@@ -283,11 +342,16 @@ export class BoardComponent implements OnInit {
         x: number,
         y: number,
         rotationAmount: number,
+        fixed: boolean = false,
     ) {
         context.translate(x, y);
         context.rotate(rotationAmount);
 
-        context.drawImage(image, -this.scale / 2, -this.scale / 2, this.scale, this.scale);
+        if (fixed) {
+            context.drawImage(image, -image.width / 2, -image.height / 2, image.width, image.height);
+        } else {
+            context.drawImage(image, -this.scale / 2, -this.scale / 2, this.scale, this.scale);
+        }
 
         context.rotate(-rotationAmount);
         context.translate(-x, -y);

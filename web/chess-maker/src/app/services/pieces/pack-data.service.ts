@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 
 // A piece type is accessed using [pack][piece][color].
-export type PieceTypes = {[key: string]: {[key: string]: {image: HTMLImageElement}[]}};
+export type PieceTypes = {[key: string]: {[key: string]: {raw_image: string, image: HTMLImageElement}[]}};
 
 // A board type is accessed using [pack][board].
 export type BoardTypes = {[key: string]: {[key: string]: {rows: number, cols: number}}};
@@ -35,9 +35,13 @@ export class PackDataService {
                 for (let color = 0; color < 8; ++color) {
                     const image = new Image();
                     // TODO: Instead of replacing the "white", it should replace use a special keyword.
-                    image.src = `data:image/svg+xml,${pieceData['image'].replace(/white/g, SVG_COLORS[color])}`;
+                    const raw_image = `data:image/svg+xml,${pieceData['image'].replace(/white/g, SVG_COLORS[color])}`;
+                    image.src = raw_image;
 
-                    this.pieceTypes[pack][piece][color] = {image: image};
+                    this.pieceTypes[pack][piece][color] = {
+                        raw_image: raw_image,
+                        image: image,
+                    };
                 }
             }
 

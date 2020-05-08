@@ -1,6 +1,7 @@
 import json
 from dataclasses import dataclass
 from typing import List, Tuple, Union
+from piece import Piece
 
 
 @dataclass
@@ -14,10 +15,17 @@ class DestroyAction:
     pos: Tuple[int, int]
 
 
+@dataclass
+class CreateAction:
+    piece: Piece
+    pos: Tuple[int, int]
+
+
 Action = Union[MoveAction, DestroyAction]
 Ply = List[Action]
 
 
+# TODO: This probably doesn't need to exist.
 def ply_to_json(ply: Ply) -> str:
     return json.dumps([{
         'type': 'move',

@@ -13,7 +13,6 @@ from piece import Direction
 
 if TYPE_CHECKING:
     from ply import Ply
-    from game import Game
     from board import Tiles
 
 
@@ -44,12 +43,7 @@ class Standard8x8(Board):
 
         return board
 
-    def process_plies(
-        self,
-        plies: List[Ply],
-        from_pos: Tuple[int, int],
-        to_pos: Tuple[int, int],
-    ) -> List[Ply]:
+    def process_plies(self, plies: List[Ply], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:
         if self.tiles[from_pos].color == self.game.current_color():
             return plies
 

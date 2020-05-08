@@ -1,8 +1,7 @@
 from __future__ import annotations
 from typing import Tuple, List, TYPE_CHECKING
 
-from color import Color
-from piece import Piece, load_image, Direction
+from piece import Piece, load_image
 
 if TYPE_CHECKING:
     from ply import Ply
@@ -12,10 +11,6 @@ if TYPE_CHECKING:
 class Wall(Piece):
     name = 'Wall'
     image = load_image('standard', 'images/wall.svg')
-
-    def __init__(self):
-        # The direction of a wall does not matter, so just construct it with an arbitrary direction.
-        super().__init__(Color.NONE, Direction.NORTH)
 
     def ply_types(
         self,

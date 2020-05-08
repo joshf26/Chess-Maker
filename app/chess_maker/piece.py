@@ -38,10 +38,12 @@ class Piece:
     def __repr__(self):
         return f'<{self.color} {self.__class__.__name__} facing {self.direction}>'
 
-    def ply_types(
-        self,
-        from_pos: Tuple[int, int],
-        to_pos: Tuple[int, int],
-        game: Game,
-    ) -> Set[Ply]:
+    def to_dict(self) -> dict:
+        return {
+            'name': self.name,
+            'color': self.color.value,
+            'direction': self.direction.value,
+        }
+
+    def ply_types(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int], game: Game) -> Set[Ply]:
         raise NotImplementedError

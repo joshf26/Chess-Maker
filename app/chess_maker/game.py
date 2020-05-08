@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Dict, Type
 from uuid import uuid4
 
-from ply import Ply, MoveAction, DestroyAction
+from piece import Piece
+from ply import Ply, MoveAction, DestroyAction, ply_to_json, CreateAction
 from color import Color
 from board import InfoButton
 
@@ -87,7 +88,8 @@ class Game:
                 'color': piece.color.value,
                 'direction': piece.direction.value,
             } for position, piece in self.board.tiles.items()],
-            'info': [info_element.to_dict() for info_element in self.board.get_info(color)]
+            'info': [info_element.to_dict() for info_element in self.board.get_info(color)],
+            'inventory': [dict(pack=piece[0].__module__.split('.')[1], **piece[0].to_dict(), quantity=piece[1]) for piece in self.board.get_inventory(color)]
         }
 
     async def send_update_to_subscribers(self):
@@ -96,7 +98,7 @@ class Game:
             game_data['id'] = self.id
             await connection.run('full_game_data', game_data)
 
-    # TODO: Make this a generator.
+    # TODO: Make this a generator... any maybe get_inventory_plies too.
     def get_plies(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:
         if from_pos not in self.board.tiles:
             # Client must have sent stale data.
@@ -106,6 +108,20 @@ class Game:
 
         return self.board.process_plies(piece_plies, from_pos, to_pos)
 
+    async def apply_or_offer_choices(self, plies: List[Ply], connection: Connection):
+        if len(plies) == 1:
+            # There is only one ply available, so just apply it immediately.
+            self.apply_ply(plies[0])
+            await self.send_update_to_subscribers()
+        elif len(plies) > 1:
+            # There are multiple plies available, so present the user with a choice.
+            # TODO
+            result = [ply_to_json(ply) for ply in plies]
+
+            await connection.run('plies', {
+                'plies': result,
+            })
+
     def apply_ply(self, ply: Ply):
         self.history.append(HistoryEvent(self.current_color(), self.board.tiles.copy(), ply))
 
@@ -114,8 +130,11 @@ class Game:
                 self.board.tiles[action.from_pos].moves += 1
                 self.board.tiles[action.to_pos] = self.board.tiles.pop(action.from_pos)
 
-            if isinstance(action, DestroyAction):
+            elif isinstance(action, DestroyAction):
                 self.board.tiles.pop(action.pos)
+
+            elif isinstance(action, CreateAction):
+                self.board.tiles[action.pos] = action.piece
 
     def add_player(self, connection: Connection, color: Color):
         self.players.set(color, connection)

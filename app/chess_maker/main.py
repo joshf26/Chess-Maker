@@ -1,11 +1,14 @@
-from typing import Dict
-from uuid import uuid4
+from typing import Dict, List, TYPE_CHECKING
 
 from color import Color
 from game import Game
 from network import Network, Connection
 from pack import load_packs
+from piece import Direction
 from ply import ply_to_json
+
+if TYPE_CHECKING:
+    from ply import Ply
 
 PORT = 8000
 
@@ -177,19 +180,41 @@ def main():
 
         game = games[game_id]
         plies = game.get_plies((from_row, from_col), (to_row, to_col))
+        await game.apply_or_offer_choices(plies, connection)
 
-        if len(plies) == 1:
-            # There is only one ply available, so just apply it immediately.
-            game.apply_ply(plies[0])
-            await game.send_update_to_subscribers()
-        elif len(plies) > 1:
-            # There are multiple plies available, so present the user with a choice.
-            # TODO
-            result = [ply_to_json(ply) for ply in plies]
+    @network.command()
+    async def get_inventory_plies(
+        connection: Connection,
+        game_id: str,
+        pack_name: str,
+        piece_name: str,
+        piece_color: int,
+        piece_direction: int,
+        to_row: int,
+        to_col: int
+    ):
+        if game_id not in games:
+            await connection.error('Game id does not exist.')
+            return
 
-            await connection.run('plies', {
-                'plies': result,
-            })
+        if piece_color < 0 or piece_color > 7 or piece_direction < 0 or piece_direction > 3:
+            await connection.error('Invalid piece color or direction.')
+            return
+
+        game = games[game_id]
+
+        selected_piece = next(filter(lambda piece: piece.name == piece_name, packs[pack_name][1]), None)
+
+        if selected_piece is None:
+            await connection.error('Piece does not exist.')
+            return
+
+        inventory_plies = game.board.inventory_plies(
+            selected_piece(Color(piece_color), Direction(piece_direction)),
+            (to_row, to_col),
+        )
+
+        await game.apply_or_offer_choices(inventory_plies, connection)
 
     @network.command()
     async def submit_turn(connection: Connection, game_id: str, from_row: int, from_col: int, to_row: int, to_col: int):
