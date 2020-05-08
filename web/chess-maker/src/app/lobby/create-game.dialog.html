@@ -19,5 +19,6 @@
   <button mat-raised-button
           color="primary"
           [mat-dialog-close]="data.board"
+          [disabled]="data.name == '' || data.board.pack == ''"
           (click)="createGame()">Create</button>
 </div>
