@@ -148,6 +148,10 @@ export class BoardComponent implements OnInit {
         this.centerBoard();
     }
 
+    leaveGame(): void {
+        this.api.run('leave_game', {game_id: this.gameId});
+    }
+
     updateBackgroundCanvases(): void {
         this.canvas.width = this.canvas.offsetWidth;
         this.canvas.height = this.canvas.offsetHeight;

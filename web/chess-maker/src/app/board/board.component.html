@@ -19,6 +19,7 @@
     </mat-card-content>
 </mat-card>
 
-<button mat-raised-button
-        class="rotate-button"
-        (click)="rotate()">Rotate</button>
+<div class="bottom-buttons">
+    <button mat-raised-button (click)="rotate()">Rotate</button>
+    <button mat-raised-button (click)="leaveGame()" *ngIf="game && game.playing_as != undefined">Leave Game</button>
+</div>

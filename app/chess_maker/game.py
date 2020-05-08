@@ -78,6 +78,9 @@ class Game:
 
     def get_full_data(self, connection: Connection) -> dict:
         color = self.players.get_color(connection)
+
+        inventory = [] if color is None else self.board.get_inventory(color)
+
         # TODO: Maybe make this nested dictionaries instead of strings.
         return {
             'tiles': [{
@@ -89,14 +92,17 @@ class Game:
                 'direction': piece.direction.value,
             } for position, piece in self.board.tiles.items()],
             'info': [info_element.to_dict() for info_element in self.board.get_info(color)],
-            'inventory': [dict(pack=piece[0].__module__.split('.')[1], **piece[0].to_dict(), quantity=piece[1]) for piece in self.board.get_inventory(color)]
+            'inventory': [dict(pack=piece[0].__module__.split('.')[1], **piece[0].to_dict(), quantity=piece[1]) for piece in inventory]
         }
+
+    async def send_update(self, connection: Connection):
+        game_data = self.get_full_data(connection)
+        game_data['id'] = self.id
+        await connection.run('full_game_data', game_data)
 
     async def send_update_to_subscribers(self):
         for connection in self.subscribers:
-            game_data = self.get_full_data(connection)
-            game_data['id'] = self.id
-            await connection.run('full_game_data', game_data)
+            await self.send_update(connection)
 
     # TODO: Make this a generator... any maybe get_inventory_plies too.
     def get_plies(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:

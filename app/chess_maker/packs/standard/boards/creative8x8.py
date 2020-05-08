@@ -25,6 +25,12 @@ class Creative8x8(Board):
     colors = [
         Color.WHITE,
         Color.BLACK,
+        Color.RED,
+        Color.ORANGE,
+        Color.YELLOW,
+        Color.GREEN,
+        Color.BLUE,
+        Color.PURPLE,
     ]
 
     def init_board(self) -> Tiles:
@@ -32,13 +38,13 @@ class Creative8x8(Board):
 
     def get_inventory(self, color: Color) -> List[Tuple[Piece, int]]:
         return [
-            (Pawn(Color.WHITE, Direction.NORTH), -1),
-            (Knight(Color.WHITE, Direction.NORTH), -1),
-            (Bishop(Color.WHITE, Direction.NORTH), -1),
-            (Rook(Color.WHITE, Direction.NORTH), -1),
-            (Queen(Color.WHITE, Direction.NORTH), -1),
-            (King(Color.WHITE, Direction.NORTH), -1),
-            (Wall(Color.WHITE, Direction.NORTH), -1),
+            (Pawn(color, Direction.NORTH), -1),
+            (Knight(color, Direction.NORTH), -1),
+            (Bishop(color, Direction.NORTH), -1),
+            (Rook(color, Direction.NORTH), -1),
+            (Queen(color, Direction.NORTH), -1),
+            (King(color, Direction.NORTH), -1),
+            (Wall(color, Direction.NORTH), -1),
         ]
 
     def process_plies(self, plies: List[Ply], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:

@@ -164,6 +164,24 @@ def main():
         game.add_player(connection, color_object)
 
         await send_metadata_update_to_all()
+        await game.send_update(connection)
+
+    @network.command()
+    async def leave_game(connection: Connection, game_id: str):
+        if game_id not in games:
+            await connection.error('Game id does not exist.')
+            return
+
+        game = games[game_id]
+
+        if connection not in game.players:
+            await connection.error('Player is not in this game.')
+            return
+
+        if connection in game.players:
+            game.players.remove_connection(connection)
+
+        await send_metadata_update_to_all()
 
     ''' Note to Self:
     
