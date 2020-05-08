@@ -36,7 +36,7 @@ interface InfoElement {
 })
 export class BoardComponent implements OnInit {
     @ViewChild('canvas') private canvasElement: ElementRef<HTMLElement>;
-    @Input('game') private game: GameMetaData;
+    @Input('game') game: GameMetaData;
     @Input('gameId') private gameId: string;
     @Input('notify') private notify: (gameId: string) => void;  // TODO: Maybe this should be an @Output?
 

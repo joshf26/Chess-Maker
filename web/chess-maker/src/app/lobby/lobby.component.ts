@@ -70,7 +70,6 @@ export class LobbyComponent implements OnInit {
 
     notify(gameId: string) {
         this.hasNotification[gameId] = true;
-        console.log(`${gameId} has a move.`);
     }
 
     createGame(): void {
@@ -94,7 +93,6 @@ export class LobbyComponent implements OnInit {
     }
 
     joinGame(gameId: string, color: number): void {
-        console.log(`Joining game ${gameId} as ${this.colorNames[color]}.`);
         this.api.run('join_game', {
             game_id: gameId,
             color: color,

@@ -11,6 +11,7 @@
         <ng-template ngFor let-infoElement [ngForOf]="infoElements">
             <button mat-raised-button
                     color="primary"
+                    [disabled]="game.playing_as == undefined"
                     *ngIf="infoElement.type == 'button'"
                     (click)="click_button(infoElement.id)">{{infoElement.text}}</button>
             <p *ngIf="infoElement.type == 'text'">{{infoElement.text}}</p>

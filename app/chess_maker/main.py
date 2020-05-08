@@ -230,7 +230,7 @@ def main():
             return
 
         game = games[game_id]
-        await game.click_button(connection, button_id)
+        game.click_button(connection, button_id)
 
     network.serve(PORT)
 

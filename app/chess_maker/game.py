@@ -98,6 +98,10 @@ class Game:
 
     # TODO: Make this a generator.
     def get_plies(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:
+        if from_pos not in self.board.tiles:
+            # Client must have sent stale data.
+            return []
+
         piece_plies = self.board.tiles[from_pos].ply_types(from_pos, to_pos, self)
 
         return self.board.process_plies(piece_plies, from_pos, to_pos)
@@ -136,11 +140,14 @@ class Game:
 
         return None
 
-    async def click_button(self, connection: Connection, button_id: str):
+    def click_button(self, connection: Connection, button_id: str):
         color = self.players.get_color(connection)
+
+        if color is None:
+            return
 
         info_elements = self.board.get_info(color)
         for info_element in info_elements:
             if isinstance(info_element, InfoButton) and info_element.id == button_id:
-                await info_element.callback()
+                info_element.callback()
                 break
