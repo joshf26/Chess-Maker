@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Dict, Type
 from uuid import uuid4
 
-from piece import Piece
 from ply import Ply, MoveAction, DestroyAction, ply_to_json, CreateAction
 from color import Color
 from board import InfoButton
@@ -104,9 +103,15 @@ class Game:
         for connection in self.subscribers:
             await self.send_update(connection)
 
-    # TODO: Make this a generator... any maybe get_inventory_plies too.
+    # TODO: Make this a generator... any maybe inventory_plies too.
     def get_plies(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:
-        if from_pos not in self.board.tiles:
+        if (
+            from_pos not in self.board.tiles
+            or to_pos[0] < 0
+            or to_pos[1] < 0
+            or to_pos[0] >= self.board.size[0]
+            or to_pos[1] >= self.board.size[1]
+        ):
             # Client must have sent stale data.
             return []
 
@@ -145,6 +150,7 @@ class Game:
     def add_player(self, connection: Connection, color: Color):
         self.players.set(color, connection)
 
+    # TODO: This should not be part of the Game class.
     def current_color(self) -> Color:
         if len(self.history) == 0:
             # TODO: Board should be validated at some point to ensure there is at least one color.

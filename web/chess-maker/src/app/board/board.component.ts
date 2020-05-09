@@ -256,29 +256,39 @@ export class BoardComponent implements OnInit {
 
             this.dragging = false;
 
-            if (this.draggingPiece.row == -1 && this.draggingPiece.col == -1) {
-                // The piece came from the inventory.
-                // TODO: Use a different system for this.
+            if (
+                mouseTileX >= 0
+                && mouseTileY >= 0
+                && mouseTileY < this.boardSizeRows
+                && mouseTileX < this.boardSizeCols
+            ) {
+                if (this.draggingPiece.row == -1 && this.draggingPiece.col == -1) {
+                    // The piece came from the inventory.
+                    // TODO: Use a different system for this.
 
-                this.api.run('get_inventory_plies', {
-                    'game_id': this.gameId,
-                    'pack_name': this.draggingPiece.pack,
-                    'piece_name': this.draggingPiece.piece,
-                    'piece_color': this.draggingPiece.color,
-                    'piece_direction': this.draggingPiece.direction,
-                    'to_row': mouseTileY,
-                    'to_col': mouseTileX,
-                })
+                    this.api.run('get_inventory_plies', {
+                        'game_id': this.gameId,
+                        'pack_name': this.draggingPiece.pack,
+                        'piece_name': this.draggingPiece.piece,
+                        'piece_color': this.draggingPiece.color,
+                        'piece_direction': this.draggingPiece.direction,
+                        'to_row': mouseTileY,
+                        'to_col': mouseTileX,
+                    })
+                }
+                else if (this.draggingPiece.row != mouseTileY || this.draggingPiece.col != mouseTileX) {
+                    this.api.run('get_plies', {
+                        'game_id': this.gameId,
+                        'from_row': this.draggingPiece.row,
+                        'from_col': this.draggingPiece.col,
+                        'to_row': mouseTileY,
+                        'to_col': mouseTileX,
+                    })
+                }
+            } else {
+                this.draw();
             }
-            else if (this.draggingPiece.row != mouseTileY || this.draggingPiece.col != mouseTileX) {
-                this.api.run('get_plies', {
-                    'game_id': this.gameId,
-                    'from_row': this.draggingPiece.row,
-                    'from_col': this.draggingPiece.col,
-                    'to_row': mouseTileY,
-                    'to_col': mouseTileX,
-                })
-            }
+
         }
 
         this.panning = false;
