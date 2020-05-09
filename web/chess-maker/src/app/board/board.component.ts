@@ -6,6 +6,8 @@ import {DomSanitizer} from '@angular/platform-browser';
 
 const ODD_TILE_COLOR = '#A85738';
 const EVEN_TILE_COLOR = '#F3C1A9';
+const MIN_ZOOM = 10;
+const MAX_ZOOM = 300;
 const ZOOM_FACTOR = 0.8;
 const PIECE_SIZE = 45;
 
@@ -316,6 +318,9 @@ export class BoardComponent implements OnInit {
     zoom(event: WheelEvent): boolean {
         const factor = event.deltaY > 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
         const deltaScale = (this.scale * factor) - this.scale;
+
+        const newScale = this.scale + deltaScale;
+        if (newScale < MIN_ZOOM || newScale > MAX_ZOOM) return false;
 
         this.scale += deltaScale;
         this.positionX -= this.mousePositionX * deltaScale;
