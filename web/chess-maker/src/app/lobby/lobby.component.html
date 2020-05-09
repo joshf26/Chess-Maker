@@ -22,6 +22,10 @@
                 </mat-card-content>
             </mat-card>
         </ng-template>
+        <button mat-raised-button
+                (click)="disconnect()"
+                class="disconnect-button"
+                color="warn">Disconnect</button>
     </mat-sidenav>
     <mat-sidenav-content>
         <app-board #board

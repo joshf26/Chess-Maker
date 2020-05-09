@@ -3,6 +3,7 @@ import {ApiService} from '../services/api/api.service';
 import {PackDataService} from '../services/pieces/pack-data.service';
 import {MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
 import {BoardComponent} from '../board/board.component';
+import {Router} from '@angular/router';
 
 const COLOR_NAMES = [
     'White',
@@ -47,6 +48,7 @@ export class LobbyComponent implements OnInit {
         public api: ApiService,
         private packDataService: PackDataService,
         private changeDetectorRef: ChangeDetectorRef,
+        private router: Router,
     ) {
         api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
         api.getCommand('update_pack_data').subscribe(this.updatePackData.bind(this));
@@ -66,6 +68,11 @@ export class LobbyComponent implements OnInit {
 
     updatePackData(parameters: {[key: string]: any}): void {
         this.packDataService.updatePackData(parameters.pack_data);
+    }
+
+    disconnect() {
+        this.api.disconnect();
+        this.router.navigate(['/']);
     }
 
     notify(gameId: string) {

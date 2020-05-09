@@ -41,6 +41,10 @@ export class ApiService {
         this.getCommand('set_nickname').subscribe(this.setNickname.bind(this));
     }
 
+    disconnect() {
+        this.socket.complete();
+    }
+
     // TODO: This could be a decorator.
     getCommand(command: string): Observable<unknown> {
         if (this.commands == undefined) {

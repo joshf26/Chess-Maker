@@ -120,7 +120,8 @@ class Network:
                     continue
 
                 await self.try_command(connection, data)
-
+        except websockets.ConnectionClosedError:
+            pass
         finally:
             print('Client disconnected.')
             self.connections.remove(connection)

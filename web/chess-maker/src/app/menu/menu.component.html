@@ -1,13 +1,19 @@
-<h1>Welcome to Chess Maker!</h1>
-
-<label>
-    Address
-    <input type="text" [(ngModel)]="address">
-</label>
-<br>
-<label>
-    Nickname
-    <input type="text" [(ngModel)]="nickname">
-</label>
-<br>
-<button (click)="connect()">Connect</button>
+<div class="menu">
+    <h1>Chess Maker</h1>
+    <br>
+    <mat-card>
+        <mat-card-content>
+            <mat-form-field>
+                <mat-label>Address</mat-label>
+                <input matInput [(ngModel)]="address">
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+                <mat-label>Nickname</mat-label>
+                <input matInput [(ngModel)]="nickname">
+            </mat-form-field>
+            <br>
+            <button mat-raised-button color="primary" (click)="connect()">Connect</button>
+        </mat-card-content>
+    </mat-card>
+</div>
