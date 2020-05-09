@@ -1,8 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple, List
 
-from board import Board
+from board import Board, InfoElement, InfoText
 from color import Color
+from packs.standard.helpers import get_color_info_texts
 from packs.standard.pieces.bishop import Bishop
 from packs.standard.pieces.king import King
 from packs.standard.pieces.knight import Knight
@@ -42,6 +43,16 @@ class Standard8x8(Board):
                 board[row, col] = Pawn(color, direction)
 
         return board
+
+    def get_info(self, color: Color) -> List[InfoElement]:
+        result = get_color_info_texts(self.game, trailing_space=True)
+
+        result.append(InfoText(
+            f'Current Turn: <strong style="color: {self.game.current_color().name.lower()}">'
+            f'{self.game.current_color().name.title()}</strong>'
+        ))
+
+        return result
 
     def process_plies(self, plies: List[Ply], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:
         if self.tiles[from_pos].color == self.game.current_color():

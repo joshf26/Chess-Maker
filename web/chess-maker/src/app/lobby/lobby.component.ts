@@ -4,6 +4,7 @@ import {PackDataService} from '../services/pieces/pack-data.service';
 import {MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
 import {BoardComponent} from '../board/board.component';
 import {Router} from '@angular/router';
+import {DomSanitizer} from '@angular/platform-browser';
 
 const COLOR_NAMES = [
     'White',

@@ -26,6 +26,7 @@ def main():
 
             if connection in game.players:
                 game.players.remove_connection(connection)
+                await game.send_update_to_subscribers()
                 change_made = True
 
         if change_made:
@@ -182,6 +183,7 @@ def main():
             game.players.remove_connection(connection)
 
         await send_metadata_update_to_all()
+        await game.send_update_to_subscribers()
 
     ''' Note to Self:
     

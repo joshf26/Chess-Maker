@@ -2,6 +2,7 @@ import {Component, ElementRef, Input, OnInit, Output, ViewChild} from '@angular/
 import {ApiService} from '../services/api/api.service';
 import {PackDataService} from '../services/pieces/pack-data.service';
 import {GameMetaData} from '../lobby/lobby.component';
+import {DomSanitizer} from '@angular/platform-browser';
 
 const ODD_TILE_COLOR = '#A85738';
 const EVEN_TILE_COLOR = '#F3C1A9';
@@ -82,6 +83,7 @@ export class BoardComponent implements OnInit {
     constructor(
         private api: ApiService,
         public packDataService: PackDataService,
+        public sanitizer: DomSanitizer,
     ) {
         api.getCommand('full_game_data').subscribe(this.gameDataHandler.bind(this));
     }

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Tuple, List
 
 from board import Board, InfoElement, InfoButton, InfoText
 from color import Color
+from packs.standard.helpers import get_color_info_texts
 from packs.standard.pieces.knight import Knight
 from piece import Direction
 
@@ -68,10 +69,12 @@ class Jousting(Board):
         asyncio.create_task(self.countdown())
 
     def get_info(self, color: Color) -> List[InfoElement]:
-        if self.countdown_started and not self.game_started:
-            return [InfoText(f'Game starting in {self.start_timer}')]
+        result = get_color_info_texts(self.game, trailing_space=not self.game_started)
 
-        return [] if self.game_started else [self.start_button]
+        if self.countdown_started and not self.game_started:
+            return result + [InfoText(f'Game starting in {self.start_timer}')]
+
+        return result if self.game_started else result + [self.start_button]
 
     def process_plies(
         self,
