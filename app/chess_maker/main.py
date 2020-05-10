@@ -1,3 +1,5 @@
+import os
+
 from typing import Dict
 
 from color import Color
@@ -6,8 +8,6 @@ from network import Network, Connection
 from pack import load_packs
 from piece import Direction
 from ply import ply_to_dicts
-
-PORT = 8000
 
 
 def main():
@@ -162,7 +162,7 @@ def main():
         game.add_player(connection, color_object)
 
         await send_metadata_update_to_all()
-        await game.send_update(connection)
+        await game.send_update_to_subscribers()
 
     @network.command()
     async def leave_game(connection: Connection, game_id: str):
@@ -181,13 +181,6 @@ def main():
 
         await send_metadata_update_to_all()
         await game.send_update_to_subscribers()
-
-    ''' Note to Self:
-    
-    This should work by the user first requesting all available plies (ordered).
-    Then the user can send back the index of which ply they are interested in for
-    each specific from/to pair.
-    '''
 
     @network.command()
     async def get_plies(connection: Connection, game_id: str, from_row: int, from_col: int, to_row: int, to_col: int):
@@ -238,7 +231,7 @@ def main():
             await connection.error('Game id does not exist.')
             return
 
-        if piece_color < 0 or piece_color > 7 or piece_direction < 0 or piece_direction > 3:
+        if piece_color < 0 or piece_color > 7 or piece_direction < 0 or piece_direction > 7:
             await connection.error('Invalid piece color or direction.')
             return
 
@@ -250,12 +243,13 @@ def main():
             await connection.error('Piece does not exist.')
             return
 
+        to_pos = (to_row, to_col)
         inventory_plies = game.board.inventory_plies(
             selected_piece(Color(piece_color), Direction(piece_direction)),
-            (to_row, to_col),
+            to_pos,
         )
 
-        await game.apply_or_offer_choices(inventory_plies, connection)
+        await game.apply_or_offer_choices((-1, -1), to_pos, inventory_plies, connection)
 
     @network.command()
     async def submit_turn(connection: Connection, game_id: str, from_row: int, from_col: int, to_row: int, to_col: int):
@@ -298,7 +292,7 @@ def main():
         game = games[game_id]
         game.click_button(connection, button_id)
 
-    network.serve(PORT)
+    network.serve(int(os.environ['PORT']))
 
 
 if __name__ == '__main__':

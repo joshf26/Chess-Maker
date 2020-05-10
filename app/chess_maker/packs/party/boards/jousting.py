@@ -52,7 +52,7 @@ class Jousting(Board):
 
         return board
 
-    async def countdown(self):
+    async def start_game(self, color: Color):
         self.countdown_started = True
         await self.game.send_update_to_subscribers()
         await asyncio.sleep(1)
@@ -64,9 +64,6 @@ class Jousting(Board):
         await asyncio.sleep(1)
         self.game_started = True
         await self.game.send_update_to_subscribers()
-
-    def start_game(self):
-        asyncio.create_task(self.countdown())
 
     def get_info(self, color: Color) -> List[InfoElement]:
         result = get_color_info_texts(self.game, trailing_space=not self.game_started)

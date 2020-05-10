@@ -43,8 +43,6 @@ class Standard8x8(Board):
             for col in range(8):
                 board[row, col] = Pawn(color, direction)
 
-        board[1, 0] = Pawn(Color.WHITE, Direction.NORTH)
-
         return board
 
     def get_info(self, color: Color) -> List[InfoElement]:

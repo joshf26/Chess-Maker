@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Dict, Type
 from uuid import uuid4
@@ -187,5 +188,5 @@ class Game:
         info_elements = self.board.get_info(color)
         for info_element in info_elements:
             if isinstance(info_element, InfoButton) and info_element.id == button_id:
-                info_element.callback()
+                asyncio.create_task(info_element.callback(color))
                 break
