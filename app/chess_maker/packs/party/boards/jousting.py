@@ -76,10 +76,5 @@ class Jousting(Board):
 
         return result if self.game_started else result + [self.start_button]
 
-    def process_plies(
-        self,
-        plies: List[Ply],
-        from_pos: Tuple[int, int],
-        to_pos: Tuple[int, int],
-    ) -> List[Ply]:
+    def process_plies(self, plies: List[Tuple[str, Ply]], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Tuple[str, Ply]]:
         return plies if self.game_started else []

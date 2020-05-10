@@ -32,6 +32,20 @@ export interface CreateGameDialogData {
     board: {pack: string, name: string},
 }
 
+export interface Ply {
+    name: string,
+    actions: object[],
+}
+
+export interface SelectPlyDialogData {
+    fromRow: number,
+    fromCol: number,
+    toRow: number,
+    toCol: number,
+    plies: Ply[],
+    gameId: string,
+}
+
 @Component({
     selector: 'app-lobby',
     templateUrl: './lobby.component.html',
@@ -45,7 +59,8 @@ export class LobbyComponent implements OnInit {
     colorNames = COLOR_NAMES;
 
     constructor(
-        public dialog: MatDialog,
+        public createGameDialog: MatDialog,
+        public selectPlyDialog: MatDialog,
         public api: ApiService,
         private packDataService: PackDataService,
         private changeDetectorRef: ChangeDetectorRef,
@@ -53,6 +68,7 @@ export class LobbyComponent implements OnInit {
     ) {
         api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
         api.getCommand('update_pack_data').subscribe(this.updatePackData.bind(this));
+        api.getCommand('plies').subscribe(this.showPlies.bind(this));
     }
 
     ngOnInit(): void {
@@ -71,6 +87,19 @@ export class LobbyComponent implements OnInit {
         this.packDataService.updatePackData(parameters.pack_data);
     }
 
+    showPlies(parameters: {[key: string]: any}): void {
+        this.selectPlyDialog.open(SelectPlyDialog, {
+            data: {
+                fromRow: parameters.from_row,
+                fromCol: parameters.from_col,
+                toRow: parameters.to_row,
+                toCol: parameters.to_col,
+                plies: parameters.plies,
+                gameId: this.selectedGameId,
+            },
+        });
+    }
+
     disconnect() {
         this.api.disconnect();
         this.router.navigate(['/']);
@@ -81,7 +110,7 @@ export class LobbyComponent implements OnInit {
     }
 
     createGame(): void {
-        this.dialog.open(CreateGameDialog, {
+        this.createGameDialog.open(CreateGameDialog, {
             data: {
                 name: 'New Game',
                 board: {pack: '', name: ''},
@@ -124,6 +153,28 @@ export class CreateGameDialog {
             name: this.data.name,
             pack: this.data.board.pack,
             board: this.data.board.name,
+        })
+    }
+}
+
+@Component({
+    selector: 'select-ply-dialog',
+    templateUrl: 'select-ply.dialog.html',
+})
+export class SelectPlyDialog {
+    constructor(
+        public api: ApiService,
+        @Inject(MAT_DIALOG_DATA) public data: SelectPlyDialogData,
+    ) {}
+
+    selectPly(ply: Ply): void {
+        this.api.run('submit_ply', {
+            game_id: this.data.gameId,
+            from_row: this.data.fromRow,
+            from_col: this.data.fromCol,
+            to_row: this.data.toRow,
+            to_col: this.data.toCol,
+            ply: ply,
         })
     }
 }

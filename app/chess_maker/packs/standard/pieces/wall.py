@@ -12,10 +12,5 @@ class Wall(Piece):
     name = 'Wall'
     image = load_image('standard', 'images/wall.svg')
 
-    def ply_types(
-        self,
-        from_pos: Tuple[int, int],
-        to_pos: Tuple[int, int],
-        game: Game,
-    ) -> List[Ply]:
+    def ply_types(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int], game: Game) -> List[Tuple[str, Ply]]:
         return []

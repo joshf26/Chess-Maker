@@ -9,10 +9,23 @@ class MoveAction:
     from_pos: Tuple[int, int]
     to_pos: Tuple[int, int]
 
+    def to_dict(self) -> dict:
+        return {
+            'type': 'move',
+            'from_pos': list(self.from_pos),
+            'to_pos': list(self.to_pos),
+        }
+
 
 @dataclass
 class DestroyAction:
     pos: Tuple[int, int]
+
+    def to_dict(self) -> dict:
+        return {
+            'type': 'destroy',
+            'pos': list(self.pos),
+        }
 
 
 @dataclass
@@ -20,21 +33,17 @@ class CreateAction:
     piece: Piece
     pos: Tuple[int, int]
 
+    def to_dict(self) -> dict:
+        return {
+            'type': 'create',
+            'piece': self.piece.to_dict(),
+            'pos': list(self.pos),
+        }
 
-Action = Union[MoveAction, DestroyAction]
+
+Action = Union[MoveAction, DestroyAction, CreateAction]
 Ply = List[Action]
 
 
-# TODO: This probably doesn't need to exist.
-def ply_to_json(ply: Ply) -> str:
-    return json.dumps([{
-        'type': 'move',
-        'from_row': action.from_pos[0],
-        'from_col': action.from_pos[1],
-        'to_row': action.to_pos[0],
-        'to_col': action.to_pos[1],
-    } if isinstance(action, MoveAction) else {
-        'type': 'destroy',
-        'row': action.pos[0],
-        'col': action.pos[1],
-    } for action in ply])
+def ply_to_dicts(ply: Ply) -> List[dict]:
+    return [action.to_dict() for action in ply]

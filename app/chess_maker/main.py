@@ -1,14 +1,11 @@
-from typing import Dict, List, TYPE_CHECKING
+from typing import Dict
 
 from color import Color
 from game import Game
 from network import Network, Connection
 from pack import load_packs
 from piece import Direction
-from ply import ply_to_json
-
-if TYPE_CHECKING:
-    from ply import Ply
+from ply import ply_to_dicts
 
 PORT = 8000
 
@@ -199,8 +196,32 @@ def main():
             return
 
         game = games[game_id]
+        from_pos = (from_row, from_col)
+        to_pos = (to_row, to_col)
+
+        plies = game.get_plies(from_pos, to_pos)
+        await game.apply_or_offer_choices(from_pos, to_pos, plies, connection)
+
+    @network.command()
+    async def submit_ply(connection: Connection, game_id: str, from_row: int, from_col: int, to_row: int, to_col: int, ply: dict):
+        if game_id not in games:
+            await connection.error('Game id does not exist.')
+            return
+
+        game = games[game_id]
         plies = game.get_plies((from_row, from_col), (to_row, to_col))
-        await game.apply_or_offer_choices(plies, connection)
+        dict_plies = [{
+            'name': ply_data[0],
+            'actions': ply_to_dicts(ply_data[1]),
+        } for ply_data in plies]
+
+        if ply not in dict_plies:
+            await connection.error('Ply not available.')
+            return
+
+        ply_index = dict_plies.index(ply)
+
+        await game.apply_ply(plies[ply_index][1])
 
     @network.command()
     async def get_inventory_plies(

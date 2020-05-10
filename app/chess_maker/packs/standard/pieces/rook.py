@@ -13,12 +13,7 @@ class Rook(Piece):
     name = 'Rook'
     image = load_image('standard', 'images/rook.svg')
 
-    def ply_types(
-        self,
-        from_pos: Tuple[int, int],
-        to_pos: Tuple[int, int],
-        game: Game,
-    ) -> List[Ply]:
+    def ply_types(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int], game: Game) -> List[Tuple[str, Ply]]:
         # Make sure the rook is moving along the same axis.
         if to_pos == from_pos or (to_pos[0] != from_pos[0] and to_pos[1] != from_pos[1]):
             return []
@@ -34,9 +29,9 @@ class Rook(Piece):
         # Check for capture.
         if to_pos in game.board.tiles:
             if game.board.tiles[to_pos].color != self.color:
-                return [[DestroyAction(to_pos), MoveAction(from_pos, to_pos)]]
+                return [('Capture', [DestroyAction(to_pos), MoveAction(from_pos, to_pos)])]
         else:
-            return [[MoveAction(from_pos, to_pos)]]
+            return [('Move', [MoveAction(from_pos, to_pos)])]
 
         return []
 

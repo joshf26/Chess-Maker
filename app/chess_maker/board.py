@@ -76,8 +76,8 @@ class Board:
     def get_inventory(self, color: Color) -> List[Tuple[Piece, int]]:
         return []
 
-    def process_plies(self, plies: List[Ply], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:
+    def process_plies(self, plies: List[Tuple[str, Ply]], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Tuple[str, Ply]]:
         return plies
 
-    def inventory_plies(self, piece: Piece, pos: Tuple[int, int]) -> List[Ply]:
+    def inventory_plies(self, piece: Piece, pos: Tuple[int, int]) -> List[Tuple[str, Ply]]:
         return []

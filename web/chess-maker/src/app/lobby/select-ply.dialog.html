@@ -1,0 +1,15 @@
+<h1>Select Ply</h1>
+
+<mat-list>
+    <mat-list-item *ngFor="let ply of data.plies">
+        <button mat-raised-button
+                mat-dialog-close
+                color="primary"
+                style="width: 100%"
+                (click)="selectPly(ply)">{{ply.name}}</button>
+    </mat-list-item>
+</mat-list>
+
+<div mat-dialog-actions>
+  <button mat-button mat-dialog-close="true">Cancel</button>
+</div>

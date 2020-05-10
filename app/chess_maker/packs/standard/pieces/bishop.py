@@ -12,12 +12,7 @@ class Bishop(Piece):
     name = 'Bishop'
     image = load_image('standard', 'images/bishop.svg')
 
-    def ply_types(
-        self,
-        from_pos: Tuple[int, int],
-        to_pos: Tuple[int, int],
-        game: Game,
-    ) -> List[Ply]:
+    def ply_types(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int], game: Game) -> List[Tuple[str, Ply]]:
         row_diff = to_pos[0] - from_pos[0]
         col_diff = to_pos[1] - from_pos[1]
 
@@ -35,9 +30,9 @@ class Bishop(Piece):
         # Check for capture.
         if to_pos in game.board.tiles:
             if game.board.tiles[to_pos].color != self.color:
-                return [[DestroyAction(to_pos), MoveAction(from_pos, to_pos)]]
+                return [('Capture', [DestroyAction(to_pos), MoveAction(from_pos, to_pos)])]
         else:
-            return [[MoveAction(from_pos, to_pos)]]
+            return [('Move', [MoveAction(from_pos, to_pos)])]
 
         return []
 

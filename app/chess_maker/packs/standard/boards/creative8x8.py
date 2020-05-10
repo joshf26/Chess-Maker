@@ -47,8 +47,8 @@ class Creative8x8(Board):
             (Wall(color, Direction.NORTH), -1),
         ]
 
-    def process_plies(self, plies: List[Ply], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:
-        return [[MoveAction(from_pos, to_pos)]]
+    def process_plies(self, plies: List[Tuple[str, Ply]], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Tuple[str, Ply]]:
+        return [('Move', [MoveAction(from_pos, to_pos)])]
 
-    def inventory_plies(self, piece: Piece, pos: Tuple[int, int]):
-        return [[CreateAction(piece, pos)]]
+    def inventory_plies(self, piece: Piece, pos: Tuple[int, int]) -> List[Tuple[str, Ply]]:
+        return [('Create', [CreateAction(piece, pos)])]

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Set, Tuple
+from typing import TYPE_CHECKING, Tuple, List
 
 if TYPE_CHECKING:
     from ply import Ply
@@ -45,5 +45,5 @@ class Piece:
             'direction': self.direction.value,
         }
 
-    def ply_types(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int], game: Game) -> Set[Ply]:
+    def ply_types(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int], game: Game) -> List[Tuple[str, Ply]]:
         raise NotImplementedError

@@ -11,6 +11,7 @@ from packs.standard.pieces.pawn import Pawn
 from packs.standard.pieces.queen import Queen
 from packs.standard.pieces.rook import Rook
 from piece import Direction
+from ply import DestroyAction, CreateAction
 
 if TYPE_CHECKING:
     from ply import Ply
@@ -42,6 +43,8 @@ class Standard8x8(Board):
             for col in range(8):
                 board[row, col] = Pawn(color, direction)
 
+        board[1, 0] = Pawn(Color.WHITE, Direction.NORTH)
+
         return board
 
     def get_info(self, color: Color) -> List[InfoElement]:
@@ -54,8 +57,35 @@ class Standard8x8(Board):
 
         return result
 
-    def process_plies(self, plies: List[Ply], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Ply]:
-        if self.tiles[from_pos].color == self.game.current_color():
-            return plies
+    def process_plies(self, plies: List[Tuple[str, Ply]], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Tuple[str, Ply]]:
+        piece = self.tiles[from_pos]
 
-        return []
+        # Make sure it is their turn.
+        if piece.color != self.game.current_color():
+            return []
+
+        # Check for pawn promotion.
+        if isinstance(piece, Pawn) and (
+            (to_pos[0] == 0 and piece.color == Color.WHITE)
+            or (to_pos[0] == 7 and piece.color == Color.BLACK)
+        ):
+            return [
+                ('Promote to Queen', [
+                    DestroyAction(from_pos),
+                    CreateAction(Queen(piece.color, piece.direction), to_pos)
+                ]),
+                ('Promote to Knight', [
+                    DestroyAction(from_pos),
+                    CreateAction(Knight(piece.color, piece.direction), to_pos)
+                ]),
+                ('Promote to Rook', [
+                    DestroyAction(from_pos),
+                    CreateAction(Rook(piece.color, piece.direction), to_pos)
+                ]),
+                ('Promote to Bishop', [
+                    DestroyAction(from_pos),
+                    CreateAction(Bishop(piece.color, piece.direction), to_pos)
+                ]),
+            ]
+
+        return plies

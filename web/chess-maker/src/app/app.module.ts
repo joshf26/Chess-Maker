@@ -6,7 +6,7 @@ import {AppComponent} from './app.component';
 import {FormsModule} from '@angular/forms';
 import {BoardComponent} from './board/board.component';
 import {MenuComponent} from './menu/menu.component';
-import {CreateGameDialog, LobbyComponent} from './lobby/lobby.component';
+import {CreateGameDialog, LobbyComponent, SelectPlyDialog} from './lobby/lobby.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MatSidenavModule} from '@angular/material/sidenav';
 import {MatCardModule} from '@angular/material/card';
@@ -26,6 +26,7 @@ import {MatListModule} from '@angular/material/list';
         MenuComponent,
         LobbyComponent,
         CreateGameDialog,
+        SelectPlyDialog,
     ],
     imports: [
         BrowserModule,
