@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple, List
 
-from packs.standard.pieces.knight import signed_range
+from packs.standard.helpers import bidirectional_exclusive_range
 from piece import Piece, load_image
 from ply import Ply, MoveAction, DestroyAction
 
@@ -20,10 +20,10 @@ class Rook(Piece):
 
         # Check for collisions. TODO: Extract this and bishop code for queen to use.
         if to_pos[0] != from_pos[0]:
-            if any((row, to_pos[1]) in game.board.tiles for row in signed_range(from_pos[0], to_pos[0])):
+            if any((row, to_pos[1]) in game.board.tiles for row in bidirectional_exclusive_range(from_pos[0], to_pos[0])):
                 return []
         else:
-            if any((to_pos[0], col) in game.board.tiles for col in signed_range(from_pos[1], to_pos[1])):
+            if any((to_pos[0], col) in game.board.tiles for col in bidirectional_exclusive_range(from_pos[1], to_pos[1])):
                 return []
 
         # Check for capture.

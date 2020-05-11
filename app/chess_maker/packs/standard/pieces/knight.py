@@ -8,15 +8,6 @@ if TYPE_CHECKING:
     from game import Game
 
 
-def signed_range(start: int, end: int, step: int = 1) -> range:
-    assert step > 0, 'step must be a positive integer'
-
-    if start < end:
-        return range(start + 1, end, step)
-
-    return range(start - 1, end, -step)
-
-
 class Knight(Piece):
     name = 'Knight'
     image = load_image('standard', 'images/knight.svg')

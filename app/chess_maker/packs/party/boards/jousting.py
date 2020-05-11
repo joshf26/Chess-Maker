@@ -66,10 +66,10 @@ class Jousting(Board):
         await self.game.send_update_to_subscribers()
 
     def get_info(self, color: Color) -> List[InfoElement]:
-        result = get_color_info_texts(self.game, trailing_space=not self.game_started)
+        result = get_color_info_texts(self.game)
 
         if self.countdown_started and not self.game_started:
-            return result + [InfoText(f'Game starting in {self.start_timer}')]
+            return result + [InfoText(f'<br>Game starting in {self.start_timer}')]
 
         return result if self.game_started else result + [self.start_button]
 

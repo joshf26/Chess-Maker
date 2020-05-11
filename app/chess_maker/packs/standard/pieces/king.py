@@ -18,8 +18,6 @@ class King(Piece):
 
         # Make sure the king is moving one square.
         if from_pos == to_pos or row_dist > 1 or col_dist > 1:
-            # Check for castling
-
             return []
 
         # Check for capture.
@@ -28,7 +26,5 @@ class King(Piece):
                 return [('Capture', [DestroyAction(to_pos), MoveAction(from_pos, to_pos)])]
         else:
             return [('Move', [MoveAction(from_pos, to_pos)])]
-
-        # TODO: Implement castling.
 
         return []

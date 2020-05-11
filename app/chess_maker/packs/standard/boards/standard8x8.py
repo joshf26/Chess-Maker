@@ -1,9 +1,9 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Tuple, List
 
-from board import Board, InfoElement, InfoText
+from board import Board, InfoElement, InfoText, InfoButton
 from color import Color
-from packs.standard.helpers import get_color_info_texts
+from packs.standard.helpers import get_color_info_texts, empty_along_axis
 from packs.standard.pieces.bishop import Bishop
 from packs.standard.pieces.king import King
 from packs.standard.pieces.knight import Knight
@@ -16,6 +16,7 @@ from ply import DestroyAction, CreateAction
 if TYPE_CHECKING:
     from ply import Ply
     from board import Tiles
+    from game import Game
 
 
 class Standard8x8(Board):
@@ -25,6 +26,12 @@ class Standard8x8(Board):
         Color.WHITE,
         Color.BLACK,
     ]
+
+    def __init__(self, game: Game):
+        super().__init__(game)
+
+        self.castle_king_side_button = InfoButton('Castle King Side', self.castle_king_side)
+        self.castle_queen_side_button = InfoButton('Castle Queen Side', self.castle_queen_side)
 
     def init_board(self) -> Tiles:
         board: Tiles = {}
@@ -52,6 +59,17 @@ class Standard8x8(Board):
             f'Current Turn: <strong style="color: {self.game.current_color().name.lower()}">'
             f'{self.game.current_color().name.title()}</strong>'
         ))
+
+        if (
+            color == Color.WHITE == self.game.current_color()
+            and (7, 4) in self.tiles
+            and self.tiles[7, 4].moves == 0
+        ):
+            if (7, 7) in self.tiles and self.tiles[7, 7].moves == 0 and empty_along_axis(self, (7, 4), (7, 7)):
+                result.append(self.castle_king_side_button)
+
+            if (7, 0) in self.tiles and self.tiles[7, 0].moves == 0 and empty_along_axis(self, (7, 4), (7, 0)):
+                result.append(self.castle_queen_side_button)
 
         return result
 
@@ -87,3 +105,9 @@ class Standard8x8(Board):
             ]
 
         return plies
+
+    async def castle_king_side(self, color: Color):
+        pass
+
+    async def castle_queen_side(self, color: Color):
+        pass
