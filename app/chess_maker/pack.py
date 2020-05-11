@@ -18,7 +18,7 @@ def list_available_packs() -> Set[str]:
 
 
 def get_members_of_type(module: ModuleType, class_type: Type):
-    return inspect.getmembers(module, lambda cls: inspect.isclass(cls) and cls.__bases__[0] == class_type)
+    return inspect.getmembers(module, lambda cls: inspect.isclass(cls) and class_type in cls.__bases__)
         
 
 def load_packs() -> Dict[str, Tuple[List[Type[Board]], List[Type[Piece]]]]:

@@ -4,8 +4,8 @@ import {PackDataService} from '../services/pieces/pack-data.service';
 import {GameMetaData} from '../lobby/lobby.component';
 import {DomSanitizer} from '@angular/platform-browser';
 
-const ODD_TILE_COLOR = '#A85738';
-const EVEN_TILE_COLOR = '#F3C1A9';
+const EVEN_TILE_COLOR = '#A85738';
+const ODD_TILE_COLOR = '#F3C1A9';
 const MIN_ZOOM = 10;
 const MAX_ZOOM = 300;
 const ZOOM_FACTOR = 0.8;

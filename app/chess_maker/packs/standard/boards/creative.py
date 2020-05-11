@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Tuple, List, Dict
 
 from board import Board, InfoButton
@@ -22,9 +23,7 @@ if TYPE_CHECKING:
     from board import InfoElement
 
 
-class Creative8x8(Board):
-    name = 'Creative 8x8'
-    size = (8, 8)
+class Creative(Board):
     colors = [
         Color.WHITE,
         Color.BLACK,
@@ -69,3 +68,13 @@ class Creative8x8(Board):
         self.directions[color] = rotate_direction(self.directions[color])
 
         await self.game.send_update_to_subscribers()
+
+
+class Creative8x8(Creative, Board):
+    name = 'Creative 8x8'
+    size = (8, 8)
+
+
+class Creative32x32(Creative, Board):
+    name = 'Creative 32x32'
+    size = (32, 32)
