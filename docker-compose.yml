@@ -8,3 +8,9 @@ services:
       - 8000:8000
     environment:
       - PORT=8000
+  web:
+    build: web
+    volumes:
+      - ./web:/web
+    ports:
+      - 4200:4200
