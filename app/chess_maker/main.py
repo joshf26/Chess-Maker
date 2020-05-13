@@ -2,6 +2,7 @@ import os
 
 from typing import Dict
 
+from board import Vector2
 from color import Color
 from game import Game
 from network import Network, Connection
@@ -189,8 +190,8 @@ def main():
             return
 
         game = games[game_id]
-        from_pos = (from_row, from_col)
-        to_pos = (to_row, to_col)
+        from_pos = Vector2(from_row, from_col)
+        to_pos = Vector2(to_row, to_col)
 
         plies = game.get_plies(from_pos, to_pos)
         await game.apply_or_offer_choices(from_pos, to_pos, plies, connection)
@@ -202,7 +203,7 @@ def main():
             return
 
         game = games[game_id]
-        plies = game.get_plies((from_row, from_col), (to_row, to_col))
+        plies = game.get_plies(Vector2(from_row, from_col), Vector2(to_row, to_col))
         dict_plies = [{
             'name': ply_data[0],
             'actions': ply_to_dicts(ply_data[1]),
@@ -243,13 +244,13 @@ def main():
             await connection.error('Piece does not exist.')
             return
 
-        to_pos = (to_row, to_col)
+        to_pos = Vector2(to_row, to_col)
         inventory_plies = game.board.inventory_plies(
             selected_piece(Color(piece_color), Direction(piece_direction)),
             to_pos,
         )
 
-        await game.apply_or_offer_choices((-1, -1), to_pos, inventory_plies, connection)
+        await game.apply_or_offer_choices(Vector2(-1, -1), to_pos, inventory_plies, connection)
 
     @network.command()
     async def submit_turn(connection: Connection, game_id: str, from_row: int, from_col: int, to_row: int, to_col: int):

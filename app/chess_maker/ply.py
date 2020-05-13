@@ -1,13 +1,13 @@
-import json
 from dataclasses import dataclass
-from typing import List, Tuple, Union
+from typing import List, Union
 from piece import Piece
+from board import Vector2
 
 
 @dataclass
 class MoveAction:
-    from_pos: Tuple[int, int]
-    to_pos: Tuple[int, int]
+    from_pos: Vector2
+    to_pos: Vector2
 
     def to_dict(self) -> dict:
         return {
@@ -19,7 +19,7 @@ class MoveAction:
 
 @dataclass
 class DestroyAction:
-    pos: Tuple[int, int]
+    pos: Vector2
 
     def to_dict(self) -> dict:
         return {
@@ -31,7 +31,7 @@ class DestroyAction:
 @dataclass
 class CreateAction:
     piece: Piece
-    pos: Tuple[int, int]
+    pos: Vector2
 
     def to_dict(self) -> dict:
         return {

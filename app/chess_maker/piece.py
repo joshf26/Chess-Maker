@@ -45,5 +45,5 @@ class Piece:
             'direction': self.direction.value,
         }
 
-    def ply_types(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int], game: Game) -> List[Tuple[str, Ply]]:
+    def ply_types(self, from_pos: Vector2, to_pos: Vector2, game: Game) -> List[Tuple[str, Ply]]:
         raise NotImplementedError

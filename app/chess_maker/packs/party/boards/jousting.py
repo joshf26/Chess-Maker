@@ -38,19 +38,15 @@ class Jousting(Board):
 
         self.start_button = InfoButton('Start Game', self.start_game)
 
-    def init_board(self) -> Tiles:
-        board: Tiles = {
-            (0, 2): Knight(Color.WHITE, Direction.NORTH),
-            (0, 5): Knight(Color.BLACK, Direction.NORTH),
-            (2, 7): Knight(Color.RED, Direction.NORTH),
-            (5, 7): Knight(Color.ORANGE, Direction.NORTH),
-            (7, 5): Knight(Color.YELLOW, Direction.NORTH),
-            (7, 2): Knight(Color.GREEN, Direction.NORTH),
-            (5, 0): Knight(Color.BLUE, Direction.NORTH),
-            (2, 0): Knight(Color.PURPLE, Direction.NORTH),
-        }
-
-        return board
+    def init_board(self):
+        self[0, 2] = Knight(Color.WHITE, Direction.NORTH)
+        self[0, 5] = Knight(Color.BLACK, Direction.NORTH)
+        self[2, 7] = Knight(Color.RED, Direction.NORTH)
+        self[5, 7] = Knight(Color.ORANGE, Direction.NORTH)
+        self[7, 5] = Knight(Color.YELLOW, Direction.NORTH)
+        self[7, 2] = Knight(Color.GREEN, Direction.NORTH)
+        self[5, 0] = Knight(Color.BLUE, Direction.NORTH)
+        self[2, 0] = Knight(Color.PURPLE, Direction.NORTH)
 
     async def start_game(self, color: Color):
         self.countdown_started = True
@@ -73,5 +69,5 @@ class Jousting(Board):
 
         return result if self.game_started else result + [self.start_button]
 
-    def process_plies(self, plies: List[Tuple[str, Ply]], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Tuple[str, Ply]]:
+    def process_plies(self, plies: List[Tuple[str, Ply]], from_pos: Vector2, to_pos: Vector2) -> List[Tuple[str, Ply]]:
         return plies if self.game_started else []

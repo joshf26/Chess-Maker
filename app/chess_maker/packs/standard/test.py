@@ -1,6 +1,6 @@
 import unittest
-from typing import Tuple
 
+from board import Vector2
 from packs.standard.boards.standard8x8 import Standard8x8
 from ply import MoveAction, DestroyAction
 from testing import make_test_game
@@ -10,47 +10,47 @@ class TestPawn(unittest.TestCase):
     # TODO: Test directions other than North and South.
 
     def setUp(self):
-        self.game = make_test_game(Standard8x8())
+        self.game = make_test_game(Standard8x8)
 
-    def _ply_types(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int]):
+    def _ply_types(self, from_pos: Vector2, to_pos: Vector2):
         return self.game.board.tiles[from_pos].ply_types(from_pos, to_pos, self.game)
 
     def test_single_advance(self):
         self.assertEqual(
-            self._ply_types((6, 0), (5, 0)),
+            self._ply_types(Vector2(6, 0), Vector2(5, 0)),
             [[MoveAction((6, 0), (5, 0))]],
             'white pawn cannot single advance to empty space',
         )
 
         self.assertEqual(
-            self._ply_types((1, 0), (2, 0)),
+            self._ply_types(Vector2(1, 0), Vector2(2, 0)),
             [[MoveAction((1, 0), (2, 0))]],
             'black pawn cannot single advance to empty space',
         )
 
     def test_double_advance(self):
         self.assertEqual(
-            self._ply_types((6, 0), (4, 0)),
+            self._ply_types(Vector2(6, 0), Vector2(4, 0)),
             [[MoveAction((6, 0), (4, 0))]],
             'white pawn cannot double advance to empty space on its first move',
         )
 
         self.game.board.tiles[6, 0].moves += 1
         self.assertEqual(
-            self._ply_types((6, 0), (4, 0)),
+            self._ply_types(Vector2(6, 0), Vector2(4, 0)),
             [],
             'white pawn can double advance to empty space on its second move',
         )
 
         self.assertEqual(
-            self._ply_types((1, 0), (3, 0)),
+            self._ply_types(Vector2(1, 0), Vector2(3, 0)),
             [[MoveAction((1, 0), (3, 0))]],
             'black pawn cannot double advance to empty space on its first move',
         )
 
         self.game.board.tiles[1, 0].moves += 1
         self.assertEqual(
-            self._ply_types((1, 0), (3, 0)),
+            self._ply_types(Vector2(1, 0), Vector2(3, 0)),
             [],
             'black pawn can double advance to empty space on its second move',
         )
@@ -60,13 +60,13 @@ class TestPawn(unittest.TestCase):
         self.game.apply_ply([MoveAction((6, 1), (2, 1))])
 
         self.assertEqual(
-            self._ply_types((2, 1), (1, 0)),
+            self._ply_types(Vector2(2, 1), Vector2(1, 0)),
             [[DestroyAction((1, 0)), MoveAction((2, 1), (1, 0))]],
             'white pawn cannot capture left diagonally',
         )
 
         self.assertEqual(
-            self._ply_types((2, 1), (1, 2)),
+            self._ply_types(Vector2(2, 1), Vector2(1, 2)),
             [[DestroyAction((1, 2)), MoveAction((2, 1), (1, 2))]],
             'white pawn cannot capture right diagonally',
         )
@@ -75,13 +75,13 @@ class TestPawn(unittest.TestCase):
         self.game.apply_ply([MoveAction((1, 1), (5, 1))])
 
         self.assertEqual(
-            self._ply_types((5, 1), (6, 0)),
+            self._ply_types(Vector2(5, 1), Vector2(6, 0)),
             [[DestroyAction((6, 0)), MoveAction((5, 1), (6, 0))]],
             'black pawn cannot capture right diagonally',
         )
 
         self.assertEqual(
-            self._ply_types((5, 1), (6, 2)),
+            self._ply_types(Vector2(5, 1), Vector2(6, 2)),
             [[DestroyAction((6, 2)), MoveAction((5, 1), (6, 2))]],
             'black pawn cannot capture left diagonally',
         )
@@ -94,7 +94,7 @@ class TestPawn(unittest.TestCase):
         self.game.apply_ply([MoveAction((1, 0), (3, 0))])
 
         self.assertEqual(
-            self._ply_types((3, 1), (2, 0)),
+            self._ply_types(Vector2(3, 1), Vector2(2, 0)),
             [[DestroyAction((3, 0)), MoveAction((3, 1), (2, 0))]],
             'white pawn cannot en passant left',
         )
@@ -106,7 +106,7 @@ class TestPawn(unittest.TestCase):
         self.game.apply_ply([MoveAction((1, 7), (3, 7))])
 
         self.assertEqual(
-            self._ply_types((3, 6), (2, 7)),
+            self._ply_types(Vector2(3, 6), Vector2(2, 7)),
             [[DestroyAction((3, 7)), MoveAction((3, 6), (2, 7))]],
             'white pawn cannot en passant right',
         )
@@ -122,7 +122,7 @@ class TestPawn(unittest.TestCase):
         self.game.apply_ply([MoveAction((6, 0), (4, 0))])
 
         self.assertEqual(
-            self._ply_types((4, 1), (5, 0)),
+            self._ply_types(Vector2(4, 1), Vector2(5, 0)),
             [[DestroyAction((4, 0)), MoveAction((4, 1), (5, 0))]],
             'black pawn cannot en passant right',
         )
@@ -136,7 +136,7 @@ class TestPawn(unittest.TestCase):
         print(f'\n\n{self.game.board}\n\n')
 
         self.assertEqual(
-            self._ply_types((4, 6), (5, 7)),
+            self._ply_types(Vector2(4, 6), Vector2(5, 7)),
             [[DestroyAction((4, 7)), MoveAction((4, 6), (5, 7))]],
             'black pawn cannot en passant left',
         )
@@ -146,7 +146,7 @@ class TestPawn(unittest.TestCase):
         self.game.apply_ply([MoveAction((6, 0), (4, 0))])
 
         self.assertEqual(
-            self._ply_types((4, 0), (5, 0)),
+            self._ply_types(Vector2(4, 0), Vector2(5, 0)),
             [],
             'white pawn can single advance backwards',
         )
@@ -155,7 +155,7 @@ class TestPawn(unittest.TestCase):
         self.game.apply_ply([MoveAction((1, 0), (3, 0))])
 
         self.assertEqual(
-            self._ply_types((3, 0), (2, 0)),
+            self._ply_types(Vector2(3, 0), Vector2(2, 0)),
             [],
             'black pawn can single advance backwards',
         )

@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from board import Tiles
     from piece import Piece
     from game import Game
-    from board import InfoElement
+    from board import InfoElement, Vector2
 
 
 class Creative(Board):
@@ -41,9 +41,6 @@ class Creative(Board):
         self.directions: Dict[Color, Direction] = {color: Direction.NORTH for color in self.colors}
         self.rotate_pieces_button = InfoButton('Rotate Pieces', self.rotate_pieces)
 
-    def init_board(self) -> Tiles:
-        return {}
-
     def get_info(self, color: Color) -> List[InfoElement]:
         return [self.rotate_pieces_button]
 
@@ -58,10 +55,10 @@ class Creative(Board):
             (Wall(color, self.directions[color]), -1),
         ]
 
-    def process_plies(self, plies: List[Tuple[str, Ply]], from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Tuple[str, Ply]]:
+    def process_plies(self, plies: List[Tuple[str, Ply]], from_pos: Vector2, to_pos: Vector2) -> List[Tuple[str, Ply]]:
         return [('Move', [MoveAction(from_pos, to_pos)])]
 
-    def inventory_plies(self, piece: Piece, pos: Tuple[int, int]) -> List[Tuple[str, Ply]]:
+    def inventory_plies(self, piece: Piece, pos: Vector2) -> List[Tuple[str, Ply]]:
         return [('Create', [CreateAction(piece, pos)])]
 
     async def rotate_pieces(self, color: Color):

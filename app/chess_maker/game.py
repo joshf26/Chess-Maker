@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from ply import Ply, MoveAction, DestroyAction, ply_to_dicts, CreateAction
 from color import Color
-from board import InfoButton
+from board import InfoButton, Vector2
 
 if TYPE_CHECKING:
     from network import Network, Connection
@@ -84,8 +84,8 @@ class Game:
         # TODO: Maybe make this nested dictionaries instead of strings.
         return {
             'tiles': [{
-                'row': position[0],
-                'col': position[1],
+                'row': position.row,
+                'col': position.col,
                 'pack': piece.__module__.split('.')[1],  # TODO: Extract into function?
                 'piece': piece.__class__.__name__,
                 'color': piece.color.value,
@@ -105,13 +105,13 @@ class Game:
             await self.send_update(connection)
 
     # TODO: Make this a generator... any maybe inventory_plies too.
-    def get_plies(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int]) -> List[Tuple[str, Ply]]:
+    def get_plies(self, from_pos: Vector2, to_pos: Vector2) -> List[Tuple[str, Ply]]:
         if (
             from_pos not in self.board.tiles
-            or to_pos[0] < 0
-            or to_pos[1] < 0
-            or to_pos[0] >= self.board.size[0]
-            or to_pos[1] >= self.board.size[1]
+            or to_pos.row < 0
+            or to_pos.col < 0
+            or to_pos.row >= self.board.size[0]
+            or to_pos.col >= self.board.size[1]
         ):
             # Client must have sent stale data.
             return []
@@ -120,7 +120,7 @@ class Game:
 
         return self.board.process_plies(piece_plies, from_pos, to_pos)
 
-    async def apply_or_offer_choices(self, from_pos: Tuple[int, int], to_pos: Tuple[int, int], plies: List[Tuple[str, Ply]], connection: Connection):
+    async def apply_or_offer_choices(self, from_pos: Vector2, to_pos: Vector2, plies: List[Tuple[str, Ply]], connection: Connection):
         if len(plies) == 1:
             # There is only one ply available, so just apply it immediately.
             await self.apply_ply(plies[0][1])
@@ -132,10 +132,10 @@ class Game:
             } for ply in plies]
 
             await connection.run('plies', {
-                'from_row': from_pos[0],
-                'from_col': from_pos[1],
-                'to_row': to_pos[0],
-                'to_col': to_pos[1],
+                'from_row': from_pos.row,
+                'from_col': from_pos.col,
+                'to_row': to_pos.row,
+                'to_col': to_pos.col,
                 'plies': result,
             })
 
