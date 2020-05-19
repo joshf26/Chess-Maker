@@ -1,1 +1,1 @@
-from .boards.jousting import Jousting
+from .controllers.jousting import Jousting

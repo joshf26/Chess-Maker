@@ -2,12 +2,11 @@ import asyncio
 import inspect
 import json
 import uuid
-
-import websockets
-
 from dataclasses import dataclass
 from itertools import islice
 from typing import Dict, Callable, Set, Awaitable
+
+import websockets
 
 
 class Connection:
@@ -22,9 +21,6 @@ class Connection:
             'command': command,
             'parameters': parameters,
         }))
-
-    async def send(self, data: dict):
-        await self.socket.send(json.dumps(data))
 
     async def error(self, message: str):
         await self.socket.send(json.dumps({
@@ -52,18 +48,13 @@ class Network:
         self.socket_by_player = {}
         self.player_by_socket = {}
 
-    def command(self):
-        def inner(function: Callable):
-            signature = inspect.signature(function)
-            parameters = {
-                name: parameter.annotation for name, parameter in islice(signature.parameters.items(), 1, None)
-            }
+    def register_command(self, command: str, callback: Callable) -> None:
+        signature = inspect.signature(callback)
+        parameters = {
+            name: parameter.annotation for name, parameter in islice(signature.parameters.items(), 1, None)
+        }
 
-            self.commands[function.__name__] = Command(function, parameters)
-
-            return function
-
-        return inner
+        self.commands[command] = Command(callback, parameters)
 
     async def run_all(self, command: str, parameters: dict):
         for connection in self.connections:

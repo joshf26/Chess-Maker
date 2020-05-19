@@ -7,7 +7,6 @@ from network import Connection, Network
 from pack import Pack
 from piece import Direction
 from vector2 import Vector2
-from functools import partial
 
 
 class Server:
@@ -155,7 +154,7 @@ class Server:
         await self._send_metadata_update_to_all()
         await game.send_update_to_subscribers()
 
-    def on_plies(
+    async def on_plies(
         self,
         connection: Connection,
         game_id: str,
@@ -175,7 +174,7 @@ class Server:
         plies = game.get_plies(connection, from_pos, to_pos)
         await game.apply_or_offer_choices(from_pos, to_pos, plies, connection)
 
-    def on_inventory_plies(
+    async def on_inventory_plies(
         self,
         connection: Connection,
         game_id: str,
@@ -210,7 +209,7 @@ class Server:
 
         await game.apply_or_offer_choices(Vector2(-1, -1), to_pos, inventory_plies, connection)
 
-    def on_submit_ply(
+    async def on_submit_ply(
         self,
         connection: Connection,
         game_id: str,
@@ -236,7 +235,7 @@ class Server:
 
         await game.apply_ply(plies[ply_index])
 
-    def on_click_button(
+    async def on_click_button(
         self,
         connection: Connection,
         game_id: str,

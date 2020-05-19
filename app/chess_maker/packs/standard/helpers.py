@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import List, TYPE_CHECKING, Optional, Tuple
+from typing import List, TYPE_CHECKING, Optional, Tuple, Dict, Generator
 
-from board import InfoText, Board, Vector2
+from color import Color
+from info_elements import InfoText, InfoElement
 from piece import Direction, Piece
+from ply import Ply, DestroyAction, MoveAction
+from vector2 import Vector2
 
 if TYPE_CHECKING:
-    from board import InfoElement
-    from game import Game
-
+    from game import Game, GameState
 
 OFFSETS = {
     Direction.NORTH: Vector2(-1, 0),
@@ -36,10 +37,10 @@ def get_color_info_texts(game: Game, trailing_space=False) -> List[InfoElement]:
     return [InfoText(
         f'<strong style="color: {color.name.lower()}">{color.name.title()}</strong>: '
         f'{connection.nickname if (connection := game.players.get_connection(color)) is not None else "<em>Waiting...</em>"}'
-    ) for color in game.board.colors] + ([InfoText('<br>')] if trailing_space else [])
+    ) for color in game.controller.colors] + ([InfoText('<br>')] if trailing_space else [])
 
 
-def rotate_direction(direction: Direction):
+def rotate_direction(direction: Direction) -> Direction:
     return Direction((direction.value + 1) % 8)
 
 
@@ -60,14 +61,14 @@ def axis_direction(from_pos: Vector2, to_pos: Vector2) -> Optional[Direction]:
         return None
 
 
-def closest_piece_along_direction(board: Board, start: Vector2, direction: Direction) -> Optional[Tuple[Piece, Vector2]]:
+def closest_piece_along_direction(game: Game, start: Vector2, direction: Direction) -> Optional[Tuple[Piece, Vector2]]:
     position = start.copy()
 
-    while 0 <= position.row < board.size[0] and 0 <= position.col < board.size[1]:
+    while 0 <= position.row < game.controller.size[0] and 0 <= position.col < game.controller.size[1]:
         position += OFFSETS[direction]
 
-        if position in board.tiles:
-            return board.tiles[position], position
+        if position in game.board:
+            return game.board[position], position
 
     return None
 
@@ -79,7 +80,7 @@ class Axis(Enum):
     BOTTOM_LEFT_TOP_RIGHT = 3
 
 
-def empty_along_axis(board: Board, start: Vector2, end: Vector2):
+def empty_along_axis(board: Dict[Vector2, Piece], start: Vector2, end: Vector2) -> bool:
     row_dist = abs(end.row - start.row)
     col_dist = abs(end.col - start.col)
 
@@ -103,11 +104,52 @@ def empty_along_axis(board: Board, start: Vector2, end: Vector2):
 
     if axis == Axis.HORIZONTAL:
         for i in bidirectional_exclusive_range(start.col, end.col):
-            if (start.row, i) in board.tiles:
+            if Vector2(start.row, i) in board:
                 return False
     else:
         for i in bidirectional_exclusive_range(start.row, end.row):
-            if (i, start.col + i) in board.tiles:
+            if Vector2(i, start.col + i) in board:
                 return False
 
     return True
+
+
+def next_color(game: Game) -> Color:
+    return game.controller.colors[(game.history[-1].ply_color.value + 1) % len(game.controller.colors)]
+
+
+def n_state_by_color(game: Game, color: Color, n: int, reverse: bool = False) -> Optional[GameState]:
+    current = 0
+    for state in reversed(game.history) if reverse else game.history:
+        if state.ply_color == color:
+            current += 1
+
+            if current == n:
+                return state
+
+    return None
+
+
+def capture_or_move(
+    board: Dict[Vector2, Piece],
+    color: Color,
+    from_pos: Vector2,
+    to_pos: Vector2,
+) -> Generator[Ply]:
+    if to_pos in board:
+        if board[to_pos].color != color:
+            yield Ply('Capture', [DestroyAction(to_pos), MoveAction(from_pos, to_pos)])
+    else:
+        yield Ply('Move', [MoveAction(from_pos, to_pos)])
+
+
+def capture_or_move_if_empty(
+    board: Dict[Vector2, Piece],
+    color: Color,
+    from_pos: Vector2,
+    to_pos: Vector2,
+) -> Generator[Ply]:
+    if not empty_along_axis(board, from_pos, to_pos):
+        return
+
+    yield from capture_or_move(board, color, from_pos, to_pos)

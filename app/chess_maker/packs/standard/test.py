@@ -1,7 +1,7 @@
 import unittest
 
 from board import Vector2
-from packs.standard.boards.standard8x8 import Standard8x8
+from packs.standard.controllers.standard8x8 import Standard8x8
 from ply import MoveAction, DestroyAction
 from testing import make_test_game
 
@@ -13,7 +13,7 @@ class TestPawn(unittest.TestCase):
         self.game = make_test_game(Standard8x8)
 
     def _ply_types(self, from_pos: Vector2, to_pos: Vector2):
-        return self.game.board.tiles[from_pos].ply_types(from_pos, to_pos, self.game)
+        return self.game.board.tiles[from_pos].get_plies(from_pos, to_pos, self.game)
 
     def test_single_advance(self):
         self.assertEqual(

@@ -1,15 +1,17 @@
 from dataclasses import dataclass
 from typing import List, Union
+
+from json_serializable import JsonSerializable
 from piece import Piece
-from board import Vector2
+from vector2 import Vector2
 
 
 @dataclass
-class MoveAction:
+class MoveAction(JsonSerializable):
     from_pos: Vector2
     to_pos: Vector2
 
-    def to_dict(self) -> dict:
+    def to_json(self) -> Union[dict, list]:
         return {
             'type': 'move',
             'from_pos': list(self.from_pos),
@@ -18,10 +20,10 @@ class MoveAction:
 
 
 @dataclass
-class DestroyAction:
+class DestroyAction(JsonSerializable):
     pos: Vector2
 
-    def to_dict(self) -> dict:
+    def to_json(self) -> Union[dict, list]:
         return {
             'type': 'destroy',
             'pos': list(self.pos),
@@ -29,21 +31,25 @@ class DestroyAction:
 
 
 @dataclass
-class CreateAction:
+class CreateAction(JsonSerializable):
     piece: Piece
     pos: Vector2
 
-    def to_dict(self) -> dict:
+    def to_json(self) -> Union[dict, list]:
         return {
             'type': 'create',
-            'piece': self.piece.to_dict(),
+            'piece': self.piece.to_json(),
             'pos': list(self.pos),
         }
 
 
 Action = Union[MoveAction, DestroyAction, CreateAction]
-Ply = List[Action]
 
 
-def ply_to_dicts(ply: Ply) -> List[dict]:
-    return [action.to_dict() for action in ply]
+@dataclass
+class Ply(JsonSerializable):
+    name: str
+    actions: List[Action]
+
+    def to_json(self) -> Union[dict, list]:
+        return [action.to_json() for action in self.actions]

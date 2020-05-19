@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Tuple, List
+from typing import TYPE_CHECKING, Union, Generator
+
+from json_serializable import JsonSerializable
+from vector2 import Vector2
 
 if TYPE_CHECKING:
     from ply import Ply
     from color import Color
     from game import Game
+    from controller import Controller
 
 
 class Direction(Enum):
@@ -25,8 +29,12 @@ def load_image(pack_path: str, image_path: str) -> str:
         return file.read()
 
 
-class Piece:
-    name = 'Piece'
+def get_pack(obj: Union[Piece, Controller]) -> str:
+    return obj.__module__.split('.')[1]
+
+
+class Piece(JsonSerializable):
+    name = ''
     image = ''
 
     def __init__(self, color: Color, direction: Direction):
@@ -38,12 +46,12 @@ class Piece:
     def __repr__(self):
         return f'<{self.color} {self.__class__.__name__} facing {self.direction}>'
 
-    def to_dict(self) -> dict:
+    def to_json(self) -> Union[dict, list]:
         return {
             'name': self.name,
             'color': self.color.value,
             'direction': self.direction.value,
         }
 
-    def ply_types(self, from_pos: Vector2, to_pos: Vector2, game: Game) -> List[Tuple[str, Ply]]:
-        raise NotImplementedError
+    def get_plies(self, from_pos: Vector2, to_pos: Vector2, game: Game) -> Generator[Ply]:
+        yield from ()

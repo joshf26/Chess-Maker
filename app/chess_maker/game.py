@@ -2,23 +2,20 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Dict, Type
+from typing import TYPE_CHECKING, List, Optional, Set, Dict, Type, Generator
 from uuid import uuid4
 
-from ply import Ply, MoveAction, DestroyAction, ply_to_dicts, CreateAction
 from color import Color
-from board import InfoButton, Vector2
+from controller import Controller
+from game_subscribers import GameSubscribers
+from info_elements import InfoButton
+from inventory_item import InventoryItem
+from piece import Piece, get_pack
+from ply import Ply, MoveAction, DestroyAction, CreateAction
+from vector2 import Vector2
 
 if TYPE_CHECKING:
     from network import Network, Connection
-    from board import Board, Tiles
-
-
-@dataclass
-class HistoryEvent:
-    color: Color
-    tiles: Tiles
-    ply: Ply
 
 
 class ColorConnections:
@@ -53,140 +50,177 @@ class ColorConnections:
         return self.color_to_connection.get(color, None)
 
 
+@dataclass
+class GameState:
+    board: Dict[Vector2, Piece]
+    ply_color: Optional[Color]
+    ply: Optional[Ply]
+
+
 class Game:
 
-    def __init__(self, name: str, owner: Connection, board_class: Type[Board], network: Network):
+    def __init__(
+        self,
+        name: str,
+        owner: Connection,
+        controller_type: Type[Controller],
+        network: Network,
+        subscribers: GameSubscribers,
+    ):
         self.name = name
         self.owner = owner
         self.network = network
+        self.subscribers = subscribers
 
         self.id = str(uuid4())
-
-        self.subscribers: Set[Connection] = set()
         self.players = ColorConnections()
+        self.history: List[GameState] = []
+        self.controller = controller_type(self)
 
-        self.plies: List[Ply] = []
-        self.history: List[HistoryEvent] = []
+        self._init_game()
 
-        self.board = board_class(self)
+    def __hash__(self):
+        return hash(self.id)
+
+    def _init_game(self) -> None:
+        board = self.controller.init_board()
+        self.history.append(GameState(board, None, None))
+
+    def get_metadata(self, connection: Connection) -> dict:
+        return {
+            'name': self.name,
+            'creator': self.owner.nickname,
+            'pack': get_pack(self.controller),
+            'board': self.controller.name,
+            'available_colors': list(map(lambda color: color.value, self.get_available_colors())),
+            'total_players': len(self.controller.colors),
+            'playing_as': None if (color := self.players.get_color(connection)) is None else color.value,
+        }
+
+    def get_full_data(self, connection: Connection) -> dict:
+        color = self.players.get_color(connection)
+        inventory_items: List[InventoryItem] = [] if color is None else self.controller.get_inventory(color)
+
+        pieces = [{
+            'row': position.row,
+            'col': position.col,
+            'pack': get_pack(piece),
+            'piece': piece.__class__.__name__,
+            'color': piece.color.value,
+            'direction': piece.direction.value,
+        } for position, piece in self.board.items()]
+        info = [info_element.to_dict() for info_element in self.controller.get_info(color)]
+        inventory = [dict(
+            pack=get_pack(inventory_item.piece),
+            quantity=inventory_item.quantity,
+            **inventory_item.piece.to_dict(),
+        ) for inventory_item in inventory_items]
+
+        return {
+            'pieces': pieces,
+            'info': info,
+            'inventory': inventory
+        }
 
     def get_available_colors(self) -> Set[Color]:
-        colors = set(self.board.colors.copy())
+        colors = set(self.controller.colors.copy())
         taken_colors = set(self.players.color_to_connection.keys())
 
         return colors - taken_colors
 
-    def get_full_data(self, connection: Connection) -> dict:
-        color = self.players.get_color(connection)
-
-        inventory = [] if color is None else self.board.get_inventory(color)
-
-        # TODO: Maybe make this nested dictionaries instead of strings.
-        return {
-            'tiles': [{
-                'row': position.row,
-                'col': position.col,
-                'pack': piece.__module__.split('.')[1],  # TODO: Extract into function?
-                'piece': piece.__class__.__name__,
-                'color': piece.color.value,
-                'direction': piece.direction.value,
-            } for position, piece in self.board.tiles.items()],
-            'info': [info_element.to_dict() for info_element in self.board.get_info(color)],
-            'inventory': [dict(pack=piece[0].__module__.split('.')[1], **piece[0].to_dict(), quantity=piece[1]) for piece in inventory]
-        }
-
-    async def send_update(self, connection: Connection):
+    async def send_update(self, connection: Connection) -> None:
         game_data = self.get_full_data(connection)
         game_data['id'] = self.id
         await connection.run('full_game_data', game_data)
 
-    async def send_update_to_subscribers(self):
-        for connection in self.subscribers:
+    async def send_update_to_subscribers(self) -> None:
+        for connection in self.subscribers.get_connections(self):
             await self.send_update(connection)
 
-    # TODO: Make this a generator... any maybe inventory_plies too.
-    def get_plies(self, from_pos: Vector2, to_pos: Vector2) -> List[Tuple[str, Ply]]:
+    def get_plies(self, connection: Connection, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
         if (
-            from_pos not in self.board.tiles
+            from_pos not in self.board
             or to_pos.row < 0
             or to_pos.col < 0
-            or to_pos.row >= self.board.size[0]
-            or to_pos.col >= self.board.size[1]
+            or to_pos.row >= self.controller.board_size.row
+            or to_pos.col >= self.controller.board_size.col
         ):
             # Client must have sent stale data.
-            return []
+            raise StopIteration
 
-        piece_plies = self.board.tiles[from_pos].ply_types(from_pos, to_pos, self)
+        color = self.players.get_color(connection)
+        return self.controller.get_plies(color, from_pos, to_pos)
 
-        return self.board.process_plies(piece_plies, from_pos, to_pos)
+    def next_state(self, color: Color, ply: Ply) -> GameState:
+        board = self.board.copy()
 
-    async def apply_or_offer_choices(self, from_pos: Vector2, to_pos: Vector2, plies: List[Tuple[str, Ply]], connection: Connection):
-        if len(plies) == 1:
-            # There is only one ply available, so just apply it immediately.
-            await self.apply_ply(plies[0][1])
-        elif len(plies) > 1:
-            # There are multiple plies available, so present the user with a choice.
-            result = [{
-                'name': ply[0],
-                'actions': ply_to_dicts(ply[1])
-            } for ply in plies]
-
-            await connection.run('plies', {
-                'from_row': from_pos.row,
-                'from_col': from_pos.col,
-                'to_row': to_pos.row,
-                'to_col': to_pos.col,
-                'plies': result,
-            })
-
-    async def apply_ply(self, ply: Ply):
-        self.history.append(HistoryEvent(self.current_color(), self.board.tiles.copy(), ply))
-
-        for action in ply:
+        for action in ply.actions:
             if isinstance(action, MoveAction):
-                self.board.tiles[action.from_pos].moves += 1
-                self.board.tiles[action.to_pos] = self.board.tiles.pop(action.from_pos)
+                board[action.from_pos].moves += 1
+                board[action.to_pos] = board.pop(action.from_pos)
 
             elif isinstance(action, DestroyAction):
-                self.board.tiles.pop(action.pos)
+                board.pop(action.pos)
 
             elif isinstance(action, CreateAction):
-                self.board.tiles[action.pos] = action.piece
+                board[action.pos] = action.piece
 
+        return GameState(board, color, ply)
+
+    async def apply_ply(self, color: Color, ply: Ply) -> None:
+        self.history.append(self.next_state(color, ply))
         await self.send_update_to_subscribers()
 
-    def add_player(self, connection: Connection, color: Color):
+    async def undo_ply(self) -> None:
+        self.history.pop()
+        await self.send_update_to_subscribers()
+
+    async def apply_or_offer_choices(
+        self,
+        from_pos: Vector2,
+        to_pos: Vector2,
+        plies: Generator[Ply],
+        connection: Connection,
+    ) -> None:
+        first = next(plies, None)
+        if first is None:
+            # No plies available.
+            return
+
+        second = next(plies, None)
+        if second is None:
+            # There is only one ply available, so just apply it immediately.
+            await self.apply_ply(self.players.get_color(connection), first)
+            return
+
+        full_plies = [first, second, *plies]
+
+        # There are multiple plies available, so present the user with a choice.
+        result = [ply.to_json() for ply in full_plies]
+
+        await connection.run('plies', {
+            'from_row': from_pos.row,
+            'from_col': from_pos.col,
+            'to_row': to_pos.row,
+            'to_col': to_pos.col,
+            'plies': result,
+        })
+
+    def add_player(self, connection: Connection, color: Color) -> None:
         self.players.set(color, connection)
 
-    # TODO: This should not be part of the Game class.
-    def current_color(self) -> Color:
-        if len(self.history) == 0:
-            # TODO: Board should be validated at some point to ensure there is at least one color.
-            return self.board.colors[0]
-
-        color_index = self.board.colors.index(self.history[-1].color) + 1
-        return self.board.colors[color_index % len(self.board.colors)]
-
-    def n_event_by_color(self, color: Color, n: int, reverse: bool = False) -> Optional[HistoryEvent]:
-        assert n > 0, 'n must be greater than 0'
-
-        counter = 0
-        for history_event in reversed(self.history) if reverse else self.history:
-            if history_event.color == color:
-                counter += 1
-                if counter == n:
-                    return history_event
-
-        return None
-
-    def click_button(self, connection: Connection, button_id: str):
+    def click_button(self, connection: Connection, button_id: str) -> None:
         color = self.players.get_color(connection)
 
         if color is None:
             return
 
-        info_elements = self.board.get_info(color)
+        info_elements = self.controller.get_info(color)
         for info_element in info_elements:
             if isinstance(info_element, InfoButton) and info_element.id == button_id:
                 asyncio.create_task(info_element.callback(color))
                 break
+
+    @property
+    def board(self) -> Dict[Vector2, Piece]:
+        return self.history[-1].board
