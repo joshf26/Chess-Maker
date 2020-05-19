@@ -1,8 +1,10 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Tuple, List
 
+from typing import TYPE_CHECKING, Generator
+
+from packs.standard.helpers import capture_or_move
 from piece import Piece, load_image
-from ply import Ply, DestroyAction, MoveAction
+from ply import Ply
 
 if TYPE_CHECKING:
     from game import Game
@@ -13,20 +15,13 @@ class Knight(Piece):
     name = 'Knight'
     image = load_image('standard', 'images/knight.svg')
 
-    def ply_types(self, from_pos: Vector2, to_pos: Vector2, game: Game) -> List[Tuple[str, Ply]]:
+    def get_plies(self, from_pos: Vector2, to_pos: Vector2, game: Game) -> Generator[Ply]:
         row_dist = abs(to_pos.row - from_pos.row)
         col_dist = abs(to_pos.col - from_pos.col)
 
         # Check for valid knight move.
         if (row_dist == 2 and col_dist == 1) or (row_dist == 1 and col_dist == 2):
-            # Check for capture.
-            if to_pos in game.board.tiles:
-                if game.board.tiles[to_pos].color != self.color:
-                    return [('Capture', [DestroyAction(to_pos), MoveAction(from_pos, to_pos)])]
-            else:
-                return [('Move', [MoveAction(from_pos, to_pos)])]
-
-        return []
+            yield from capture_or_move(game.board, self.color, from_pos, to_pos)
 
 
 # TODO: Add unit tests.
