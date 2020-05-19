@@ -27,9 +27,6 @@ class Standard8x8(Board):
         Color.BLACK,
     ]
 
-    def __init__(self, game: Game):
-        super().__init__(game)
-
     def init_board(self):
         for color, direction, row in zip([Color.WHITE, Color.BLACK], [Direction.NORTH, Direction.SOUTH], [7, 0]):
             self[row, 0] = Rook(color, direction)
@@ -62,6 +59,20 @@ class Standard8x8(Board):
         if piece.color != self.game.current_color():
             return []
 
+        # Make sure they are not in check after the ply is completed.
+        for ply in plies:
+            tiles = self.game.simulate_ply(ply[1])
+
+            king_position, king = next(filter(lambda piece_data: (
+                isinstance(piece_data[1], King)
+                and piece_data[1].color == piece.color
+            ), tiles.items()), None)
+
+            for position, piece in tiles.items():
+                if DestroyAction(king_position) in piece.ply_types(position, king_position, self.game):
+                    # King is still in check after ply.
+                    return []
+
         # Check for pawn promotion.
         if isinstance(piece, Pawn) and (
             (to_pos.row == 0 and piece.color == Color.WHITE)
@@ -87,9 +98,3 @@ class Standard8x8(Board):
             ]
 
         return plies
-
-    async def castle_king_side(self, color: Color):
-        pass
-
-    async def castle_queen_side(self, color: Color):
-        pass
