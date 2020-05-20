@@ -71,9 +71,7 @@ export class LobbyComponent implements OnInit {
         api.getCommand('plies').subscribe(this.showPlies.bind(this));
     }
 
-    ngOnInit(): void {
-        this.api.run('get_games', {});
-    }
+    ngOnInit(): void {}
 
     updateGameMetadata(parameters: {[key: string]: any}): void {
         this.games = parameters.game_metadata;
@@ -119,7 +117,7 @@ export class LobbyComponent implements OnInit {
     }
 
     showGame(gameId: string): void {
-        this.api.run('subscribe_to_game', {
+        this.api.run('show_game', {
             game_id: gameId,
         })
 

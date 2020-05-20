@@ -15,11 +15,10 @@ from packs.standard.pieces.queen import Queen
 from packs.standard.pieces.rook import Rook
 from packs.standard.pieces.wall import Wall
 from piece import Direction
-from ply import MoveAction, CreateAction
+from ply import MoveAction, CreateAction, Ply
 from vector2 import Vector2
 
 if TYPE_CHECKING:
-    from ply import Ply
     from piece import Piece
     from game import Game
 

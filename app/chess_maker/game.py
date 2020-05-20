@@ -129,6 +129,7 @@ class Game:
         ) for inventory_item in inventory_items]
 
         return {
+            'id': self.id,
             'pieces': pieces,
             'info': info,
             'inventory': inventory
@@ -142,7 +143,6 @@ class Game:
 
     async def send_update(self, connection: Connection) -> None:
         game_data = self.get_full_data(connection)
-        game_data['id'] = self.id
         await connection.run('full_game_data', game_data)
 
     async def send_update_to_subscribers(self) -> None:

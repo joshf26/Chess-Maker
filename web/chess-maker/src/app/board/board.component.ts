@@ -30,7 +30,7 @@ interface InventoryPiece {
 
 interface GameData {
     id: string,
-    tiles: Piece[],
+    pieces: Piece[],
     info: InfoElement[],
     inventory: InventoryPiece[],
 }
@@ -124,7 +124,7 @@ export class BoardComponent implements OnInit {
 
     gameDataHandler(gameData: GameData): void {
         if (gameData.id == this.gameId) {
-            this.pieces = gameData.tiles;
+            this.pieces = gameData.pieces;
             this.infoElements = gameData.info;
             this.inventoryPieces = gameData.inventory;
             this.updateBackgroundCanvases();
@@ -268,7 +268,7 @@ export class BoardComponent implements OnInit {
                     // The piece came from the inventory.
                     // TODO: Use a different system for this.
 
-                    this.api.run('get_inventory_plies', {
+                    this.api.run('inventory_plies', {
                         'game_id': this.gameId,
                         'pack_name': this.draggingPiece.pack,
                         'piece_name': this.draggingPiece.piece,
@@ -279,7 +279,7 @@ export class BoardComponent implements OnInit {
                     })
                 }
                 else if (this.draggingPiece.row != mouseTileY || this.draggingPiece.col != mouseTileX) {
-                    this.api.run('get_plies', {
+                    this.api.run('plies', {
                         'game_id': this.gameId,
                         'from_row': this.draggingPiece.row,
                         'from_col': this.draggingPiece.col,

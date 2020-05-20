@@ -211,8 +211,10 @@ class Server:
             return
 
         to_pos = Vector2(to_row, to_col)
-        inventory_plies = game.controller.inventory_plies(
-            selected_piece(Color(piece_color), Direction(piece_direction)),
+        color = Color(piece_color)
+        inventory_plies = game.controller.get_inventory_plies(
+            color,
+            selected_piece(color, Direction(piece_direction)),
             to_pos,
         )
 

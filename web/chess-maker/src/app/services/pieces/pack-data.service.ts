@@ -45,7 +45,7 @@ export class PackDataService {
                 }
             }
 
-            this.boardTypes[pack] = packData['boards'];
+            this.boardTypes[pack] = packData['controllers'];
         }
 
         this.updateBoardNames();

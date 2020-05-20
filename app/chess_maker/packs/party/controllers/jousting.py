@@ -14,7 +14,6 @@ from vector2 import Vector2
 if TYPE_CHECKING:
     from ply import Ply
     from game import Game
-    from board import Board
 
 
 class Jousting(Controller):
@@ -59,7 +58,8 @@ class Jousting(Controller):
         return result if self.game_started else result + [self.start_button]
 
     def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
-        yield from self.game.board[from_pos].get_plies(from_pos, to_pos, self.game)
+        if self.game_started:
+            yield from self.game.board[from_pos].get_plies(from_pos, to_pos, self.game)
 
     async def start_game(self, color: Color):
         self.countdown_started = True
