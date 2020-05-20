@@ -17,13 +17,19 @@ class Server:
         self.games: Dict[str, Game] = {}
         self.subscribers = GameSubscribers()
         self.network = Network(self.on_disconnect)
+        self._register_commands()
 
     def _register_commands(self) -> None:
         self.network.register_command('login', self.on_login)
         self.network.register_command('create_game', self.on_create_game)
+        self.network.register_command('delete_game', self.on_delete_game)
         self.network.register_command('show_game', self.on_show_game)
         self.network.register_command('join_game', self.on_join_game)
         self.network.register_command('leave_game', self.on_leave_game)
+        self.network.register_command('plies', self.on_plies)
+        self.network.register_command('inventory_plies', self.on_inventory_plies)
+        self.network.register_command('submit_ply', self.on_submit_ply)
+        self.network.register_command('click_button', self.on_click_button)
 
     def _get_metadata(self, connection: Connection) -> dict:
         return {game_id: game.get_metadata(connection) for game_id, game in self.games.items()}
@@ -31,17 +37,8 @@ class Server:
     async def _send_pack_data(self, connection: Connection) -> None:
         pack_data: Dict[str, dict] = {}
 
-        for pack, (boards, pieces) in self.packs.items():
-            pack_data[pack] = {
-                'pieces': {piece.name: {
-                    'image': piece.image,
-                } for piece in pieces},
-
-                'controllers': {board.name: {
-                    'rows': board.size[1],
-                    'cols': board.size[0],
-                } for board in boards},
-            }
+        for name, pack in self.packs.items():
+            pack_data[name] = pack.to_json()
 
         await connection.run('update_pack_data', {
             'pack_data': pack_data,
@@ -60,7 +57,7 @@ class Server:
         change_made = False
         for game in self.games.values():
             if connection in game.subscribers:
-                game.subscribers.remove(connection)
+                game.subscribers.remove_connection(connection)
                 change_made = True
 
             if connection in game.players:
@@ -86,7 +83,7 @@ class Server:
             'game_metadata': self._get_metadata(connection),
         })
 
-    async def on_create_game(self, connection: Connection, name: str, pack: str, board: str):
+    async def on_create_game(self, connection: Connection, name: str, pack: str, board: str) -> None:
         if pack not in self.packs:
             await connection.error('Package does not exist.')
             return
@@ -100,6 +97,18 @@ class Server:
         game = Game(name, connection, controller_class, self.network, self.subscribers)
         self.games[game.id] = game
 
+        await self._send_metadata_update_to_all()
+
+    async def on_delete_game(self, connection: Connection, game_id: str) -> None:
+        if game_id not in self.games:
+            await connection.error('Game does not exist.')
+            return
+
+        if self.games[game_id].owner.nickname != connection.nickname:
+            await connection.error('Only the owner of this game can delete it.')
+            return
+
+        del self.games[game_id]
         await self._send_metadata_update_to_all()
 
     async def on_show_game(self, connection: Connection, game_id: str) -> None:
@@ -224,6 +233,7 @@ class Server:
             return
 
         game = self.games[game_id]
+        color = game.players.get_color(connection)
         plies = list(game.get_plies(connection, Vector2(from_row, from_col), Vector2(to_row, to_col)))
         dict_plies = [ply_data.to_json() for ply_data in plies]
 
@@ -233,7 +243,7 @@ class Server:
 
         ply_index = dict_plies.index(ply)
 
-        await game.apply_ply(plies[ply_index])
+        await game.apply_ply(color, plies[ply_index])
 
     async def on_click_button(
         self,

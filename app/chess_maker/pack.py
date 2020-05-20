@@ -3,18 +3,31 @@ import os
 from dataclasses import dataclass
 from importlib import import_module
 from types import ModuleType
-from typing import List, Set, Dict, Type, TypeVar
+from typing import List, Set, Dict, Type, TypeVar, Union
 
 from controller import Controller
+from json_serializable import JsonSerializable
 from piece import Piece
+
 
 T = TypeVar('T')
 
 
 @dataclass
-class Pack:
+class Pack(JsonSerializable):
     controllers: List[Type[Controller]]
     pieces: List[Type[Piece]]
+
+    def to_json(self) -> Union[dict, list]:
+        return {
+            'pieces': {piece.name: {
+                'image': piece.image
+            } for piece in self.pieces},
+            'controllers': {controller.name: {
+                'rows': controller.board_size.row,
+                'cols': controller.board_size.col,
+            } for controller in self.controllers},
+        }
 
 
 def available_packs() -> Set[str]:

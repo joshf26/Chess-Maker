@@ -10,7 +10,7 @@ from controller import Controller
 from game_subscribers import GameSubscribers
 from info_elements import InfoButton
 from inventory_item import InventoryItem
-from piece import Piece, get_pack
+from piece import get_pack, Piece
 from ply import Ply, MoveAction, DestroyAction, CreateAction
 from vector2 import Vector2
 
@@ -51,6 +51,17 @@ class ColorConnections:
 
 
 @dataclass
+class GameData:
+    history: List[GameState]
+    board_size: Vector2
+    colors: List[Color]
+
+    @property
+    def board(self) -> Dict[Vector2, Piece]:
+        return self.history[-1].board
+
+
+@dataclass
 class GameState:
     board: Dict[Vector2, Piece]
     ply_color: Optional[Color]
@@ -74,8 +85,8 @@ class Game:
 
         self.id = str(uuid4())
         self.players = ColorConnections()
-        self.history: List[GameState] = []
         self.controller = controller_type(self)
+        self.game_data = GameData([], self.controller.board_size, self.controller.colors)
 
         self._init_game()
 
@@ -83,8 +94,9 @@ class Game:
         return hash(self.id)
 
     def _init_game(self) -> None:
-        board = self.controller.init_board()
-        self.history.append(GameState(board, None, None))
+        board: Dict[Vector2, Piece] = {}
+        self.controller.init_board(board)
+        self.game_data.history.append(GameState(board, None, None))
 
     def get_metadata(self, connection: Connection) -> dict:
         return {
@@ -109,11 +121,11 @@ class Game:
             'color': piece.color.value,
             'direction': piece.direction.value,
         } for position, piece in self.board.items()]
-        info = [info_element.to_dict() for info_element in self.controller.get_info(color)]
+        info = [info_element.to_json() for info_element in self.controller.get_info(color)]
         inventory = [dict(
             pack=get_pack(inventory_item.piece),
             quantity=inventory_item.quantity,
-            **inventory_item.piece.to_dict(),
+            **inventory_item.piece.to_json(),
         ) for inventory_item in inventory_items]
 
         return {
@@ -168,11 +180,11 @@ class Game:
         return GameState(board, color, ply)
 
     async def apply_ply(self, color: Color, ply: Ply) -> None:
-        self.history.append(self.next_state(color, ply))
+        self.game_data.history.append(self.next_state(color, ply))
         await self.send_update_to_subscribers()
 
     async def undo_ply(self) -> None:
-        self.history.pop()
+        self.game_data.history.pop()
         await self.send_update_to_subscribers()
 
     async def apply_or_offer_choices(
@@ -222,5 +234,5 @@ class Game:
                 break
 
     @property
-    def board(self) -> Dict[Vector2, Piece]:
-        return self.history[-1].board
+    def board(self) -> Board:
+        return self.game_data.history[-1].board

@@ -14,11 +14,12 @@ from vector2 import Vector2
 if TYPE_CHECKING:
     from ply import Ply
     from game import Game
+    from board import Board
 
 
 class Jousting(Controller):
     name = 'Jousting'
-    size = (8, 8)
+    board_size = Vector2(8, 8)
     colors = [
         Color.WHITE,
         Color.BLACK,
@@ -39,17 +40,15 @@ class Jousting(Controller):
 
         self.start_button = InfoButton('Start Game', self.start_game)
 
-    def init_board(self) -> Dict[Vector2, Piece]:
-        return {
-            Vector2(0, 2): Knight(Color.WHITE, Direction.NORTH),
-            Vector2(0, 5): Knight(Color.BLACK, Direction.NORTH),
-            Vector2(2, 7): Knight(Color.RED, Direction.NORTH),
-            Vector2(5, 7): Knight(Color.ORANGE, Direction.NORTH),
-            Vector2(7, 5): Knight(Color.YELLOW, Direction.NORTH),
-            Vector2(7, 2): Knight(Color.GREEN, Direction.NORTH),
-            Vector2(5, 0): Knight(Color.BLUE, Direction.NORTH),
-            Vector2(2, 0): Knight(Color.PURPLE, Direction.NORTH),
-        }
+    def init_board(self, board: Dict[Vector2, Piece]) -> None:
+        board[Vector2(0, 2)] = Knight(Color.WHITE, Direction.NORTH)
+        board[Vector2(0, 5)] = Knight(Color.BLACK, Direction.NORTH)
+        board[Vector2(2, 7)] = Knight(Color.RED, Direction.NORTH)
+        board[Vector2(5, 7)] = Knight(Color.ORANGE, Direction.NORTH)
+        board[Vector2(7, 5)] = Knight(Color.YELLOW, Direction.NORTH)
+        board[Vector2(7, 2)] = Knight(Color.GREEN, Direction.NORTH)
+        board[Vector2(5, 0)] = Knight(Color.BLUE, Direction.NORTH)
+        board[Vector2(2, 0)] = Knight(Color.PURPLE, Direction.NORTH)
 
     def get_info(self, color: Color) -> List[InfoElement]:
         result = get_color_info_texts(self.game)

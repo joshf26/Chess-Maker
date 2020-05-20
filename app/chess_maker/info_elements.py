@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Callable, Awaitable
+from typing import Callable, Awaitable, Union
 from uuid import uuid4
 
 from color import Color
@@ -15,7 +15,7 @@ class InfoText(InfoElement):
     def __init__(self, text: str):
         self.text = text
 
-    def to_dict(self) -> dict:
+    def to_json(self) -> Union[dict, list]:
         return {
             'type': 'text',
             'text': self.text,
@@ -30,7 +30,7 @@ class InfoButton(InfoElement):
 
         self.id = str(uuid4())
 
-    def to_dict(self) -> dict:
+    def to_json(self) -> Union[dict, list]:
         return {
             'type': 'button',
             'id': self.id,

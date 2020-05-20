@@ -70,9 +70,9 @@ class Creative(Controller):
 
 class Creative8x8(Creative, Controller):
     name = 'Creative 8x8'
-    size = (8, 8)
+    board_size = Vector2(8, 8)
 
 
 class Creative32x32(Creative, Controller):
     name = 'Creative 32x32'
-    size = (32, 32)
+    board_size = Vector2(32, 32)

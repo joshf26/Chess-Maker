@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, List, Dict, Generator
 
 from color import Color
 from controller import Controller
+from game import GameData
 from info_elements import InfoText, InfoElement
 from packs.standard.helpers import get_color_info_texts, next_color
 from packs.standard.pieces.bishop import Bishop
@@ -23,15 +24,13 @@ if TYPE_CHECKING:
 
 class Standard8x8(Controller):
     name = 'Standard 8x8'
-    size = Vector2(8, 8)
+    board_size = Vector2(8, 8)
     colors = [
         Color.WHITE,
         Color.BLACK,
     ]
 
-    def init_board(self) -> Dict[Vector2, Piece]:
-        board: Dict[Vector2, Piece] = {}
-
+    def init_board(self, board: Dict[Vector2, Piece]) -> None:
         for color, direction, row in zip([Color.WHITE, Color.BLACK], [Direction.NORTH, Direction.SOUTH], [7, 0]):
             board[Vector2(row, 0)] = Rook(color, direction)
             board[Vector2(row, 1)] = Knight(color, direction)
@@ -45,8 +44,6 @@ class Standard8x8(Controller):
         for color, direction, row in zip([Color.WHITE, Color.BLACK], [Direction.NORTH, Direction.SOUTH], [6, 1]):
             for col in range(8):
                 board[Vector2(row, col)] = Pawn(color, direction)
-
-        return board
 
     def get_info(self, color: Color) -> List[InfoElement]:
         next_color_name = next_color(self.game).name
@@ -100,7 +97,19 @@ class Standard8x8(Controller):
 
             threatening = False
             for position, piece in state.board.items():
-                if DestroyAction(king_position) in piece.get_plies(position, king_position, self.game):
+                if piece.color == color:
+                    # Don't bother checking your own pieces.
+                    continue
+
+                if any(DestroyAction(king_position) in possible_ply.actions for possible_ply in piece.get_plies(
+                    position,
+                    king_position,
+                    GameData(
+                        [*self.game.game_data.history, state],
+                        self.game.game_data.board_size,
+                        self.game.game_data.colors,
+                    ),
+                )):
                     threatening = True
                     break
 

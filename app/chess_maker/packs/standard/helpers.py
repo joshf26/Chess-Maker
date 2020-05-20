@@ -10,7 +10,7 @@ from ply import Ply, DestroyAction, MoveAction
 from vector2 import Vector2
 
 if TYPE_CHECKING:
-    from game import Game, GameState
+    from game import Game, GameState, GameData
 
 OFFSETS = {
     Direction.NORTH: Vector2(-1, 0),
@@ -61,14 +61,18 @@ def axis_direction(from_pos: Vector2, to_pos: Vector2) -> Optional[Direction]:
         return None
 
 
-def closest_piece_along_direction(game: Game, start: Vector2, direction: Direction) -> Optional[Tuple[Piece, Vector2]]:
+def closest_piece_along_direction(
+    game_data: GameData,
+    start: Vector2,
+    direction: Direction
+) -> Optional[Tuple[Piece, Vector2]]:
     position = start.copy()
 
-    while 0 <= position.row < game.controller.size[0] and 0 <= position.col < game.controller.size[1]:
+    while 0 <= position.row < game_data.board_size.row and 0 <= position.col < game_data.board_size.col:
         position += OFFSETS[direction]
 
-        if position in game.board:
-            return game.board[position], position
+        if position in game_data.board:
+            return game_data.board[position], position
 
     return None
 
@@ -81,46 +85,33 @@ class Axis(Enum):
 
 
 def empty_along_axis(board: Dict[Vector2, Piece], start: Vector2, end: Vector2) -> bool:
-    row_dist = abs(end.row - start.row)
-    col_dist = abs(end.col - start.col)
+    direction = axis_direction(start, end)
 
-    if col_dist and not row_dist:
-        axis = Axis.HORIZONTAL
-    elif row_dist and not col_dist:
-        axis = Axis.VERTICAL
-    elif col_dist == row_dist:
-        if end.row > start.row:
-            if end.col > start.col:
-                axis = Axis.TOP_LEFT_BOTTOM_RIGHT
-            else:
-                axis = Axis.BOTTOM_LEFT_TOP_RIGHT
-        else:
-            if end.col > start.col:
-                axis = Axis.BOTTOM_LEFT_TOP_RIGHT
-            else:
-                axis = Axis.TOP_LEFT_BOTTOM_RIGHT
-    else:
+    if direction is None:
         raise ValueError('Start and end positions are not aligned.')
 
-    if axis == Axis.HORIZONTAL:
-        for i in bidirectional_exclusive_range(start.col, end.col):
-            if Vector2(start.row, i) in board:
-                return False
-    else:
-        for i in bidirectional_exclusive_range(start.row, end.row):
-            if Vector2(i, start.col + i) in board:
-                return False
+    current_position = start.copy()
+    while current_position + OFFSETS[direction] != end:
+        current_position += OFFSETS[direction]
+        if current_position in board:
+            return False
 
     return True
 
 
 def next_color(game: Game) -> Color:
-    return game.controller.colors[(game.history[-1].ply_color.value + 1) % len(game.controller.colors)]
+    last_state = game.game_data.history[-1]
+
+    if last_state.ply_color is None:
+        # No turns were made yet.
+        return game.controller.colors[0]
+
+    return game.controller.colors[(last_state.ply_color.value + 1) % len(game.controller.colors)]
 
 
-def n_state_by_color(game: Game, color: Color, n: int, reverse: bool = False) -> Optional[GameState]:
+def n_state_by_color(game_data: GameData, color: Color, n: int, reverse: bool = False) -> Optional[GameState]:
     current = 0
-    for state in reversed(game.history) if reverse else game.history:
+    for state in reversed(game_data.history) if reverse else game_data.history:
         if state.ply_color == color:
             current += 1
 
@@ -131,7 +122,7 @@ def n_state_by_color(game: Game, color: Color, n: int, reverse: bool = False) ->
 
 
 def capture_or_move(
-    board: Dict[Vector2, Piece],
+    board: Board,
     color: Color,
     from_pos: Vector2,
     to_pos: Vector2,
@@ -144,7 +135,7 @@ def capture_or_move(
 
 
 def capture_or_move_if_empty(
-    board: Dict[Vector2, Piece],
+    board: Board,
     color: Color,
     from_pos: Vector2,
     to_pos: Vector2,

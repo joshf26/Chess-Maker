@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import List, Dict, Generator, TYPE_CHECKING
+from typing import List, Generator, TYPE_CHECKING, Dict
 
 from color import Color
 from info_elements import InfoElement
@@ -22,7 +22,7 @@ class Controller(ABC):
     def __init__(self, game: Game):
         self.game = game
 
-    def init_board(self) -> Dict[Vector2, Piece]:
+    def init_board(self, board: Dict[Vector2, Piece]) -> None:
         pass
 
     def get_info(self, color: Color) -> List[InfoElement]:

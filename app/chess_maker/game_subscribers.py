@@ -14,6 +14,9 @@ class GameSubscribers:
         self.connection_to_game: Dict[Connection, Game] = {}
         self.game_to_connections: Dict[Game, Set[Connection]] = {}
 
+    def __contains__(self, item):
+        return item in self.connection_to_game or item in self.game_to_connections
+
     def set(self, game: Game, connection: Connection) -> None:
         # Remove the old subscription.
         if connection in self.connection_to_game:
@@ -34,3 +37,14 @@ class GameSubscribers:
 
     def get_game(self, connection: Connection) -> Optional[Game]:
         return self.connection_to_game.get(connection, None)
+
+    def remove_game(self, game: Game) -> None:
+        for connection in self.game_to_connections[game]:
+            del self.connection_to_game[connection]
+
+        del self.game_to_connections[game]
+
+    def remove_connection(self, connection: Connection) -> None:
+        self.game_to_connections[self.connection_to_game[connection]].remove(connection)
+
+        del self.connection_to_game[connection]

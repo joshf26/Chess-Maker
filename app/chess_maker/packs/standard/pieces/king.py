@@ -8,15 +8,15 @@ from piece import Piece, load_image
 from ply import Ply, DestroyAction, MoveAction
 
 if TYPE_CHECKING:
-    from game import Game
-    from board import Vector2
+    from game import GameData
+    from vector2 import Vector2
 
 
 class King(Piece):
     name = 'King'
     image = load_image('standard', 'images/king.svg')
 
-    def get_plies(self, from_pos: Vector2, to_pos: Vector2, game: Game) -> Generator[Ply]:
+    def get_plies(self, from_pos: Vector2, to_pos: Vector2, game_data: GameData) -> Generator[Ply]:
         row_dist = abs(to_pos.row - from_pos.row)
         col_dist = abs(to_pos.col - from_pos.col)
 
@@ -34,7 +34,7 @@ class King(Piece):
             if self.moves > 0 or direction is None:
                 return
 
-            piece_data = closest_piece_along_direction(game, from_pos, direction)
+            piece_data = closest_piece_along_direction(game_data, from_pos, direction)
             if piece_data is None:
                 return
 
@@ -45,4 +45,4 @@ class King(Piece):
 
             yield Ply('Castle', [MoveAction(from_pos, to_pos), MoveAction(position, from_pos + OFFSETS[direction])])
 
-        yield from capture_or_move(game.board, self.color, from_pos, to_pos)
+        yield from capture_or_move(game_data.board, self.color, from_pos, to_pos)

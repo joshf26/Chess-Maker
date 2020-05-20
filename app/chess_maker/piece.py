@@ -9,7 +9,7 @@ from vector2 import Vector2
 if TYPE_CHECKING:
     from ply import Ply
     from color import Color
-    from game import Game
+    from game import GameData
     from controller import Controller
 
 
@@ -53,5 +53,5 @@ class Piece(JsonSerializable):
             'direction': self.direction.value,
         }
 
-    def get_plies(self, from_pos: Vector2, to_pos: Vector2, game: Game) -> Generator[Ply]:
+    def get_plies(self, from_pos: Vector2, to_pos: Vector2, game_data: GameData) -> Generator[Ply]:
         yield from ()
