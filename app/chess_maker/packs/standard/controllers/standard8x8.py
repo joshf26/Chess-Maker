@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING, List, Dict, Generator
 
 from color import Color
 from controller import Controller
-from game import GameData
 from info_elements import InfoText, InfoElement
-from packs.standard.helpers import get_color_info_texts, next_color
+from packs.standard.helpers import get_color_info_texts, next_color, threatened, find_pieces, print_color, OFFSETS
 from packs.standard.pieces.bishop import Bishop
 from packs.standard.pieces.king import King
 from packs.standard.pieces.knight import Knight
@@ -46,11 +45,18 @@ class Standard8x8(Controller):
                 board[Vector2(row, col)] = Pawn(color, direction)
 
     def get_info(self, color: Color) -> List[InfoElement]:
-        next_color_name = next_color(self.game).name
+        result = get_color_info_texts(self.game, trailing_space=True)
 
-        return [*get_color_info_texts(self.game, trailing_space=True), InfoText(
-            f'Current Turn: <strong style="color: {next_color_name.lower()}">{next_color_name.title()}</strong>'
-        )]
+        ply_color = next_color(self.game)
+
+        # Check if their king is in check.
+        king_position, king = next(find_pieces(self.game.board, King, ply_color))
+        if threatened(self.game, king_position, ply_color):
+            result.append(InfoText(f'{print_color(ply_color)} is in check!'))
+
+        result.append(InfoText(f'Current Turn: {print_color(ply_color)}'))
+
+        return result
 
     def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
         board = self.game.board
@@ -60,7 +66,7 @@ class Standard8x8(Controller):
         if piece.color != next_color(self.game):
             return
 
-        plies = piece.get_plies(from_pos, to_pos, self.game)
+        plies = piece.get_plies(from_pos, to_pos, self.game.game_data)
 
         # Check for pawn promotion.
         if isinstance(piece, Pawn) and (
@@ -90,28 +96,85 @@ class Standard8x8(Controller):
         for ply in plies:
             state = self.game.next_state(color, ply)
 
-            king_position, king = next(filter(lambda piece_data: (
-                isinstance(piece_data[1], King)
-                and piece_data[1].color == piece.color
-            ), state.board.items()))
+            king_position, king = next(find_pieces(state.board, King, color))
 
-            threatening = False
-            for position, piece in state.board.items():
-                if piece.color == color:
-                    # Don't bother checking your own pieces.
-                    continue
-
-                if any(DestroyAction(king_position) in possible_ply.actions for possible_ply in piece.get_plies(
-                    position,
-                    king_position,
-                    GameData(
-                        [*self.game.game_data.history, state],
-                        self.game.game_data.board_size,
-                        self.game.game_data.colors,
-                    ),
-                )):
-                    threatening = True
-                    break
-
-            if not threatening:
+            if not threatened(self.game, king_position, color, state):
                 yield ply
+
+    def after_ply(self) -> None:
+        # You cannot put yourself in checkmate, so we only need to check for the opposite color.
+        color = next_color(self.game)
+        king_position, king = next(find_pieces(self.game.board, King, color))
+
+        # Check if the king is in check.
+        if not self._has_legal_move(color):
+            if threatened(self.game, king_position, color):
+                print(f'{color.name} has been checkmated!!!')
+            else:
+                print('Stalemate!!!')
+
+    def _is_legal(self, from_pos: Vector2, to_pos: Vector2) -> bool:
+        if to_pos.row >= self.board_size.row or to_pos.row < 0 or to_pos.col >= self.board_size.col or to_pos.col < 0:
+            return False
+
+        piece = self.game.board[from_pos]
+        plies = piece.get_plies(from_pos, to_pos, self.game.game_data)
+
+        for ply in plies:
+            state = self.game.next_state(piece.color, ply)
+
+            king_position, king = next(find_pieces(state.board, King, piece.color))
+
+            if not threatened(self.game, king_position, piece.color, state):
+                return True
+
+        return False
+
+    def _has_legal_move(self, color: Color) -> bool:
+        for pos, piece in find_pieces(self.game.board, color=color):
+            if isinstance(piece, Pawn):
+                if piece.direction == Direction.NORTH and (
+                    self._is_legal(pos, pos + Vector2(0, -1))
+                    or self._is_legal(pos, pos + Vector2(0, -2))
+                    or self._is_legal(pos, pos + Vector2(1, -1))
+                    or self._is_legal(pos, pos + Vector2(-1, -1))
+                ):
+                    return True
+
+                if piece.direction == Direction.SOUTH and (
+                    self._is_legal(pos, pos + Vector2(0, 1))
+                    or self._is_legal(pos, pos + Vector2(0, 2))
+                    or self._is_legal(pos, pos + Vector2(1, 1))
+                    or self._is_legal(pos, pos + Vector2(-1, 1))
+                ):
+                    return True
+
+            if isinstance(piece, Rook) or isinstance(piece, Queen):
+                for i in range(8):
+                    if self._is_legal(pos, Vector2(pos.row, i)) or self._is_legal(pos, Vector2(i, pos.col)):
+                        return True
+
+            if isinstance(piece, Knight):
+                if (
+                    self._is_legal(pos, pos + Vector2(1, 2))
+                    or self._is_legal(pos, pos + Vector2(2, 1))
+                    or self._is_legal(pos, pos + Vector2(1, -2))
+                    or self._is_legal(pos, pos + Vector2(2, -1))
+                    or self._is_legal(pos, pos + Vector2(-1, 2))
+                    or self._is_legal(pos, pos + Vector2(-2, 1))
+                    or self._is_legal(pos, pos + Vector2(-1, -2))
+                    or self._is_legal(pos, pos + Vector2(-2, -1))
+                ):
+                    return True
+
+            if isinstance(piece, Bishop) or isinstance(piece, Queen):
+                for i in range(-7, 8):
+                    if self._is_legal(pos, pos + Vector2(i, i)) or self._is_legal(pos, pos + Vector2(i, i)):
+                        return True
+
+            if isinstance(piece, King):
+                for offset in OFFSETS.values():
+                    if self._is_legal(pos, pos + offset):
+                        return True
+
+        return False

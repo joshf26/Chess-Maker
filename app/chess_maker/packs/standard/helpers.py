@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-from enum import Enum
-from typing import List, TYPE_CHECKING, Optional, Tuple, Dict, Generator
+from typing import List, TYPE_CHECKING, Optional, Tuple, Dict, Generator, Type
 
 from color import Color
 from info_elements import InfoText, InfoElement
 from piece import Direction, Piece
 from ply import Ply, DestroyAction, MoveAction
 from vector2 import Vector2
+from game import GameData
 
 if TYPE_CHECKING:
-    from game import Game, GameState, GameData
+    from game import Game, GameState
+
 
 OFFSETS = {
     Direction.NORTH: Vector2(-1, 0),
@@ -77,13 +78,6 @@ def closest_piece_along_direction(
     return None
 
 
-class Axis(Enum):
-    HORIZONTAL = 0
-    VERTICAL = 1
-    TOP_LEFT_BOTTOM_RIGHT = 2
-    BOTTOM_LEFT_TOP_RIGHT = 3
-
-
 def empty_along_axis(board: Dict[Vector2, Piece], start: Vector2, end: Vector2) -> bool:
     direction = axis_direction(start, end)
 
@@ -122,7 +116,7 @@ def n_state_by_color(game_data: GameData, color: Color, n: int, reverse: bool = 
 
 
 def capture_or_move(
-    board: Board,
+    board: Dict[Vector2, Piece],
     color: Color,
     from_pos: Vector2,
     to_pos: Vector2,
@@ -135,7 +129,7 @@ def capture_or_move(
 
 
 def capture_or_move_if_empty(
-    board: Board,
+    board: Dict[Vector2, Piece],
     color: Color,
     from_pos: Vector2,
     to_pos: Vector2,
@@ -144,3 +138,39 @@ def capture_or_move_if_empty(
         return
 
     yield from capture_or_move(board, color, from_pos, to_pos)
+
+
+def find_pieces(
+    board: Dict[Vector2, Piece],
+    piece_type: Type[Piece] = None,
+    color: Color = None
+) -> Generator[Tuple[Vector2, Piece]]:
+    yield from filter(lambda piece_data: (
+        (True if piece_type is None else isinstance(piece_data[1], piece_type))
+        and (True if color is None else piece_data[1].color == color)
+    ), board.items())
+
+
+def threatened(game: Game, pos: Vector2, color: Color, state: GameState = None) -> bool:
+    board = game.board if state is None else state.board
+    for current_pos, piece in board.items():
+        if piece.color == color:
+            # Don't bother checking your own pieces.
+            continue
+
+        if any(DestroyAction(pos) in ply.actions for ply in piece.get_plies(
+            current_pos,
+            pos,
+            GameData(
+                [*game.game_data.history, state],
+                game.game_data.board_size,
+                game.game_data.colors,
+            ) if state is not None else game.game_data,
+        )):
+            return True
+
+    return False
+
+
+def print_color(color: Color) -> str:
+    return f'<strong style="color: {color.name.lower()}">{color.name.title()}</strong>'

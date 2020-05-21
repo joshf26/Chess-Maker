@@ -181,6 +181,7 @@ class Game:
 
     async def apply_ply(self, color: Color, ply: Ply) -> None:
         self.game_data.history.append(self.next_state(color, ply))
+        self.controller.after_ply()
         await self.send_update_to_subscribers()
 
     async def undo_ply(self) -> None:
@@ -234,5 +235,5 @@ class Game:
                 break
 
     @property
-    def board(self) -> Board:
+    def board(self) -> Dict[Vector2, Piece]:
         return self.game_data.history[-1].board

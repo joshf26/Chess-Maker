@@ -26,6 +26,7 @@ class Controller(ABC):
         pass
 
     def get_info(self, color: Color) -> List[InfoElement]:
+        # TODO: Should `color` be optional??
         return []
 
     def get_inventory(self, color: Color) -> List[InventoryItem]:
@@ -36,3 +37,9 @@ class Controller(ABC):
 
     def get_inventory_plies(self, color: Color, piece: Piece, pos: Vector2) -> Generator[Ply]:
         raise StopIteration
+
+    def after_ply(self) -> None:
+        pass
+
+    def winner(self, color: Color) -> None:
+        pass
