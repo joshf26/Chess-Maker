@@ -287,10 +287,9 @@ export class BoardComponent implements OnInit {
                         'to_col': mouseTileX,
                     })
                 }
-            } else {
-                this.draw();
             }
 
+            this.draw();
         }
 
         this.panning = false;

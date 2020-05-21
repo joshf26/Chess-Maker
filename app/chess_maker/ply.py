@@ -52,4 +52,7 @@ class Ply(JsonSerializable):
     actions: List[Action]
 
     def to_json(self) -> Union[dict, list]:
-        return [action.to_json() for action in self.actions]
+        return {
+            'actions': [action.to_json() for action in self.actions],
+            'name': self.name,
+        }

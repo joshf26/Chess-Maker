@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import List, Generator, TYPE_CHECKING, Dict
+from typing import List, Generator, TYPE_CHECKING, Dict, Optional
 
 from color import Color
 from info_elements import InfoElement
@@ -41,5 +41,5 @@ class Controller(ABC):
     def after_ply(self) -> None:
         pass
 
-    def winner(self, color: Color) -> None:
+    def winner(self, color: Optional[Color], reason: str = None) -> None:
         pass

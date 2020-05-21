@@ -45,4 +45,5 @@ class King(Piece):
 
             yield Ply('Castle', [MoveAction(from_pos, to_pos), MoveAction(position, from_pos + OFFSETS[direction])])
 
-        yield from capture_or_move(game_data.board, self.color, from_pos, to_pos)
+        else:
+            yield from capture_or_move(game_data.board, self.color, from_pos, to_pos)
