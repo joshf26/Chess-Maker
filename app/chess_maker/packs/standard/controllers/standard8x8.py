@@ -75,14 +75,12 @@ class Standard8x8(Controller):
         if piece.color != next_color(self.game):
             return
 
-        plies = piece.get_plies(from_pos, to_pos, self.game.game_data)
-
         # Check for pawn promotion.
         if isinstance(piece, Pawn) and (
             (to_pos.row == 0 and piece.color == Color.WHITE)
             or (to_pos.row == 7 and piece.color == Color.BLACK)
         ):
-            plies = chain(plies, [
+            plies = [
                 Ply('Promote to Queen', [
                     DestroyAction(from_pos),
                     CreateAction(Queen(piece.color, piece.direction), to_pos)
@@ -99,7 +97,9 @@ class Standard8x8(Controller):
                     DestroyAction(from_pos),
                     CreateAction(Bishop(piece.color, piece.direction), to_pos)
                 ]),
-            ])
+            ]
+        else:
+            plies = piece.get_plies(from_pos, to_pos, self.game.game_data)
 
         # Make sure they are not in check after each ply is complete.
         for ply in plies:

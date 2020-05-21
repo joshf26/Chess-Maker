@@ -30,9 +30,9 @@ export class ApiService {
             console.log,
             error => {
                 if (error instanceof CloseEvent) {
-                    alert('The server has closed.')
+                    alert('The server has closed.');
                 } else {
-                    alert('Cannot reach the server.')
+                    alert('Cannot reach the server.');
                 }
                 this.router.navigate(['/']);
             },
