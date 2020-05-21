@@ -3,6 +3,7 @@ import {ApiService} from '../services/api/api.service';
 import {PackDataService} from '../services/pieces/pack-data.service';
 import {GameMetaData} from '../lobby/lobby.component';
 import {DomSanitizer} from '@angular/platform-browser';
+import {MatSidenav} from "@angular/material/sidenav";
 
 const EVEN_TILE_COLOR = '#A85738';
 const ODD_TILE_COLOR = '#F3C1A9';
@@ -51,6 +52,7 @@ export class BoardComponent implements OnInit {
     @Input('game') game: GameMetaData;
     @Input('gameId') private gameId: string;
     @Input('notify') private notify: (gameId: string) => void;  // TODO: Maybe this should be an @Output?
+    @Input('sidenav') sidenav: MatSidenav;
 
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
@@ -112,6 +114,11 @@ export class BoardComponent implements OnInit {
             x * Math.cos(rad_angle) - y * Math.sin(rad_angle),
             y * Math.cos(rad_angle) + x * Math.sin(rad_angle),
         ];
+    }
+
+    onResize(): void {
+        this.updateBackgroundCanvases();
+        this.centerBoard();
     }
 
     updateBoardSize(): void {

@@ -1,5 +1,5 @@
 <mat-sidenav-container>
-    <mat-sidenav mode="side" opened>
+    <mat-sidenav #sidenav mode="side" opened (opened)="board.onResize()" (closed)="board.onResize()">
         <div class="center">
             <h1 class="header">Chess Maker</h1>
             <button mat-raised-button color="primary" (click)="createGame()">New Game</button>
@@ -22,16 +22,21 @@
                 </mat-card-content>
             </mat-card>
         </ng-template>
-        <button mat-raised-button
-                (click)="disconnect()"
-                class="disconnect-button"
-                color="warn">Disconnect</button>
+        <div class="sidenav-actions">
+            <button mat-raised-button
+                    (click)="disconnect()"
+                    color="warn">Disconnect</button>
+            <button mat-raised-button
+                    color="accent"
+                    (click)="sidenav.toggle()">Hide Sidebar</button>
+        </div>
     </mat-sidenav>
     <mat-sidenav-content>
         <app-board #board
                    [gameId]="selectedGameId"
                    [game]="selectedGameId ? games[selectedGameId] : null"
-                   [notify]="notify.bind(this)"></app-board>
+                   [notify]="notify.bind(this)"
+                   [sidenav]="sidenav"></app-board>
         <mat-card id="join-game-box" *ngIf="selectedGameId && games[selectedGameId].playing_as == null">
             <mat-card-content>
                 <h1>{{games[selectedGameId].available_colors.length ? 'Join As' : 'Spectating'}}</h1>

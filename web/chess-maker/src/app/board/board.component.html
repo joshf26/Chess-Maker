@@ -21,6 +21,7 @@
 </mat-card>
 
 <div class="bottom-buttons">
+    <button mat-raised-button (click)="sidenav.toggle()" *ngIf="!sidenav.opened">Show Sidebar</button>
     <button mat-raised-button (click)="rotate()">Rotate</button>
     <button mat-raised-button (click)="leaveGame()" *ngIf="game && game.playing_as != undefined">Leave Game</button>
 </div>
