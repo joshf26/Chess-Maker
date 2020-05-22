@@ -37,7 +37,7 @@ class Jousting(Controller):
         self.countdown_started = False
         self.start_timer = 3
 
-        self.start_button = InfoButton('Start Game', self.start_game)
+        self.start_button = InfoButton('Start Game', self._start_game)
 
     def init_board(self, board: Dict[Vector2, Piece]) -> None:
         board[Vector2(0, 2)] = Knight(Color.WHITE, Direction.NORTH)
@@ -59,9 +59,14 @@ class Jousting(Controller):
 
     def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
         if self.game_started:
-            yield from self.game.board[from_pos].get_plies(from_pos, to_pos, self.game)
+            yield from self.game.board[from_pos].get_plies(from_pos, to_pos, self.game.game_data)
 
-    async def start_game(self, color: Color):
+    async def after_ply(self) -> None:
+        if len(self.game.board) == 1:
+            await self.game.winner([list(self.game.board.values())[0].color], 'Last Knight Standing')
+
+    async def _start_game(self, color: Color):
+        self._clear_unused()
         self.countdown_started = True
         await self.game.send_update_to_subscribers()
         await asyncio.sleep(1)
@@ -73,3 +78,8 @@ class Jousting(Controller):
         await asyncio.sleep(1)
         self.game_started = True
         await self.game.send_update_to_subscribers()
+
+    def _clear_unused(self):
+        for pos, piece in list(self.game.board.items()):
+            if piece.color not in self.game.players:
+                del self.game.board[pos]
