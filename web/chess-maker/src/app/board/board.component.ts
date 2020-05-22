@@ -1,4 +1,4 @@
-import {Component, ElementRef, Input, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
 import {PackDataService} from '../services/pieces/pack-data.service';
 import {GameMetaData} from '../lobby/lobby.component';
@@ -29,11 +29,17 @@ interface InventoryPiece {
     quantity: number,
 }
 
+export interface WinnerData {
+    colors: number[],
+    reason: string,
+}
+
 interface GameData {
     id: string,
     pieces: Piece[],
     info: InfoElement[],
     inventory: InventoryPiece[],
+    winners?: WinnerData,
 }
 
 interface InfoElement {
@@ -53,6 +59,7 @@ export class BoardComponent implements OnInit {
     @Input('gameId') private gameId: string;
     @Input('notify') private notify: (gameId: string) => void;  // TODO: Maybe this should be an @Output?
     @Input('sidenav') sidenav: MatSidenav;
+    @Output('winner') private winner = new EventEmitter<WinnerData>();
 
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
@@ -134,6 +141,9 @@ export class BoardComponent implements OnInit {
             this.pieces = gameData.pieces;
             this.infoElements = gameData.info;
             this.inventoryPieces = gameData.inventory;
+
+            this.winner.emit(gameData.winners);
+
             this.updateBackgroundCanvases();
             this.draw();
         } else {

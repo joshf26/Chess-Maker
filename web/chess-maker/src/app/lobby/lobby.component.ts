@@ -2,9 +2,8 @@ import {ChangeDetectorRef, Component, Inject, OnInit, ViewChild} from '@angular/
 import {ApiService} from '../services/api/api.service';
 import {PackDataService} from '../services/pieces/pack-data.service';
 import {MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
-import {BoardComponent} from '../board/board.component';
+import {BoardComponent, WinnerData} from '../board/board.component';
 import {Router} from '@angular/router';
-import {DomSanitizer} from '@angular/platform-browser';
 
 const COLOR_NAMES = [
     'White',
@@ -57,6 +56,7 @@ export class LobbyComponent implements OnInit {
     hasNotification: {[key: string]: boolean} = {};
     selectedGameId: string;
     colorNames = COLOR_NAMES;
+    winnerData?: WinnerData = null;
 
     constructor(
         public createGameDialog: MatDialog,
@@ -132,6 +132,32 @@ export class LobbyComponent implements OnInit {
             game_id: gameId,
             color: color,
         })
+    }
+
+    onWinner(winnerData: WinnerData): void {
+        this.winnerData = winnerData;
+    }
+
+    winner_string(colors: number[]): string {
+        if (colors.length == 0) {
+            return 'No winners!';
+        }
+
+        if (colors.length == 1) {
+            return `${COLOR_NAMES[colors[0]]} wins!`;
+        }
+
+        if (colors.length == 2) {
+            return `${COLOR_NAMES[colors[0]]} and ${COLOR_NAMES[colors[1]]} win!`;
+        }
+
+        let result = '';
+        for (const [index, color] of Object.entries(colors)) {
+            result += index == colors.length - 1 ? `and ${COLOR_NAMES[color]}` : `${COLOR_NAMES[color]}, `;
+        }
+        result += ' win!'
+
+        return result;
     }
 }
 

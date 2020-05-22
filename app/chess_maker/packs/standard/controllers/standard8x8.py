@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from itertools import chain
-from typing import TYPE_CHECKING, List, Dict, Generator
+from typing import List, Dict, Generator
 
 from color import Color
 from controller import Controller
@@ -17,9 +16,6 @@ from piece import Direction, Piece
 from ply import DestroyAction, CreateAction, Ply
 from vector2 import Vector2
 
-if TYPE_CHECKING:
-    from game import Game
-
 
 class Standard8x8(Controller):
     name = 'Standard 8x8'
@@ -28,12 +24,6 @@ class Standard8x8(Controller):
         Color.WHITE,
         Color.BLACK,
     ]
-
-    # TEMP
-    def __init__(self, game: Game):
-        super().__init__(game)
-
-        self.winner = 'temp'
 
     def init_board(self, board: Dict[Vector2, Piece]) -> None:
         for color, direction, row in zip([Color.WHITE, Color.BLACK], [Direction.NORTH, Direction.SOUTH], [7, 0]):
@@ -51,9 +41,6 @@ class Standard8x8(Controller):
                 board[Vector2(row, col)] = Pawn(color, direction)
 
     def get_info(self, color: Color) -> List[InfoElement]:
-        if self.winner != 'temp':
-            return [InfoText(f'{self.winner.name.title()} won!')]
-
         result = get_color_info_texts(self.game, trailing_space=True)
 
         ply_color = next_color(self.game)
@@ -110,7 +97,7 @@ class Standard8x8(Controller):
             if not threatened(self.game, king_position, color, state):
                 yield ply
 
-    def after_ply(self) -> None:
+    async def after_ply(self) -> None:
         # You cannot put yourself in checkmate, so we only need to check for the opposite color.
         color = next_color(self.game)
         king_position, king = next(find_pieces(self.game.board, King, color))
@@ -118,11 +105,9 @@ class Standard8x8(Controller):
         # Check if the king is in check.
         if not self._has_legal_move(color):
             if threatened(self.game, king_position, color):
-                self.winner = Color.BLACK if color == color.WHITE else Color.WHITE,
-                # self.winner(Color.BLACK if color == color.WHITE else Color.WHITE, 'Checkmate')
+                await self.game.winner([Color.BLACK if color == color.WHITE else Color.WHITE], 'Checkmate')
             else:
-                self.winner = None
-                # self.winner(None, 'Stalemate')
+                await self.game.winner([], 'Stalemate')
 
     def _is_legal(self, from_pos: Vector2, to_pos: Vector2) -> bool:
         if to_pos.row >= self.board_size.row or to_pos.row < 0 or to_pos.col >= self.board_size.col or to_pos.col < 0:

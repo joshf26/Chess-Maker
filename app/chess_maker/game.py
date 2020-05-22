@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Set, Dict, Type, Generator
+from typing import TYPE_CHECKING, List, Optional, Set, Dict, Type, Generator, Union
 from uuid import uuid4
 
 from color import Color
@@ -10,6 +10,7 @@ from controller import Controller
 from game_subscribers import GameSubscribers
 from info_elements import InfoButton
 from inventory_item import InventoryItem
+from json_serializable import JsonSerializable
 from piece import get_pack, Piece
 from ply import Ply, MoveAction, DestroyAction, CreateAction
 from vector2 import Vector2
@@ -68,6 +69,18 @@ class GameState:
     ply: Optional[Ply]
 
 
+@dataclass
+class WinnerData(JsonSerializable):
+    colors: List[Color]
+    reason: str
+
+    def to_json(self) -> Union[dict, list]:
+        return {
+            'colors': [color.value for color in self.colors],
+            'reason': self.reason,
+        }
+
+
 class Game:
 
     def __init__(
@@ -87,6 +100,7 @@ class Game:
         self.players = ColorConnections()
         self.controller = controller_type(self)
         self.game_data = GameData([], self.controller.board_size, self.controller.colors)
+        self.winners: Optional[WinnerData] = None
 
         self._init_game()
 
@@ -132,7 +146,8 @@ class Game:
             'id': self.id,
             'pieces': pieces,
             'info': info,
-            'inventory': inventory
+            'inventory': inventory,
+            'winners': None if self.winners is None else self.winners.to_json(),
         }
 
     def get_available_colors(self) -> Set[Color]:
@@ -151,17 +166,18 @@ class Game:
 
     def get_plies(self, connection: Connection, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
         if (
-            from_pos not in self.board
+            self.winners is not None
+            or from_pos not in self.board
             or to_pos.row < 0
             or to_pos.col < 0
             or to_pos.row >= self.controller.board_size.row
             or to_pos.col >= self.controller.board_size.col
         ):
             # Client must have sent stale data.
-            raise StopIteration
+            return
 
         color = self.players.get_color(connection)
-        return self.controller.get_plies(color, from_pos, to_pos)
+        yield from self.controller.get_plies(color, from_pos, to_pos)
 
     def next_state(self, color: Color, ply: Ply) -> GameState:
         board = self.board.copy()
@@ -181,7 +197,7 @@ class Game:
 
     async def apply_ply(self, color: Color, ply: Ply) -> None:
         self.game_data.history.append(self.next_state(color, ply))
-        self.controller.after_ply()
+        await self.controller.after_ply()
         await self.send_update_to_subscribers()
 
     async def undo_ply(self) -> None:
@@ -233,6 +249,9 @@ class Game:
             if isinstance(info_element, InfoButton) and info_element.id == button_id:
                 asyncio.create_task(info_element.callback(color))
                 break
+
+    async def winner(self, colors: List[Color], reason: str = None) -> None:
+        self.winners = WinnerData(colors, reason)
 
     @property
     def board(self) -> Dict[Vector2, Piece]:

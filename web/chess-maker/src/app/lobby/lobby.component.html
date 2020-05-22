@@ -36,17 +36,24 @@
                    [gameId]="selectedGameId"
                    [game]="selectedGameId ? games[selectedGameId] : null"
                    [notify]="notify.bind(this)"
-                   [sidenav]="sidenav"></app-board>
-        <mat-card id="join-game-box" *ngIf="selectedGameId && games[selectedGameId].playing_as == null">
+                   [sidenav]="sidenav"
+                   (winner)="onWinner($event)"></app-board>
+        <mat-card id="control-box" *ngIf="(selectedGameId && games[selectedGameId].playing_as == null) || winnerData != null">
             <mat-card-content>
-                <h1>{{games[selectedGameId].available_colors.length ? 'Join As' : 'Spectating'}}</h1>
-                <mat-chip-list>
-                    <mat-chip *ngFor="let color of games[selectedGameId].available_colors"
-                              [ngStyle]="{backgroundColor: colorNames[color], color: color == 0 || color == 3 || color == 4 ? 'black' : 'white'}"
-                              (click)="joinGame(selectedGameId, color)">
-                        {{colorNames[color]}}
-                    </mat-chip>
-                </mat-chip-list>
+                <ng-template [ngIf]="winnerData == null">
+                    <h1>{{games[selectedGameId].available_colors.length ? 'Join As' : 'Spectating'}}</h1>
+                    <mat-chip-list>
+                        <mat-chip *ngFor="let color of games[selectedGameId].available_colors"
+                                  [ngStyle]="{backgroundColor: colorNames[color], color: color == 0 || color == 3 || color == 4 ? 'black' : 'white'}"
+                                  (click)="joinGame(selectedGameId, color)">
+                            {{colorNames[color]}}
+                        </mat-chip>
+                    </mat-chip-list>
+                </ng-template>
+                <ng-template [ngIf]="winnerData != null">
+                    <h1>{{winner_string(winnerData.colors)}}</h1>
+                    <p>{{winnerData.reason}}</p>
+                </ng-template>
             </mat-card-content>
         </mat-card>
     </mat-sidenav-content>
