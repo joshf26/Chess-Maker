@@ -59,7 +59,7 @@ class Standard8x8(Controller):
         piece = board[from_pos]
 
         # Make sure it is their turn.
-        if piece.color != next_color(self.game):
+        if color != piece.color or color != next_color(self.game):
             return
 
         # Check for pawn promotion.

@@ -59,7 +59,9 @@ class Jousting(Controller):
 
     def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
         if self.game_started:
-            yield from self.game.board[from_pos].get_plies(from_pos, to_pos, self.game.game_data)
+            piece = self.game.board[from_pos]
+            if color == piece.color:
+                yield from piece.get_plies(from_pos, to_pos, self.game.game_data)
 
     async def after_ply(self) -> None:
         if len(self.game.board) == 1:

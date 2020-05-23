@@ -248,7 +248,7 @@ export class BoardComponent implements OnInit {
 
                 for (const piece of this.pieces) {
                     if (piece.row == mouseTileY && piece.col == mouseTileX) {
-                        if (this.game && piece.color == this.game.playing_as) {
+                        if (this.game) {
                             this.dragging = true;
                             this.draggingPiece = piece;
                         }
