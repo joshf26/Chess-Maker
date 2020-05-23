@@ -227,6 +227,10 @@ export class BoardComponent implements OnInit {
                 // Prevent the user from accidentally selecting the canvas.
                 event.preventDefault();
 
+                if (!this.game) {
+                    break;
+                }
+
                 if (event.offsetX > this.canvas.width - PIECE_SIZE && event.offsetY < this.inventoryPieces.length * PIECE_SIZE) {
                     const piece = this.inventoryPieces[Math.floor(event.offsetY / PIECE_SIZE)];
 
@@ -248,10 +252,8 @@ export class BoardComponent implements OnInit {
 
                 for (const piece of this.pieces) {
                     if (piece.row == mouseTileY && piece.col == mouseTileX) {
-                        if (this.game) {
-                            this.dragging = true;
-                            this.draggingPiece = piece;
-                        }
+                        this.dragging = true;
+                        this.draggingPiece = piece;
 
                         break;
                     }

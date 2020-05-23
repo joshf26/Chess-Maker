@@ -153,7 +153,7 @@ export class LobbyComponent implements OnInit {
 
         let result = '';
         for (const [index, color] of Object.entries(colors)) {
-            result += index == colors.length - 1 ? `and ${COLOR_NAMES[color]}` : `${COLOR_NAMES[color]}, `;
+            result += parseInt(index) == colors.length - 1 ? `and ${COLOR_NAMES[color]}` : `${COLOR_NAMES[color]}, `;
         }
         result += ' win!'
 

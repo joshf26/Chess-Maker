@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import List, Generator, TYPE_CHECKING, Dict, Optional
+from typing import List, Generator, TYPE_CHECKING, Dict
 
 from color import Color
 from info_elements import InfoElement
