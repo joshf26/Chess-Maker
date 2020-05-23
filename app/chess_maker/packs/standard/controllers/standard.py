@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import List, Dict, Generator
+from typing import List, Dict, Generator, TYPE_CHECKING
 
 from color import Color
 from controller import Controller
-from info_elements import InfoText, InfoElement
+from info_elements import InfoText
 from packs.standard.helpers import get_color_info_texts, next_color, threatened, find_pieces, print_color, OFFSETS
 from packs.standard.pieces.bishop import Bishop
 from packs.standard.pieces.king import King
@@ -12,13 +12,17 @@ from packs.standard.pieces.knight import Knight
 from packs.standard.pieces.pawn import Pawn
 from packs.standard.pieces.queen import Queen
 from packs.standard.pieces.rook import Rook
-from piece import Direction, Piece
+from piece import Direction
 from ply import DestroyAction, CreateAction, Ply
 from vector2 import Vector2
 
+if TYPE_CHECKING:
+    from piece import Piece
+    from info_elements import InfoElement
 
-class Standard8x8(Controller):
-    name = 'Standard 8x8'
+
+class Standard(Controller):
+    name = 'Standard'
     board_size = Vector2(8, 8)
     colors = [
         Color.WHITE,
