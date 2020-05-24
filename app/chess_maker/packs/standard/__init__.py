@@ -1,3 +1,4 @@
+from .controllers.crazyhouse import CrazyHouse
 from .controllers.creative import Creative8x8, Creative32x32
 from .controllers.standard import Standard
 from .pieces.bishop import Bishop

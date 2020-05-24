@@ -109,8 +109,8 @@ class Game:
 
     def _init_game(self) -> None:
         board: Dict[Vector2, Piece] = {}
-        self.controller.init_board(board)
         self.game_data.history.append(GameState(board, None, None))
+        self.controller.init_board(board)
 
     def get_metadata(self, connection: Connection) -> dict:
         return {
@@ -156,13 +156,13 @@ class Game:
 
         return colors - taken_colors
 
-    async def send_update(self, connection: Connection) -> None:
+    def send_update(self, connection: Connection) -> None:
         game_data = self.get_full_data(connection)
-        await connection.run('full_game_data', game_data)
+        connection.run('full_game_data', game_data)
 
-    async def send_update_to_subscribers(self) -> None:
+    def send_update_to_subscribers(self) -> None:
         for connection in self.subscribers.get_connections(self):
-            await self.send_update(connection)
+            self.send_update(connection)
 
     def get_plies(self, connection: Connection, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
         if (
@@ -195,16 +195,16 @@ class Game:
 
         return GameState(board, color, ply)
 
-    async def apply_ply(self, color: Color, ply: Ply) -> None:
+    def apply_ply(self, color: Color, ply: Ply) -> None:
         self.game_data.history.append(self.next_state(color, ply))
-        await self.controller.after_ply()
-        await self.send_update_to_subscribers()
+        self.controller.after_ply()
+        self.send_update_to_subscribers()
 
-    async def undo_ply(self) -> None:
+    def undo_ply(self) -> None:
         self.game_data.history.pop()
-        await self.send_update_to_subscribers()
+        self.send_update_to_subscribers()
 
-    async def apply_or_offer_choices(
+    def apply_or_offer_choices(
         self,
         from_pos: Vector2,
         to_pos: Vector2,
@@ -219,7 +219,7 @@ class Game:
         second = next(plies, None)
         if second is None:
             # There is only one ply available, so just apply it immediately.
-            await self.apply_ply(self.players.get_color(connection), first)
+            self.apply_ply(self.players.get_color(connection), first)
             return
 
         full_plies = [first, second, *plies]
@@ -227,7 +227,7 @@ class Game:
         # There are multiple plies available, so present the user with a choice.
         result = [ply.to_json() for ply in full_plies]
 
-        await connection.run('plies', {
+        connection.run('plies', {
             'from_row': from_pos.row,
             'from_col': from_pos.col,
             'to_row': to_pos.row,
@@ -247,10 +247,10 @@ class Game:
         info_elements = self.controller.get_info(color)
         for info_element in info_elements:
             if isinstance(info_element, InfoButton) and info_element.id == button_id:
-                asyncio.create_task(info_element.callback(color))
+                info_element.callback(color)
                 break
 
-    async def winner(self, colors: List[Color], reason: str = None) -> None:
+    def winner(self, colors: List[Color], reason: str = None) -> None:
         self.winners = WinnerData(colors, reason)
 
     @property

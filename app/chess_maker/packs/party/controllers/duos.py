@@ -1,82 +1,79 @@
 from __future__ import annotations
 
-from typing import List, Dict, Generator, TYPE_CHECKING
+from typing import Dict, List, Generator
 
 from color import Color
 from controller import Controller
-from info_elements import InfoText
-from packs.standard.helpers import get_color_info_texts, next_color, threatened, find_pieces, print_color, OFFSETS, \
-    opposite
+from info_elements import InfoElement, InfoText
+from packs.standard import Standard
+from packs.standard.controllers.standard import pawn_promotions
+from packs.standard.helpers import next_color, find_pieces, threatened, get_color_info_texts, print_color, OFFSETS
+from piece import Piece, Direction
 from packs.standard.pieces.bishop import Bishop
 from packs.standard.pieces.king import King
 from packs.standard.pieces.knight import Knight
 from packs.standard.pieces.pawn import Pawn
 from packs.standard.pieces.queen import Queen
 from packs.standard.pieces.rook import Rook
-from piece import Direction
-from ply import DestroyAction, CreateAction, Ply
+from ply import Ply, DestroyAction, MoveAction
 from vector2 import Vector2
 
-if TYPE_CHECKING:
-    from piece import Piece
-    from info_elements import InfoElement
+
+KING_COLOR = {
+    Color.RED: Color.ORANGE,
+    Color.BLUE: Color.PURPLE,
+    Color.ORANGE: Color.ORANGE,
+    Color.PURPLE: Color.PURPLE,
+}
+
+OPPONENTS = {
+    Color.RED: [Color.BLUE, Color.PURPLE],
+    Color.ORANGE: [Color.BLUE, Color.PURPLE],
+    Color.BLUE: [Color.RED, Color.ORANGE],
+    Color.PURPLE: [Color.RED, Color.ORANGE],
+}
 
 
-def pawn_promotions(piece: Piece, from_pos: Vector2, to_pos: Vector2) -> List[Ply]:
-    return [
-        Ply('Promote to Queen', [
-            DestroyAction(from_pos),
-            CreateAction(Queen(piece.color, piece.direction), to_pos)
-        ]),
-        Ply('Promote to Knight', [
-            DestroyAction(from_pos),
-            CreateAction(Knight(piece.color, piece.direction), to_pos)
-        ]),
-        Ply('Promote to Rook', [
-            DestroyAction(from_pos),
-            CreateAction(Rook(piece.color, piece.direction), to_pos)
-        ]),
-        Ply('Promote to Bishop', [
-            DestroyAction(from_pos),
-            CreateAction(Bishop(piece.color, piece.direction), to_pos)
-        ]),
-    ]
-
-
-class Standard(Controller):
-    name = 'Standard'
-    board_size = Vector2(8, 8)
+class Duos(Standard, Controller):
+    name = 'Duos'
     colors = [
-        Color.WHITE,
-        Color.BLACK,
+        Color.RED,
+        Color.BLUE,
+        Color.ORANGE,
+        Color.PURPLE,
     ]
 
     def init_board(self, board: Dict[Vector2, Piece]) -> None:
-        for color, direction, row in zip([Color.WHITE, Color.BLACK], [Direction.NORTH, Direction.SOUTH], [7, 0]):
+        for color, direction, row in zip([Color.RED, Color.BLUE], [Direction.NORTH, Direction.SOUTH], [7, 0]):
             board[Vector2(row, 0)] = Rook(color, direction)
             board[Vector2(row, 1)] = Knight(color, direction)
             board[Vector2(row, 2)] = Bishop(color, direction)
             board[Vector2(row, 3)] = Queen(color, direction)
+
+        for color, direction, row in zip([Color.ORANGE, Color.PURPLE], [Direction.NORTH, Direction.SOUTH], [7, 0]):
             board[Vector2(row, 4)] = King(color, direction)
             board[Vector2(row, 5)] = Bishop(color, direction)
             board[Vector2(row, 6)] = Knight(color, direction)
             board[Vector2(row, 7)] = Rook(color, direction)
 
-        for color, direction, row in zip([Color.WHITE, Color.BLACK], [Direction.NORTH, Direction.SOUTH], [6, 1]):
-            for col in range(8):
+        for color, direction, row in zip([Color.RED, Color.BLUE], [Direction.NORTH, Direction.SOUTH], [6, 1]):
+            for col in range(4):
+                board[Vector2(row, col)] = Pawn(color, direction)
+
+        for color, direction, row in zip([Color.ORANGE, Color.PURPLE], [Direction.NORTH, Direction.SOUTH], [6, 1]):
+            for col in range(4, 8):
                 board[Vector2(row, col)] = Pawn(color, direction)
 
     def get_info(self, color: Color) -> List[InfoElement]:
         result = get_color_info_texts(self.game, trailing_space=True)
 
-        ply_color = next_color(self.game)
+        for king_color in [Color.ORANGE, Color.PURPLE]:
+            # Check if their king is in check.
+            king_position, king = next(find_pieces(self.game.board, King, king_color))
+            if threatened(self.game, king_position, OPPONENTS[king_color]):
+                result.append(InfoText(f'{print_color(king_color)} is in check!'))
 
-        # Check if their king is in check.
-        king_position, king = next(find_pieces(self.game.board, King, ply_color))
-        if threatened(self.game, king_position, [opposite(ply_color)]):
-            result.append(InfoText(f'{print_color(ply_color)} is in check!'))
-
-        result.append(InfoText(f'Current Turn: {print_color(ply_color)}'))
+        result.append(InfoText(f'Current Turn: {print_color(next_color(self.game))}'))
 
         return result
 
@@ -84,37 +81,44 @@ class Standard(Controller):
         board = self.game.board
         piece = board[from_pos]
 
-        # Make sure it is their turn.
+        # Make sure it is their piece and their turn.
         if color != piece.color or color != next_color(self.game):
             return
 
         # Check for pawn promotion.
         if isinstance(piece, Pawn) and (
-            (to_pos.row == 0 and piece.color == Color.WHITE)
-            or (to_pos.row == 7 and piece.color == Color.BLACK)
+            (to_pos.row == 0 and piece.color in [Color.RED, Color.ORANGE])
+            or (to_pos.row == 7 and piece.color in [Color.BLUE, Color.PURPLE])
         ):
             plies = pawn_promotions(piece, from_pos, to_pos)
         else:
             plies = piece.get_plies(from_pos, to_pos, self.game.game_data)
 
-        # Make sure they are not in check after each ply is complete.
         for ply in plies:
-            state = self.game.next_state(color, ply)
+            # Make sure they are not capturing their teammate's piece.
+            captures = filter(lambda action: isinstance(action, DestroyAction), ply.actions)
+            if any(board[capture.pos].color not in OPPONENTS[color] for capture in captures):
+                continue
 
-            king_position, king = next(find_pieces(state.board, King, color))
+            # The owner of their team's king needs to sure they are not in check after each ply is complete.
+            if color == KING_COLOR[color]:
+                state = self.game.next_state(color, ply)
+                king_position, king = next(find_pieces(state.board, King, color))
+                if threatened(self.game, king_position, OPPONENTS[color], state):
+                    continue
 
-            if not threatened(self.game, king_position, [opposite(color)]):
-                yield ply
+            yield ply
 
     def after_ply(self) -> None:
-        # You cannot put yourself in checkmate, so we only need to check for the opposite color.
         color = next_color(self.game)
+        if color not in [Color.ORANGE, Color.PURPLE]:
+            return
+
         king_position, king = next(find_pieces(self.game.board, King, color))
 
         if not self._has_legal_move(color):
-            opposite_color = [opposite(color)]
-            if threatened(self.game, king_position, opposite_color):
-                self.game.winner(opposite_color, 'Checkmate')
+            if threatened(self.game, king_position, OPPONENTS[color]):
+                self.game.winner(OPPONENTS[color], 'Checkmate')
             else:
                 self.game.winner([], 'Stalemate')
 
@@ -126,11 +130,16 @@ class Standard(Controller):
         plies = piece.get_plies(from_pos, to_pos, self.game.game_data)
 
         for ply in plies:
+            # Capturing your teammate is not legal.
+            captures = filter(lambda action: isinstance(action, DestroyAction), ply.actions)  # TODO: Extract function.
+            if any(self.game.board[capture.pos].color not in OPPONENTS[piece.color] for capture in captures):
+                continue
+
             state = self.game.next_state(piece.color, ply)
 
             king_position, king = next(find_pieces(state.board, King, piece.color))
 
-            if not threatened(self.game, king_position, [opposite(piece.color)], state):
+            if not threatened(self.game, king_position, OPPONENTS[piece.color], state):
                 return True
 
         return False

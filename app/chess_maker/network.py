@@ -16,16 +16,16 @@ class Connection:
         self.id = uuid.uuid4()
         self.nickname = 'Player'
 
-    async def run(self, command: str, parameters: dict):
-        await self.socket.send(json.dumps({
+    def run(self, command: str, parameters: dict):
+        asyncio.create_task(self.socket.send(json.dumps({
             'command': command,
             'parameters': parameters,
-        }))
+        })))
 
-    async def error(self, message: str):
-        await self.socket.send(json.dumps({
+    def error(self, message: str):
+        asyncio.create_task(self.socket.send(json.dumps({
             'error': message,
-        }))
+        })))
 
     def __hash__(self):
         return hash(self.socket)
@@ -56,9 +56,9 @@ class Network:
 
         self.commands[command] = Command(callback, parameters)
 
-    async def run_all(self, command: str, parameters: dict):
+    def run_all(self, command: str, parameters: dict):
         for connection in self.connections:
-            await connection.run(command, parameters)
+            connection.run(command, parameters)
 
     def serve(self, port: int):
         print(f'Serving on port {port}...')
@@ -67,34 +67,34 @@ class Network:
         event_loop.run_until_complete(websockets.serve(self.server, '0.0.0.0', port))
         event_loop.run_forever()
 
-    async def try_command(self, connection: Connection, data: dict):
+    def try_command(self, connection: Connection, data: dict):
         if 'command' not in data:
-            await connection.error('Command Not Specified')
+            connection.error('Command Not Specified')
             return
 
         if data['command'] not in self.commands:
-            await connection.error('Command Not Found')
+            connection.error('Command Not Found')
             return
 
         parameters = self.commands[data['command']].parameters
 
         if parameters and 'parameters' not in data:
-            await connection.error(f'This command requires the following parameters: {", ".join(parameters.keys())}.')
+            connection.error(f'This command requires the following parameters: {", ".join(parameters.keys())}.')
             return
 
         payload = {}
         for parameter_name, parameter_type in parameters.items():
             if parameter_name not in data['parameters']:
-                await connection.error(f'"{parameter_name}" parameter not specified.')
+                connection.error(f'"{parameter_name}" parameter not specified.')
                 return
 
             if type(data['parameters'][parameter_name]) is not parameter_type:
-                await connection.error(f'"{parameter_name}" parameter needs to be of type {parameter_type.__name__}.')
+                connection.error(f'"{parameter_name}" parameter needs to be of type {parameter_type.__name__}.')
                 return
 
             payload[parameter_name] = data['parameters'][parameter_name]
 
-        await self.commands[data['command']].function(connection, **payload)
+        self.commands[data['command']].function(connection, **payload)
 
     async def server(self, websocket: websockets.WebSocketServerProtocol, path: str):
         connection = Connection(websocket)
@@ -107,13 +107,13 @@ class Network:
                 try:
                     data = json.loads(raw_data)
                 except json.JSONDecodeError:
-                    await connection.error('Invalid JSON')
+                    connection.error('Invalid JSON')
                     continue
 
-                await self.try_command(connection, data)
+                self.try_command(connection, data)
         except websockets.ConnectionClosedError:
             pass
         finally:
             print('Client disconnected.')
             self.connections.remove(connection)
-            await self.on_disconnect(connection)
+            self.on_disconnect(connection)

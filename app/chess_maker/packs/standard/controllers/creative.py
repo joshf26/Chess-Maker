@@ -61,10 +61,10 @@ class Creative(Controller):
     def get_inventory_plies(self, color: Color, piece: Piece, pos: Vector2) -> Generator[Ply]:
         yield Ply('Create', [CreateAction(piece, pos)])
 
-    async def rotate_pieces(self, color: Color) -> None:
+    def rotate_pieces(self, color: Color) -> None:
         self.directions[color] = rotate_direction(self.directions[color])
 
-        await self.game.send_update_to_subscribers()
+        self.game.send_update_to_subscribers()
 
 
 class Creative8x8(Creative, Controller):

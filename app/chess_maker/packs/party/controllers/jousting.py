@@ -63,23 +63,26 @@ class Jousting(Controller):
             if color == piece.color:
                 yield from piece.get_plies(from_pos, to_pos, self.game.game_data)
 
-    async def after_ply(self) -> None:
+    def after_ply(self) -> None:
         if len(self.game.board) == 1:
-            await self.game.winner([list(self.game.board.values())[0].color], 'Last Knight Standing')
+            self.game.winner([list(self.game.board.values())[0].color], 'Last Knight Standing')
 
-    async def _start_game(self, color: Color):
-        self._clear_unused()
-        self.countdown_started = True
-        await self.game.send_update_to_subscribers()
-        await asyncio.sleep(1)
-        self.start_timer -= 1
-        await self.game.send_update_to_subscribers()
-        await asyncio.sleep(1)
-        self.start_timer -= 1
-        await self.game.send_update_to_subscribers()
-        await asyncio.sleep(1)
-        self.game_started = True
-        await self.game.send_update_to_subscribers()
+    def _start_game(self, color: Color):
+        async def countdown():
+            self._clear_unused()
+            self.countdown_started = True
+            self.game.send_update_to_subscribers()
+            await asyncio.sleep(1)
+            self.start_timer -= 1
+            self.game.send_update_to_subscribers()
+            await asyncio.sleep(1)
+            self.start_timer -= 1
+            self.game.send_update_to_subscribers()
+            await asyncio.sleep(1)
+            self.game_started = True
+            self.game.send_update_to_subscribers()
+
+        asyncio.create_task(countdown())
 
     def _clear_unused(self):
         for pos, piece in list(self.game.board.items()):

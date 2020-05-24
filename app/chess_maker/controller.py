@@ -38,5 +38,5 @@ class Controller(ABC):
     def get_inventory_plies(self, color: Color, piece: Piece, pos: Vector2) -> Generator[Ply]:
         raise StopIteration
 
-    async def after_ply(self) -> None:
+    def after_ply(self) -> None:
         pass

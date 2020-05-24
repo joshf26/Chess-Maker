@@ -100,7 +100,7 @@ def next_color(game: Game) -> Color:
         # No turns were made yet.
         return game.controller.colors[0]
 
-    return game.controller.colors[(last_state.ply_color.value + 1) % len(game.controller.colors)]
+    return game.controller.colors[(game.controller.colors.index(last_state.ply_color) + 1) % len(game.controller.colors)]
 
 
 def n_state_by_color(game_data: GameData, color: Color, n: int, reverse: bool = False) -> Optional[GameState]:
@@ -151,11 +151,10 @@ def find_pieces(
     ), board.items())
 
 
-def threatened(game: Game, pos: Vector2, color: Color, state: GameState = None) -> bool:
+def threatened(game: Game, pos: Vector2, by: List[Color], state: GameState = None) -> bool:
     board = game.board if state is None else state.board
     for current_pos, piece in board.items():
-        if piece.color == color:
-            # Don't bother checking your own pieces.
+        if piece.color not in by:
             continue
 
         if any(DestroyAction(pos) in ply.actions for ply in piece.get_plies(
@@ -174,3 +173,12 @@ def threatened(game: Game, pos: Vector2, color: Color, state: GameState = None) 
 
 def print_color(color: Color) -> str:
     return f'<strong style="color: {color.name.lower()}">{color.name.title()}</strong>'
+
+
+def opposite(color: Color) -> Color:
+    """ Returns Color.BLACK if passed Color.WHITE and returns Color.WHITE if passed COLOR.BLACK.
+
+    Useful since many games a played by white vs black.
+    """
+
+    return Color.BLACK if color == Color.WHITE else Color.BLACK
