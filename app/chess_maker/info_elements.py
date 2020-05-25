@@ -24,7 +24,7 @@ class InfoText(InfoElement):
 
 class InfoButton(InfoElement):
 
-    def __init__(self, text: str, callback: Callable[[Color], Awaitable[None]]):
+    def __init__(self, text: str, callback: Callable[[Color], None]):
         self.text = text
         self.callback = callback
 

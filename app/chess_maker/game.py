@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional, Set, Dict, Type, Generator, Union
 from uuid import uuid4
@@ -180,7 +181,7 @@ class Game:
         yield from self.controller.get_plies(color, from_pos, to_pos)
 
     def next_state(self, color: Color, ply: Ply) -> GameState:
-        board = self.board.copy()
+        board = deepcopy(self.board)
 
         for action in ply.actions:
             if isinstance(action, MoveAction):

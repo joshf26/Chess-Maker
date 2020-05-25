@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING, Optional, Tuple, Dict, Generator, Type
+from typing import List, TYPE_CHECKING, Optional, Tuple, Dict, Generator, Type, Iterator
 
 from color import Color
 from info_elements import InfoText, InfoElement
@@ -93,14 +93,23 @@ def empty_along_axis(board: Dict[Vector2, Piece], start: Vector2, end: Vector2) 
     return True
 
 
-def next_color(game: Game) -> Color:
+def next_color(game: Game, skip_colors: List[Color] = None) -> Optional[Color]:
+    if skip_colors is None:
+        skip_colors = []
+
     last_state = game.game_data.history[-1]
+    available_colors = filter(lambda color: color not in skip_colors, game.controller.colors)
 
     if last_state.ply_color is None:
         # No turns were made yet.
-        return game.controller.colors[0]
+        return next(available_colors, None)
 
-    return game.controller.colors[(game.controller.colors.index(last_state.ply_color) + 1) % len(game.controller.colors)]
+    available_colors = list(available_colors)
+    return available_colors[(available_colors.index(last_state.ply_color) + 1) % len(available_colors)]
+
+
+def players_without_pieces(game: Game) -> Generator[Color]:
+    yield from filter(lambda color: next(find_pieces(game.board, color=color), None) is None, game.controller.colors)
 
 
 def n_state_by_color(game_data: GameData, color: Color, n: int, reverse: bool = False) -> Optional[GameState]:

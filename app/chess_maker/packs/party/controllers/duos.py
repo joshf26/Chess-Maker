@@ -7,7 +7,7 @@ from controller import Controller
 from info_elements import InfoElement, InfoText
 from packs.standard import Standard
 from packs.standard.controllers.standard import pawn_promotions
-from packs.standard.helpers import next_color, find_pieces, threatened, get_color_info_texts, print_color, OFFSETS
+from packs.standard.helpers import next_color, find_pieces, threatened, get_color_info_texts, print_color, OFFSETS, players_without_pieces
 from piece import Piece, Direction
 from packs.standard.pieces.bishop import Bishop
 from packs.standard.pieces.king import King
@@ -73,7 +73,7 @@ class Duos(Standard, Controller):
             if threatened(self.game, king_position, OPPONENTS[king_color]):
                 result.append(InfoText(f'{print_color(king_color)} is in check!'))
 
-        result.append(InfoText(f'Current Turn: {print_color(next_color(self.game))}'))
+        result.append(InfoText(f'Current Turn: {print_color(next_color(self.game, list(players_without_pieces(self.game))))}'))
 
         return result
 
@@ -82,7 +82,7 @@ class Duos(Standard, Controller):
         piece = board[from_pos]
 
         # Make sure it is their piece and their turn.
-        if color != piece.color or color != next_color(self.game):
+        if color != piece.color or color != next_color(self.game, list(players_without_pieces(self.game))):
             return
 
         # Check for pawn promotion.
@@ -110,7 +110,7 @@ class Duos(Standard, Controller):
             yield ply
 
     def after_ply(self) -> None:
-        color = next_color(self.game)
+        color = next_color(self.game, list(players_without_pieces(self.game)))
         if color not in [Color.ORANGE, Color.PURPLE]:
             return
 
