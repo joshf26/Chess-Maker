@@ -15,7 +15,7 @@ from packs.standard.pieces.knight import Knight
 from packs.standard.pieces.pawn import Pawn
 from packs.standard.pieces.queen import Queen
 from packs.standard.pieces.rook import Rook
-from ply import Ply, DestroyAction, MoveAction
+from ply import Ply, DestroyAction
 from vector2 import Vector2
 
 
