@@ -3,8 +3,9 @@ from __future__ import annotations
 from typing import Generator
 
 from game import GameData
-from piece import Piece, load_image
-from ply import Ply, MoveAction
+from packs.checkers.pieces.king import King
+from piece import Piece, load_image, Direction
+from ply import Ply
 from vector2 import Vector2
 
 
@@ -14,9 +15,8 @@ class Man(Piece):
 
     def get_plies(self, from_pos: Vector2, to_pos: Vector2, game_data: GameData) -> Generator[Ply]:
         row_diff = to_pos.row - from_pos.row
-        col_diff = to_pos.col - from_pos.col
 
-        if to_pos == from_pos or abs(row_diff) != abs(col_diff):
+        if (self.direction == Direction.NORTH and row_diff > 0) or (self.direction == Direction.SOUTH and row_diff < 0):
             return
 
-        yield Ply('Test', [MoveAction(from_pos, to_pos)])
+        yield from King.move_or_capture(from_pos, to_pos, game_data)

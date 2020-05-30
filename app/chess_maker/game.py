@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional, Set, Dict, Type, Generator, Union
