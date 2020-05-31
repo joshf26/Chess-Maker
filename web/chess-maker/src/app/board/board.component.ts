@@ -4,6 +4,8 @@ import {PackDataService} from '../services/pieces/pack-data.service';
 import {GameMetaData} from '../lobby/lobby.component';
 import {DomSanitizer} from '@angular/platform-browser';
 import {MatSidenav} from "@angular/material/sidenav";
+import {fromEvent} from "rxjs";
+import {debounceTime} from "rxjs/operators";
 
 const EVEN_TILE_COLOR = '#A85738';
 const ODD_TILE_COLOR = '#F3C1A9';
@@ -112,6 +114,11 @@ export class BoardComponent implements OnInit {
         this.inventoryContext = this.inventoryCanvas.getContext('2d');
         this.updateBackgroundCanvases();
         this.centerBoard();
+
+        fromEvent(window, 'resize').pipe(debounceTime(200)).subscribe(() => {
+            this.updateBackgroundCanvases();
+            this.centerBoard();
+        });
     }
 
     private rotateVector(x: number, y: number): number[] {
