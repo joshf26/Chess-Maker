@@ -5,7 +5,7 @@ from typing import List, TYPE_CHECKING, Optional, Tuple, Dict, Generator, Type, 
 from color import Color
 from info_elements import InfoText, InfoElement
 from piece import Direction, Piece
-from ply import Ply, DestroyAction, MoveAction
+from ply import Ply, DestroyAction, MoveAction, Action, CreateAction
 from vector2 import Vector2
 from game import GameData
 
@@ -191,3 +191,11 @@ def opposite(color: Color) -> Color:
     """
 
     return Color.BLACK if color == Color.WHITE else Color.BLACK
+
+
+def in_bounds(board_size: Vector2, pos: Vector2) -> bool:
+    return 0 <= pos.row < board_size.row and 0 <= pos.col < board_size.col
+
+
+def move_to_promotion(action: MoveAction, piece: Piece) -> List[Action]:
+    return [DestroyAction(action.from_pos), CreateAction(piece, action.to_pos)]

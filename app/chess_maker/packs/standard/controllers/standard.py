@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from info_elements import InfoElement
 
 
+# TODO: Make this a static method of Standard.
 def pawn_promotions(piece: Piece, from_pos: Vector2, to_pos: Vector2) -> List[Ply]:
     return [
         Ply('Promote to Queen', [
