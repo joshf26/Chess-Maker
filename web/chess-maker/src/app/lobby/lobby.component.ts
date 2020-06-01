@@ -70,6 +70,17 @@ export class LobbyComponent implements OnInit {
 
     ngOnInit(): void {}
 
+    updateAvailableColors(): void {
+        if (!this.selectedGameId) {
+            return;
+        }
+
+        this.availableColors = [...this.packDataService.boardTypes[this.games[this.selectedGameId].pack][this.games[this.selectedGameId].board].colors];
+        for (const player of this.games[this.selectedGameId].players) {
+            this.availableColors.splice(this.availableColors.indexOf(player.color), 1);
+        }
+    }
+
     updateMetadata(parameters: {[key: string]: any}): void {
         this.players = parameters.players;
         this.games = parameters.game_metadata;
@@ -77,6 +88,8 @@ export class LobbyComponent implements OnInit {
         if (!this.games.hasOwnProperty(this.selectedGameId)) {
             this.selectedGameId = '';
         }
+
+        this.updateAvailableColors();
     }
 
     updatePackData(parameters: {[key: string]: any}): void {
@@ -119,14 +132,9 @@ export class LobbyComponent implements OnInit {
             game_id: gameId,
         })
 
-        // TODO
-        this.availableColors = this.packDataService.boardTypes[this.games[gameId].pack][this.games[gameId].board].colors;
-        for (const player of this.games[gameId].players) {
-            this.availableColors.splice(player.color, 1);
-        }
-
         this.hasNotification[gameId] = false;
         this.selectedGameId = gameId;
+        this.updateAvailableColors();
         this.changeDetectorRef.detectChanges();
         this.board.updateBoardSize();
 
