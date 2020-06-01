@@ -5,24 +5,17 @@ import {MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
 import {BoardComponent, WinnerData} from '../board/board.component';
 import {Router} from '@angular/router';
 import {PlayersComponent} from "../players/players.component";
-
-const COLOR_NAMES = [
-    'White',
-    'Black',
-    'Red',
-    'Orange',
-    'Yellow',
-    'Green',
-    'Blue',
-    'Purple',
-];
+import {ColorService} from "../services/color/color.service";
 
 export interface GameMetaData {
     name: string,
     creator: string,
     pack: string,
     board: string,
-    available_colors: number[],
+    players: {
+        nickname: string,
+        color: number,
+    }[],
     total_players: number,
     playing_as?: number,
 }
@@ -55,16 +48,17 @@ export class LobbyComponent implements OnInit {
     @ViewChild('board') private board: BoardComponent;
     @ViewChild('playersComponent') private playersComponent: PlayersComponent;
     games: {[key: string]: GameMetaData};
+    availableColors: number[];
     players: string[];
     hasNotification: {[key: string]: boolean} = {};
     selectedGameId: string;
-    colorNames = COLOR_NAMES;
     winnerData?: WinnerData = null;
 
     constructor(
         public createGameDialog: MatDialog,
         public selectPlyDialog: MatDialog,
         public api: ApiService,
+        public colorService: ColorService,
         private packDataService: PackDataService,
         private changeDetectorRef: ChangeDetectorRef,
         private router: Router,
@@ -125,6 +119,9 @@ export class LobbyComponent implements OnInit {
             game_id: gameId,
         })
 
+        // TODO
+        this.availableColors = [0, 1, 2];
+
         this.hasNotification[gameId] = false;
         this.selectedGameId = gameId;
         this.changeDetectorRef.detectChanges();
@@ -151,16 +148,16 @@ export class LobbyComponent implements OnInit {
         }
 
         if (colors.length == 1) {
-            return `${COLOR_NAMES[colors[0]]} wins!`;
+            return `${this.colorService.names[colors[0]]} wins!`;
         }
 
         if (colors.length == 2) {
-            return `${COLOR_NAMES[colors[0]]} and ${COLOR_NAMES[colors[1]]} win!`;
+            return `${this.colorService.names[colors[0]]} and ${this.colorService.names[colors[1]]} win!`;
         }
 
         let result = '';
         for (const [index, color] of Object.entries(colors)) {
-            result += parseInt(index) == colors.length - 1 ? `and ${COLOR_NAMES[color]}` : `${COLOR_NAMES[color]}, `;
+            result += parseInt(index) == colors.length - 1 ? `and ${this.colorService.names[color]}` : `${this.colorService.names[color]}, `;
         }
         result += ' win!'
 

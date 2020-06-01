@@ -118,7 +118,12 @@ class Game:
             'creator': self.owner.nickname,
             'pack': get_pack(self.controller),
             'board': self.controller.name,
-            'available_colors': list(map(lambda color: color.value, self.get_available_colors())),
+            'players': [
+                {
+                    'color': color.value,
+                    'nickname': connection.nickname,
+                } for color, connection in self.players.color_to_connection.items()
+            ],
             'total_players': len(self.controller.colors),
             'playing_as': None if (color := self.players.get_color(connection)) is None else color.value,
         }
