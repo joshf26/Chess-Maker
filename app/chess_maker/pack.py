@@ -26,6 +26,7 @@ class Pack(JsonSerializable):
             'controllers': {controller.name: {
                 'rows': controller.board_size.row,
                 'cols': controller.board_size.col,
+                'colors': [color.value for color in controller.colors],
             } for controller in self.controllers},
         }
 

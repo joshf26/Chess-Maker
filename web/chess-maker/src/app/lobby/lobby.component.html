@@ -27,7 +27,7 @@
                     <mat-card-content>
                         <h1>{{hasNotification[game.key] ? '*' : ''}}{{game.value.name}}</h1>
                         Created by {{game.value.creator}}<br>
-                        A <strong>{{game.value.board}}</strong> game with <strong>{{game.value.players.length}}/{{game.value.total_players}}</strong> players.
+                        A <strong>{{game.value.board}}</strong> game with <strong>{{game.value.players.length}}/{{game.value.total_players.length}}</strong> players.
                     </mat-card-content>
                 </mat-card>
             </ng-template>
@@ -51,7 +51,7 @@
         <mat-card id="control-box" *ngIf="(selectedGameId && games[selectedGameId].playing_as == null) || winnerData != null">
             <mat-card-content>
                 <ng-template [ngIf]="winnerData == null">
-                    <h1>{{games[selectedGameId].players.length == games[selectedGameId].total_players ? 'Spectating' : 'Join As'}}</h1>
+                    <h1>{{games[selectedGameId].players.length == packDataService.boardTypes[games[selectedGameId].pack][games[selectedGameId].board].colors.length ? 'Spectating' : 'Join As'}}</h1>
                     <mat-chip-list>
                         <mat-chip *ngFor="let color of availableColors"
                                   [ngStyle]="{backgroundColor: colorService.names[color], color: color == 0 || color == 3 || color == 4 ? 'black' : 'white'}"

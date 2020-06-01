@@ -59,7 +59,7 @@ export class LobbyComponent implements OnInit {
         public selectPlyDialog: MatDialog,
         public api: ApiService,
         public colorService: ColorService,
-        private packDataService: PackDataService,
+        public packDataService: PackDataService,
         private changeDetectorRef: ChangeDetectorRef,
         private router: Router,
     ) {
@@ -120,7 +120,10 @@ export class LobbyComponent implements OnInit {
         })
 
         // TODO
-        this.availableColors = [0, 1, 2];
+        this.availableColors = this.packDataService.boardTypes[this.games[gameId].pack][this.games[gameId].board].colors;
+        for (const player of this.games[gameId].players) {
+            this.availableColors.splice(player.color, 1);
+        }
 
         this.hasNotification[gameId] = false;
         this.selectedGameId = gameId;

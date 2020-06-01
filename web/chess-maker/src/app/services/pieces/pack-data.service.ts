@@ -4,7 +4,7 @@ import {Injectable} from '@angular/core';
 export type PieceTypes = {[key: string]: {[key: string]: {raw_image: string, image: HTMLImageElement}[]}};
 
 // A board type is accessed using [pack][board].
-export type BoardTypes = {[key: string]: {[key: string]: {rows: number, cols: number}}};
+export type BoardTypes = {[key: string]: {[key: string]: {rows: number, cols: number, colors: number[]}}};
 
 const SVG_COLORS = [
     'white',

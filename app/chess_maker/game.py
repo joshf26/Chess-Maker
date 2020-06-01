@@ -124,7 +124,7 @@ class Game:
                     'nickname': connection.nickname,
                 } for color, connection in self.players.color_to_connection.items()
             ],
-            'total_players': len(self.controller.colors),
+            'total_players': [color.value for color in self.controller.colors],  # TODO: This should probably be sent with pack data.
             'playing_as': None if (color := self.players.get_color(connection)) is None else color.value,
         }
 
