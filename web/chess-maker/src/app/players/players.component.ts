@@ -1,15 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 
 @Component({
-  selector: 'app-players',
-  templateUrl: './players.component.html',
-  styleUrls: ['./players.component.less']
+    selector: 'app-players',
+    templateUrl: './players.component.html',
+    styleUrls: ['./players.component.less']
 })
 export class PlayersComponent implements OnInit {
+    @Input('serverPlayers') serverPlayers: string[];
+    selectedTab: number = 0;
 
-  constructor() { }
+    constructor() {}
 
-  ngOnInit(): void {
-  }
-
+    ngOnInit(): void {}
 }

@@ -1,11 +1,9 @@
 <mat-sidenav-container>
     <mat-sidenav #sidenav mode="side" opened (opened)="board.onResize()" (closed)="board.onResize()">
-        <h1 class="header">Chess Maker</h1>
-        <hr>
         <div class="padded">
             <mat-card class="darker">
                 <mat-card-content>
-                    <app-players></app-players>
+                    <app-players #playersComponent [serverPlayers]="players"></app-players>
                 </mat-card-content>
             </mat-card>
             <br>

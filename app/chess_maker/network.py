@@ -45,8 +45,6 @@ class Network:
         self.commands: Dict[str, Command] = {}
 
         self.connections: Set[Connection] = set()
-        self.socket_by_player = {}
-        self.player_by_socket = {}
 
     def register_command(self, command: str, callback: Callable) -> None:
         signature = inspect.signature(callback)

@@ -4,6 +4,7 @@ import {PackDataService} from '../services/pieces/pack-data.service';
 import {MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
 import {BoardComponent, WinnerData} from '../board/board.component';
 import {Router} from '@angular/router';
+import {PlayersComponent} from "../players/players.component";
 
 const COLOR_NAMES = [
     'White',
@@ -52,7 +53,9 @@ export interface SelectPlyDialogData {
 })
 export class LobbyComponent implements OnInit {
     @ViewChild('board') private board: BoardComponent;
+    @ViewChild('playersComponent') private playersComponent: PlayersComponent;
     games: {[key: string]: GameMetaData};
+    players: string[];
     hasNotification: {[key: string]: boolean} = {};
     selectedGameId: string;
     colorNames = COLOR_NAMES;
@@ -66,14 +69,15 @@ export class LobbyComponent implements OnInit {
         private changeDetectorRef: ChangeDetectorRef,
         private router: Router,
     ) {
-        api.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
+        api.getCommand('update_metadata').subscribe(this.updateMetadata.bind(this));
         api.getCommand('update_pack_data').subscribe(this.updatePackData.bind(this));
         api.getCommand('plies').subscribe(this.showPlies.bind(this));
     }
 
     ngOnInit(): void {}
 
-    updateGameMetadata(parameters: {[key: string]: any}): void {
+    updateMetadata(parameters: {[key: string]: any}): void {
+        this.players = parameters.players;
         this.games = parameters.game_metadata;
 
         if (!this.games.hasOwnProperty(this.selectedGameId)) {
@@ -125,6 +129,9 @@ export class LobbyComponent implements OnInit {
         this.selectedGameId = gameId;
         this.changeDetectorRef.detectChanges();
         this.board.updateBoardSize();
+
+        // Switch to the "Game" tab.
+        this.playersComponent.selectedTab = 1;
     }
 
     joinGame(gameId: string, color: number): void {

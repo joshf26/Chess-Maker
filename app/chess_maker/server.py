@@ -31,8 +31,11 @@ class Server:
         self.network.register_command('submit_ply', self.on_submit_ply)
         self.network.register_command('click_button', self.on_click_button)
 
-    def _get_metadata(self, connection: Connection) -> dict:
+    def _get_game_metadata(self, connection: Connection) -> dict:
         return {game_id: game.get_metadata(connection) for game_id, game in self.games.items()}
+
+    def _get_players(self):
+        return [connection.nickname for connection in self.network.connections]
 
     def _send_pack_data(self, connection: Connection) -> None:
         pack_data: Dict[str, dict] = {}
@@ -44,11 +47,15 @@ class Server:
             'pack_data': pack_data,
         })
 
+    def _send_metadata_update(self, connection: Connection) -> None:
+        connection.run('update_metadata', {
+            'game_metadata': self._get_game_metadata(connection),
+            'players': self._get_players(),
+        })
+
     def _send_metadata_update_to_all(self) -> None:
         for connection in self.network.connections:
-            connection.run('update_game_metadata', {
-                'game_metadata': self._get_metadata(connection),
-            })
+            self._send_metadata_update(connection)
 
     def start(self, port: int) -> None:
         self.network.serve(port)
@@ -79,9 +86,7 @@ class Server:
 
         connection.run('set_nickname', {'nickname': nickname})
         self._send_pack_data(connection)
-        connection.run('update_game_metadata', {
-            'game_metadata': self._get_metadata(connection),
-        })
+        self._send_metadata_update_to_all()
 
     def on_create_game(self, connection: Connection, name: str, pack: str, board: str) -> None:
         if pack not in self.packs:
