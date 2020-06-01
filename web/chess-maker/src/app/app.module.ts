@@ -18,6 +18,9 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatInputModule} from '@angular/material/input';
 import {MatIconModule} from '@angular/material/icon';
 import {MatListModule} from '@angular/material/list';
+import { PlayersComponent } from './players/players.component';
+import {MatTabsModule} from "@angular/material/tabs";
+import {MatTooltipModule} from "@angular/material/tooltip";
 
 @NgModule({
     declarations: [
@@ -27,6 +30,7 @@ import {MatListModule} from '@angular/material/list';
         LobbyComponent,
         CreateGameDialog,
         SelectPlyDialog,
+        PlayersComponent,
     ],
     imports: [
         BrowserModule,
@@ -43,6 +47,8 @@ import {MatListModule} from '@angular/material/list';
         MatInputModule,
         MatIconModule,
         MatListModule,
+        MatTabsModule,
+        MatTooltipModule,
     ],
     providers: [],
     bootstrap: [AppComponent],

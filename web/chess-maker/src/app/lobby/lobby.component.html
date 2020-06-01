@@ -1,34 +1,43 @@
 <mat-sidenav-container>
     <mat-sidenav #sidenav mode="side" opened (opened)="board.onResize()" (closed)="board.onResize()">
-        <div class="center">
-            <h1 class="header">Chess Maker</h1>
-            <button mat-raised-button color="primary" (click)="createGame()">New Game</button>
-        </div>
-        <br><br>
-        <ng-template ngFor let-game [ngForOf]="games | keyvalue">
-            <button mat-mini-fab
-                    color="accent"
-                    class="delete-game-button"
-                    *ngIf="game.value.creator == api.nickname"
-                    (click)="api.run('delete_game', {game_id: game.key})">
-                <mat-icon>close</mat-icon>
-            </button>
-            <mat-card (click)="showGame(game.key)"
-                      [ngStyle]="{backgroundColor: game.key == selectedGameId ? '#c2185b' : '#303030'}">
+        <h1 class="header">Chess Maker</h1>
+        <hr>
+        <div class="padded">
+            <mat-card class="darker">
                 <mat-card-content>
-                    <h1>{{hasNotification[game.key] ? '*' : ''}}{{game.value.name}}</h1>
-                    Created by {{game.value.creator}}<br>
-                    A <strong>{{game.value.board}}</strong> game with <strong>{{game.value.total_players - game.value.available_colors.length}}/{{game.value.total_players}}</strong> players.
+                    <app-players></app-players>
                 </mat-card-content>
             </mat-card>
-        </ng-template>
-        <div class="sidenav-actions">
-            <button mat-raised-button
-                    (click)="disconnect()"
-                    color="warn">Disconnect</button>
-            <button mat-raised-button
-                    color="accent"
-                    (click)="sidenav.toggle()">Hide Sidebar</button>
+            <br>
+            <div class="center">
+                <button mat-raised-button color="primary" (click)="createGame()">New Game</button>
+            </div>
+            <br>
+            <ng-template ngFor let-game [ngForOf]="games | keyvalue">
+                <button mat-mini-fab
+                        color="accent"
+                        class="delete-game-button"
+                        *ngIf="game.value.creator == api.nickname"
+                        (click)="api.run('delete_game', {game_id: game.key})">
+                    <mat-icon>close</mat-icon>
+                </button>
+                <mat-card (click)="showGame(game.key)"
+                          [ngStyle]="{backgroundColor: game.key == selectedGameId ? '#c2185b' : '#303030'}">
+                    <mat-card-content>
+                        <h1>{{hasNotification[game.key] ? '*' : ''}}{{game.value.name}}</h1>
+                        Created by {{game.value.creator}}<br>
+                        A <strong>{{game.value.board}}</strong> game with <strong>{{game.value.total_players - game.value.available_colors.length}}/{{game.value.total_players}}</strong> players.
+                    </mat-card-content>
+                </mat-card>
+            </ng-template>
+            <div class="sidenav-actions">
+                <button mat-raised-button
+                        (click)="disconnect()"
+                        color="warn">Disconnect</button>
+                <button mat-raised-button
+                        color="accent"
+                        (click)="sidenav.toggle()">Hide Sidebar</button>
+            </div>
         </div>
     </mat-sidenav>
     <mat-sidenav-content>

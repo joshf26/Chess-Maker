@@ -145,7 +145,6 @@ class Checkers(Controller):
                 piece_that_jumped = self.game.board[piece_that_jumped_pos]
                 if self._piece_can_jump(piece_that_jumped_pos, piece_that_jumped):
                     return last_state.ply_color, piece_that_jumped
-
         else:
             return Color.BLACK, None
 

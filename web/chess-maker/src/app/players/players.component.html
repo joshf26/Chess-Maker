@@ -1,0 +1,20 @@
+<h2 class="header">Players</h2>
+<mat-tab-group>
+    <mat-tab label="Server">
+        <mat-selection-list [multiple]="false">
+            <mat-list-option>Player 1</mat-list-option>
+            <mat-list-option>Player 2</mat-list-option>
+            <mat-list-option>Player 3</mat-list-option>
+        </mat-selection-list>
+    </mat-tab>
+    <mat-tab>
+        <ng-template mat-tab-label>
+            <span matTooltip="TODO">Game</span>
+        </ng-template>
+        <mat-selection-list [multiple]="false">
+            <mat-list-option>Player 1</mat-list-option>
+            <mat-list-option>Player 2</mat-list-option>
+            <mat-list-option>Player 3</mat-list-option>
+        </mat-selection-list>
+    </mat-tab>
+</mat-tab-group>
