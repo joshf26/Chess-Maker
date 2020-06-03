@@ -182,7 +182,7 @@ def opposite(color: Color) -> Color:
     Useful since many games a played by white vs black.
     """
 
-    return Color.BLACK if color == Color.WHITE else Color.BLACK
+    return Color.WHITE if color == Color.BLACK else Color.BLACK
 
 
 def in_bounds(board_size: Vector2, pos: Vector2) -> bool:
