@@ -11,7 +11,8 @@
         <ng-template mat-tab-label>
             <span [matTooltip]="disableGameTab ? 'Select a game below to enable this tab.' : ''">Game</span>
         </ng-template>
-        <mat-selection-list [multiple]="false">
+        <p class="no-players" *ngIf="gamePlayers.length == 0">No players are in the game yet.</p>
+        <mat-selection-list [multiple]="false" *ngIf="gamePlayers.length != 0">
             <mat-list-option *ngFor="let gamePlayer of gamePlayers">
                 {{gamePlayer.nickname}} (<span [ngStyle]="{color: colorService.names[gamePlayer.color], display: 'contents'}">{{colorService.names[gamePlayer.color]}}</span>)
             </mat-list-option>

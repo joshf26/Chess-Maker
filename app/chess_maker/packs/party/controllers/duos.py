@@ -37,10 +37,10 @@ OPPONENTS = {
 class Duos(Standard, Controller):
     name = 'Duos'
     colors = [
-        Color.RED,
-        Color.BLUE,
         Color.ORANGE,
         Color.PURPLE,
+        Color.RED,
+        Color.BLUE,
     ]
 
     def init_board(self, board: Dict[Vector2, Piece]) -> None:
@@ -56,12 +56,8 @@ class Duos(Standard, Controller):
             board[Vector2(row, 6)] = Knight(color, direction)
             board[Vector2(row, 7)] = Rook(color, direction)
 
-        for color, direction, row in zip([Color.RED, Color.BLUE], [Direction.NORTH, Direction.SOUTH], [6, 1]):
-            for col in range(4):
-                board[Vector2(row, col)] = Pawn(color, direction)
-
         for color, direction, row in zip([Color.ORANGE, Color.PURPLE], [Direction.NORTH, Direction.SOUTH], [6, 1]):
-            for col in range(4, 8):
+            for col in range(8):
                 board[Vector2(row, col)] = Pawn(color, direction)
 
     def get_info(self, color: Color) -> List[InfoElement]:
