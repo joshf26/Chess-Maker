@@ -5,8 +5,7 @@ from typing import List, Dict, Generator, TYPE_CHECKING
 from color import Color
 from controller import Controller
 from info_elements import InfoText
-from packs.standard.helpers import get_color_info_texts, next_color, threatened, find_pieces, print_color, OFFSETS, \
-    opposite
+from packs.standard.helpers import next_color, threatened, find_pieces, print_color, OFFSETS, opposite
 from packs.standard.pieces.bishop import Bishop
 from packs.standard.pieces.king import King
 from packs.standard.pieces.knight import Knight
@@ -68,8 +67,7 @@ class Standard(Controller):
                 board[Vector2(row, col)] = Pawn(color, direction)
 
     def get_info(self, color: Color) -> List[InfoElement]:
-        result = get_color_info_texts(self.game, trailing_space=True)
-
+        result = []
         ply_color = next_color(self.game)
 
         # Check if their king is in check.

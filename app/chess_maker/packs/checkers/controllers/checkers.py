@@ -7,8 +7,7 @@ from controller import Controller
 from info_elements import InfoElement, InfoText
 from packs.checkers.pieces.king import King
 from packs.checkers.pieces.man import Man
-from packs.standard.helpers import next_color, find_pieces, in_bounds, move_to_promotion, print_color, \
-    get_color_info_texts
+from packs.standard.helpers import next_color, find_pieces, in_bounds, move_to_promotion, print_color
 from piece import Piece, Direction
 from ply import Ply, DestroyAction, MoveAction
 from vector2 import Vector2
@@ -121,10 +120,7 @@ class Checkers(Controller):
             yield ply
 
     def get_info(self, color: Color) -> List[InfoElement]:
-        return [
-            *get_color_info_texts(self.game, trailing_space=True),
-            InfoText(f'Current turn: {print_color(self._current_color()[0])}'),
-        ]
+        return [InfoText(f'Current turn: {print_color(self._current_color()[0])}')]
 
     def after_ply(self) -> None:
         for color in self.colors:

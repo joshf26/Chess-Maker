@@ -33,14 +33,6 @@ def bidirectional_exclusive_range(start: int, end: int, step: int = 1) -> range:
 
     return range(start - 1, end, -step)
 
-
-def get_color_info_texts(game: Game, trailing_space=False) -> List[InfoElement]:
-    return [InfoText(
-        f'<strong style="color: {color.name.lower()}">{color.name.title()}</strong>: '
-        f'{connection.nickname if (connection := game.players.get_connection(color)) is not None else "<em>Waiting...</em>"}'
-    ) for color in game.controller.colors] + ([InfoText('<br>')] if trailing_space else [])
-
-
 def rotate_direction(direction: Direction) -> Direction:
     return Direction((direction.value + 1) % 8)
 

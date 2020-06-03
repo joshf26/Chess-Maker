@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, List, Dict, Generator
 from color import Color
 from controller import Controller
 from info_elements import InfoButton, InfoText, InfoElement
-from packs.standard.helpers import get_color_info_texts
 from packs.standard.pieces.knight import Knight
 from piece import Direction, Piece
 from vector2 import Vector2
@@ -50,12 +49,10 @@ class Jousting(Controller):
         board[Vector2(2, 0)] = Knight(Color.PURPLE, Direction.NORTH)
 
     def get_info(self, color: Color) -> List[InfoElement]:
-        result = get_color_info_texts(self.game)
-
         if self.countdown_started and not self.game_started:
-            return result + [InfoText(f'<br>Game starting in {self.start_timer}')]
+            return [InfoText(f'<br>Game starting in {self.start_timer}')]
 
-        return result if self.game_started else result + [self.start_button]
+        return [] if self.game_started else [self.start_button]
 
     def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
         if self.game_started:

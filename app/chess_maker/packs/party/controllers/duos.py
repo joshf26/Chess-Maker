@@ -7,7 +7,7 @@ from controller import Controller
 from info_elements import InfoElement, InfoText
 from packs.standard import Standard
 from packs.standard.controllers.standard import pawn_promotions
-from packs.standard.helpers import next_color, find_pieces, threatened, get_color_info_texts, print_color, OFFSETS, players_without_pieces
+from packs.standard.helpers import next_color, find_pieces, threatened, print_color, OFFSETS, players_without_pieces
 from piece import Piece, Direction
 from packs.standard.pieces.bishop import Bishop
 from packs.standard.pieces.king import King
@@ -65,7 +65,7 @@ class Duos(Standard, Controller):
                 board[Vector2(row, col)] = Pawn(color, direction)
 
     def get_info(self, color: Color) -> List[InfoElement]:
-        result = get_color_info_texts(self.game, trailing_space=True)
+        result = []
 
         for king_color in [Color.ORANGE, Color.PURPLE]:
             # Check if their king is in check.
