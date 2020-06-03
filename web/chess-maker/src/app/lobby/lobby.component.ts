@@ -66,6 +66,7 @@ export class LobbyComponent implements OnInit {
         api.getCommand('update_metadata').subscribe(this.updateMetadata.bind(this));
         api.getCommand('update_pack_data').subscribe(this.updatePackData.bind(this));
         api.getCommand('plies').subscribe(this.showPlies.bind(this));
+        api.getCommand('focus_game').subscribe(this.focusGame.bind(this));
     }
 
     ngOnInit(): void {}
@@ -107,6 +108,10 @@ export class LobbyComponent implements OnInit {
                 gameId: this.selectedGameId,
             },
         });
+    }
+
+    focusGame(parameters: {[key: string]: any}): void {
+        this.showGame(parameters.game_id);
     }
 
     disconnect() {

@@ -103,6 +103,7 @@ class Server:
         self.games[game.id] = game
 
         self._send_metadata_update_to_all()
+        connection.run('focus_game', {'game_id': game.id})
 
     def on_delete_game(self, connection: Connection, game_id: str) -> None:
         if game_id not in self.games:
