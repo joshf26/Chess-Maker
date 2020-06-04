@@ -1,6 +1,6 @@
 import {Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
-import {PackDataService} from '../services/pieces/pack-data.service';
+import {PackDataService} from '../services/pack-data/pack-data.service';
 import {GameMetaData} from '../lobby/lobby.component';
 import {DomSanitizer} from '@angular/platform-browser';
 import {MatSidenav} from "@angular/material/sidenav";

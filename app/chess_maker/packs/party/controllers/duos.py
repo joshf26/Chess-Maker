@@ -49,11 +49,11 @@ class Duos(Standard, Controller):
             board[Vector2(row, 1)] = Knight(color, direction)
             board[Vector2(row, 2)] = Bishop(color, direction)
             board[Vector2(row, 3)] = Queen(color, direction)
+            board[Vector2(row, 6)] = Knight(color, direction)
 
         for color, direction, row in zip([Color.ORANGE, Color.PURPLE], [Direction.NORTH, Direction.SOUTH], [7, 0]):
             board[Vector2(row, 4)] = King(color, direction)
             board[Vector2(row, 5)] = Bishop(color, direction)
-            board[Vector2(row, 6)] = Knight(color, direction)
             board[Vector2(row, 7)] = Rook(color, direction)
 
         for color, direction, row in zip([Color.ORANGE, Color.PURPLE], [Direction.NORTH, Direction.SOUTH], [6, 1]):

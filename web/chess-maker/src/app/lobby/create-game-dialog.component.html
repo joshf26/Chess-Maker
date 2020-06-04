@@ -1,0 +1,48 @@
+<div class="wrapper">
+    <h1>Create Game</h1>
+
+    <mat-form-field>
+        <mat-label>Name</mat-label>
+        <input required matInput [(ngModel)]="data.name">
+    </mat-form-field>
+    <mat-checkbox [(ngModel)]="data.public"
+                  required
+                  matTooltip="Check this box to allow anyone on the server to join your game.">Public Game</mat-checkbox>
+    <mat-form-field *ngIf="!data.public"
+                    matTooltip="Since your game is not public, you need to set a password. Give this password to the people you want in your game.">
+        <mat-label>Password</mat-label>
+        <input type="password" autocomplete="off" required matInput>
+    </mat-form-field>
+
+    <br>
+
+    <div class="pack-selector">
+        <h2>Pack</h2>
+        <mat-selection-list [multiple]="false" (selectionChange)="data.board = {pack: $event.option.value, name: ''}">
+            <mat-list-option *ngFor="let packData of packDataService.boardTypes | keyvalue"
+                             [value]="packData.key">
+                {{packData.key}}
+            </mat-list-option>
+        </mat-selection-list>
+    </div>
+    <div class="board-selector" *ngIf="data.board.pack">
+        <h2>Controller</h2>
+        <mat-selection-list [multiple]="false" (selectionChange)="data.board.name = $event.option.value">
+            <mat-list-option *ngFor="let boardData of packDataService.boardTypes[data.board.pack] | keyvalue"
+                             [value]="boardData.key">
+                {{boardData.key}}
+            </mat-list-option>
+        </mat-selection-list>
+    </div>
+
+    <div mat-dialog-actions>
+        <button mat-button mat-dialog-close="true">Cancel</button>
+        <button mat-raised-button
+                color="primary"
+                [mat-dialog-close]="data.board"
+                [disabled]="data.name == '' || data.board.name == ''"
+                (click)="createGame()">Create
+        </button>
+    </div>
+</div>
+

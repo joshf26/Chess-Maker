@@ -1,11 +1,12 @@
 import {ChangeDetectorRef, Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
-import {PackDataService} from '../services/pieces/pack-data.service';
+import {PackDataService} from '../services/pack-data/pack-data.service';
 import {MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
 import {BoardComponent, WinnerData} from '../board/board.component';
 import {Router} from '@angular/router';
 import {PlayersComponent} from "../players/players.component";
 import {ColorService} from "../services/color/color.service";
+import {CreateGameDialog} from "./create-game-dialog.component";
 
 export interface GameMetaData {
     name: string,
@@ -16,13 +17,14 @@ export interface GameMetaData {
         nickname: string,
         color: number,
     }[],
-    total_players: number,
     playing_as?: number,
 }
 
 export interface CreateGameDialogData {
     name: string,
     board: {pack: string, name: string},
+    public: boolean,
+    password?: string,
 }
 
 export interface Ply {
@@ -42,7 +44,7 @@ export interface SelectPlyDialogData {
 @Component({
     selector: 'app-lobby',
     templateUrl: './lobby.component.html',
-    styleUrls: ['./lobby.component.less']
+    styleUrls: ['./lobby.component.less'],
 })
 export class LobbyComponent implements OnInit {
     @ViewChild('board') private board: BoardComponent;
@@ -128,6 +130,8 @@ export class LobbyComponent implements OnInit {
             data: {
                 name: 'New Game',
                 board: {pack: '', name: ''},
+                public: true,
+                password: null,
             },
         });
     }
@@ -178,26 +182,6 @@ export class LobbyComponent implements OnInit {
         result += ' win!'
 
         return result;
-    }
-}
-
-@Component({
-    selector: 'create-game-dialog',
-    templateUrl: 'create-game.dialog.html',
-})
-export class CreateGameDialog {
-    constructor(
-        public packDataService: PackDataService,
-        public api: ApiService,
-        @Inject(MAT_DIALOG_DATA) public data: CreateGameDialogData,
-    ) {}
-
-    createGame(): void {
-        this.api.run('create_game', {
-            name: this.data.name,
-            pack: this.data.board.pack,
-            board: this.data.board.name,
-        })
     }
 }
 

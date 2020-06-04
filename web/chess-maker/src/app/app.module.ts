@@ -6,7 +6,7 @@ import {AppComponent} from './app.component';
 import {FormsModule} from '@angular/forms';
 import {BoardComponent} from './board/board.component';
 import {MenuComponent} from './menu/menu.component';
-import {CreateGameDialog, LobbyComponent, SelectPlyDialog} from './lobby/lobby.component';
+import {LobbyComponent, SelectPlyDialog} from './lobby/lobby.component';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {MatSidenavModule} from '@angular/material/sidenav';
 import {MatCardModule} from '@angular/material/card';
@@ -21,6 +21,8 @@ import {MatListModule} from '@angular/material/list';
 import { PlayersComponent } from './players/players.component';
 import {MatTabsModule} from "@angular/material/tabs";
 import {MatTooltipModule} from "@angular/material/tooltip";
+import {CreateGameDialog} from "./lobby/create-game-dialog.component";
+import {MatCheckboxModule} from "@angular/material/checkbox";
 
 @NgModule({
     declarations: [
@@ -49,6 +51,7 @@ import {MatTooltipModule} from "@angular/material/tooltip";
         MatListModule,
         MatTabsModule,
         MatTooltipModule,
+        MatCheckboxModule,
     ],
     providers: [],
     bootstrap: [AppComponent],
