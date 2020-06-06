@@ -88,7 +88,7 @@ class Server:
         self._send_pack_data(connection)
         self._send_metadata_update_to_all()
 
-    def on_create_game(self, connection: Connection, name: str, pack: str, board: str) -> None:
+    def on_create_game(self, connection: Connection, name: str, pack: str, board: str, options: dict) -> None:
         if pack not in self.packs:
             connection.error('Package does not exist.')
             return
@@ -99,7 +99,11 @@ class Server:
             connection.error('Controller does not exist.')
             return
 
-        game = Game(name, connection, controller_class, self.network, self.subscribers)
+        if options.keys() != controller_class.options.keys():  # TODO: Improve error reporting and add type checking.
+            connection.error('Options not supplied successfully.')
+            return
+
+        game = Game(name, connection, controller_class, options, self.network, self.subscribers)
         self.games[game.id] = game
 
         self._send_metadata_update_to_all()

@@ -1,4 +1,9 @@
 name: Party
 description: Variations of standard chess for more than two players.
+author:
+    name: Joshua Franklin
+    email: joshuafranklin26@gmail.com
+    website: https://joshfrankl.in
 depends_on:
-  - Standard
+    - Standard
+source: https://github.com/joshf26/Chess-Maker/tree/master/app/chess_maker/packs/party

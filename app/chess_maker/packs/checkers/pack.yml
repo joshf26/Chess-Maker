@@ -1,0 +1,7 @@
+name: Checkers
+description: Everything you need to play a standard game of checkers.
+author:
+    name: Joshua Franklin
+    email: joshuafranklin26@gmail.com
+    website: https://joshfrankl.in
+source: https://github.com/joshf26/Chess-Maker/tree/master/app/chess_maker/packs/checkers

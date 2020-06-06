@@ -88,6 +88,7 @@ class Game:
         name: str,
         owner: Connection,
         controller_type: Type[Controller],
+        controller_options: dict,
         network: Network,
         subscribers: GameSubscribers,
     ):
@@ -99,6 +100,7 @@ class Game:
         self.id = str(uuid4())
         self.players = ColorConnections()
         self.controller = controller_type(self)
+        self.controller.options = controller_options
         self.game_data = GameData([], self.controller.board_size, self.controller.colors)
         self.winners: Optional[WinnerData] = None
 

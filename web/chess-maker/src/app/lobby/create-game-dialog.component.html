@@ -7,7 +7,9 @@
     </mat-form-field>
     <mat-checkbox [(ngModel)]="data.public"
                   required
-                  matTooltip="Check this box to allow anyone on the server to join your game.">Public Game</mat-checkbox>
+                  matTooltip="Check this box to allow anyone on the server to join your game.">
+        Public Game
+    </mat-checkbox>
     <mat-form-field *ngIf="!data.public"
                     matTooltip="Since your game is not public, you need to set a password. Give this password to the people you want in your game.">
         <mat-label>Password</mat-label>
@@ -21,18 +23,38 @@
         <mat-selection-list [multiple]="false" (selectionChange)="data.board = {pack: $event.option.value, name: ''}">
             <mat-list-option *ngFor="let packData of packDataService.boardTypes | keyvalue"
                              [value]="packData.key">
-                {{packData.key}}
+                {{packDataService.displayNames[packData.key]}}
             </mat-list-option>
         </mat-selection-list>
     </div>
     <div class="board-selector" *ngIf="data.board.pack">
         <h2>Controller</h2>
-        <mat-selection-list [multiple]="false" (selectionChange)="data.board.name = $event.option.value">
+        <mat-selection-list [multiple]="false" (selectionChange)="data.board.name = $event.option.value; updateOptions();">
             <mat-list-option *ngFor="let boardData of packDataService.boardTypes[data.board.pack] | keyvalue"
                              [value]="boardData.key">
                 {{boardData.key}}
             </mat-list-option>
         </mat-selection-list>
+    </div>
+
+    <div class="options"
+         *ngIf="data.board.name && !isEmpty(packDataService.boardTypes[data.board.pack][data.board.name].options)">
+        <h2>{{data.board.name}} Options</h2>
+        <ng-template ngFor let-option
+                     [ngForOf]="packDataService.boardTypes[data.board.pack][data.board.name].options | keyvalue">
+            <mat-checkbox required *ngIf="option.value.type == 'bool'" [(ngModel)]="options[option.key]">{{option.key}}</mat-checkbox>
+            <mat-form-field *ngIf="option.value.type == 'int'">
+                <mat-label>{{option.key}}</mat-label>
+                <input required
+                       matInput
+                       [(ngModel)]="options[option.key]"
+                       autocomplete="off"
+                       type="number"
+                       [min]="option.value.min"
+                       [max]="option.value.max"
+                       step="1">
+            </mat-form-field>
+        </ng-template>
     </div>
 
     <div mat-dialog-actions>

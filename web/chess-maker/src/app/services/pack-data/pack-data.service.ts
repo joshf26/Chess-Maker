@@ -4,7 +4,12 @@ import {Injectable} from '@angular/core';
 export type PieceTypes = {[key: string]: {[key: string]: {raw_image: string, image: HTMLImageElement}[]}};
 
 // A board type is accessed using [pack][board].
-export type BoardTypes = {[key: string]: {[key: string]: {rows: number, cols: number, colors: number[]}}};
+export type BoardTypes = {[key: string]: {[key: string]: {
+    rows: number,
+    cols: number,
+    colors: number[],
+    options: {[key: string]: any},
+}}};
 
 const SVG_COLORS = [
     'white',
@@ -23,11 +28,13 @@ const SVG_COLORS = [
 export class PackDataService {
     pieceTypes: PieceTypes = {};
     boardTypes: BoardTypes = {};
-    boardNames: {pack: string, name: string}[] = [];
+    displayNames: {[key: string]: string} = {};
+    boardNames: {pack: string, name: string}[] = []; // TODO: Is this used anywhere?
 
     updatePackData(rawPackData: any): void {
         for (const [pack, packData] of Object.entries(rawPackData)) {
             this.pieceTypes[pack] = {};
+            this.displayNames[pack] = packData['display_name']
 
             for (const [piece, pieceData] of Object.entries(packData['pieces'])) {
                 this.pieceTypes[pack][piece] = [];

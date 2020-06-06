@@ -18,6 +18,7 @@ class Controller(ABC):
     name = ''
     board_size = Vector2(0, 0)
     colors = []
+    options = {}
 
     def __init__(self, game: Game):
         self.game = game

@@ -5,6 +5,7 @@ from typing import Dict, Generator, Iterator, Type, List, Optional, Tuple
 from color import Color
 from controller import Controller
 from info_elements import InfoElement, InfoText
+from option import BoolOption, IntOption
 from packs.checkers.pieces.king import King
 from packs.checkers.pieces.man import Man
 from packs.standard.helpers import next_color, find_pieces, in_bounds, move_to_promotion, print_color
@@ -64,6 +65,9 @@ class Checkers(Controller):
         Color.BLACK,
         Color.RED,
     ]
+    options = {
+        'Force Capture': BoolOption(True),
+    }
 
     def init_board(self, board: Dict[Vector2, Piece]) -> None:
         for row in [0, 1, 2, 5, 6, 7]:
@@ -83,6 +87,7 @@ class Checkers(Controller):
 
         result = []
 
+        # Check for double jump.
         current_color, piece_that_jumped = self._current_color()
         if current_color == last_state.ply_color and self.game.board[from_pos] == piece_that_jumped:
             for ply in plies:
@@ -90,9 +95,10 @@ class Checkers(Controller):
                     result.append(ply)
                     break
 
+        # Check for force capture.
         elif color == piece.color and color == next_color(self.game):
             for ply in plies:
-                if self._color_can_jump(color):
+                if self._color_can_jump(color) and self.options['Force Capture']:
                     if any(isinstance(action, DestroyAction) for action in ply.actions):
                         result.append(ply)
                 else:
