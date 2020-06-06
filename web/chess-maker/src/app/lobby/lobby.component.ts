@@ -7,6 +7,7 @@ import {Router} from '@angular/router';
 import {PlayersComponent} from "../players/players.component";
 import {ColorService} from "../services/color/color.service";
 import {CreateGameDialog} from "./create-game-dialog.component";
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 export interface GameMetaData {
     name: string,
@@ -64,11 +65,13 @@ export class LobbyComponent implements OnInit {
         public packDataService: PackDataService,
         private changeDetectorRef: ChangeDetectorRef,
         private router: Router,
+        private snackBar: MatSnackBar,
     ) {
         api.getCommand('update_metadata').subscribe(this.updateMetadata.bind(this));
         api.getCommand('update_pack_data').subscribe(this.updatePackData.bind(this));
         api.getCommand('plies').subscribe(this.showPlies.bind(this));
         api.getCommand('focus_game').subscribe(this.focusGame.bind(this));
+        api.getCommand('error').subscribe(this.error.bind(this));
     }
 
     ngOnInit(): void {}
@@ -114,6 +117,14 @@ export class LobbyComponent implements OnInit {
 
     focusGame(parameters: {[key: string]: any}): void {
         this.showGame(parameters.game_id);
+    }
+
+    error(parameters: {[key: string]: any}): void {
+        this.snackBar.open(parameters.message, 'Ok', {
+            duration: 5000,
+            horizontalPosition: 'end',
+            panelClass: 'error',
+        });
     }
 
     disconnect() {

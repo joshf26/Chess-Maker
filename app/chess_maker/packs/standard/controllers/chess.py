@@ -43,8 +43,8 @@ def pawn_promotions(piece: Piece, from_pos: Vector2, to_pos: Vector2) -> List[Pl
     ]
 
 
-class Standard(Controller):
-    name = 'Standard'
+class Chess(Controller):
+    name = 'Chess'
     board_size = Vector2(8, 8)
     colors = [
         Color.WHITE,
@@ -83,8 +83,14 @@ class Standard(Controller):
         board = self.game.board
         piece = board[from_pos]
 
+        # Make sure they are moving their own piece.
+        if color != piece.color:
+            self.game.send_error(color, 'That is not your piece.')
+            return
+
         # Make sure it is their turn.
-        if color != piece.color or color != next_color(self.game):
+        if color != next_color(self.game):
+            self.game.send_error(color, 'It is not your turn.')
             return
 
         # Check for pawn promotion.
@@ -95,15 +101,23 @@ class Standard(Controller):
             plies = pawn_promotions(piece, from_pos, to_pos)
         else:
             plies = piece.get_plies(from_pos, to_pos, self.game.game_data)
+            if not plies:
+                self.game.send_error(color, 'That piece cannot move like that.')
+                return
 
         # Make sure they are not in check after each ply is complete.
+        in_check = True
         for ply in plies:
             state = self.game.next_state(color, ply)
 
             king_position, king = next(find_pieces(state.board, King, color))
 
-            if not threatened(self.game, king_position, [opposite(color)]):
+            if not threatened(self.game, king_position, [opposite(color)], state):
                 yield ply
+                in_check = False
+
+        if in_check:
+            self.game.send_error(color, 'That move leaves you in check.')
 
     def after_ply(self) -> None:
         # You cannot put yourself in checkmate, so we only need to check for the opposite color.

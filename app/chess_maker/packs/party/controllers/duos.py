@@ -5,8 +5,8 @@ from typing import Dict, List, Generator
 from color import Color
 from controller import Controller
 from info_elements import InfoElement, InfoText
-from packs.standard import Standard
-from packs.standard.controllers.standard import pawn_promotions
+from packs.standard import Chess
+from packs.standard.controllers.chess import pawn_promotions
 from packs.standard.helpers import next_color, find_pieces, threatened, print_color, OFFSETS, players_without_pieces
 from piece import Piece, Direction
 from packs.standard.pieces.bishop import Bishop
@@ -34,7 +34,7 @@ OPPONENTS = {
 }
 
 
-class Duos(Standard, Controller):
+class Duos(Chess, Controller):
     name = 'Duos'
     colors = [
         Color.ORANGE,

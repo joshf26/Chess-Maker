@@ -187,6 +187,11 @@ class Server:
             return
 
         game = self.games[game_id]
+
+        if connection not in game.players:
+            connection.error('Player is not in this game.')
+            return
+
         from_pos = Vector2(from_row, from_col)
         to_pos = Vector2(to_row, to_col)
 
@@ -213,6 +218,10 @@ class Server:
             return
 
         game = self.games[game_id]
+
+        if connection not in game.players:
+            connection.error('Player is not in this game.')
+            return
 
         selected_piece = next(filter(lambda piece: piece.name == piece_name, self.packs[pack_name].pieces), None)
 

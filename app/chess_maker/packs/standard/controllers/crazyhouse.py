@@ -6,13 +6,13 @@ from color import Color
 from controller import Controller
 from game import Game
 from inventory_item import InventoryItem
-from packs.standard.controllers.standard import Standard
+from packs.standard.controllers.chess import Chess
 from piece import Piece, Direction
 from ply import Ply, CreateAction, DestroyAction
 from vector2 import Vector2
 
 
-class CrazyHouse(Standard, Controller):
+class CrazyHouse(Chess, Controller):
     name = 'Crazy House'
 
     def __init__(self, game: Game):

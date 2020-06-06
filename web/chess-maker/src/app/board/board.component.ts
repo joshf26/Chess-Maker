@@ -6,6 +6,7 @@ import {DomSanitizer} from '@angular/platform-browser';
 import {MatSidenav} from "@angular/material/sidenav";
 import {fromEvent} from "rxjs";
 import {debounceTime} from "rxjs/operators";
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 const EVEN_TILE_COLOR = '#A85738';
 const ODD_TILE_COLOR = '#F3C1A9';
@@ -95,6 +96,7 @@ export class BoardComponent implements OnInit {
 
     constructor(
         private api: ApiService,
+        private snackBar: MatSnackBar,
         public packDataService: PackDataService,
         public sanitizer: DomSanitizer,
     ) {
@@ -279,6 +281,8 @@ export class BoardComponent implements OnInit {
 
     mouseUp(): void {
         if (this.dragging) {
+            this.snackBar.dismiss();
+
             const mouseTileX = Math.floor(this.mousePositionX);
             const mouseTileY = Math.floor(this.mousePositionY);
 

@@ -23,6 +23,7 @@ import {MatTabsModule} from "@angular/material/tabs";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {CreateGameDialog} from "./lobby/create-game-dialog.component";
 import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatSnackBarModule} from "@angular/material/snack-bar";
 
 @NgModule({
     declarations: [
@@ -46,6 +47,7 @@ import {MatCheckboxModule} from "@angular/material/checkbox";
         MatBadgeModule,
         MatDialogModule,
         MatSelectModule,
+        MatSnackBarModule,
         MatInputModule,
         MatIconModule,
         MatListModule,

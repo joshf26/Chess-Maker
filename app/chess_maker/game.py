@@ -171,6 +171,12 @@ class Game:
         for connection in self.subscribers.get_connections(self):
             self.send_update(connection)
 
+    def send_error(self, color: Color, message: str) -> None:
+        connection = self.players.get_connection(color)
+        connection.run('error', {
+            'message': message,
+        })
+
     def get_plies(self, connection: Connection, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
         if (
             self.winners is not None

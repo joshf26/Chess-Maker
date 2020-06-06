@@ -1,6 +1,6 @@
 from .controllers.crazyhouse import CrazyHouse
 from .controllers.creative import Creative8x8, Creative32x32
-from .controllers.standard import Standard
+from .controllers.chess import Chess
 from .pieces.bishop import Bishop
 from .pieces.king import King
 from .pieces.knight import Knight
