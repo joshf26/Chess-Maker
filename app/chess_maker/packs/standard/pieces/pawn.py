@@ -38,7 +38,7 @@ class Pawn(Piece):
                         event = n_state_by_color(game_data, game_data.board[captured_pawn_pos].color, 1, reverse=True)
                         if (
                             event is not None and
-                            event.ply == [MoveAction(Vector2(to_pos.row - 1, to_pos.col), captured_pawn_pos)]
+                            MoveAction(Vector2(to_pos.row - 1, to_pos.col), captured_pawn_pos) in event.ply.actions
                         ):
                             yield Ply('En Passant', [DestroyAction(captured_pawn_pos), MoveAction(from_pos, to_pos)])
 
@@ -65,7 +65,7 @@ class Pawn(Piece):
                         event = n_state_by_color(game_data, game_data.board[captured_pawn_pos].color, 1, reverse=True)
                         if (
                             event is not None and
-                            event.ply == [MoveAction(Vector2(to_pos.row + 1, to_pos.col), captured_pawn_pos)]
+                            MoveAction(Vector2(to_pos.row + 1, to_pos.col), captured_pawn_pos) in event.ply.actions
                         ):
                             yield Ply('En Passant', [DestroyAction(captured_pawn_pos), MoveAction(from_pos, to_pos)])
 

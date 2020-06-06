@@ -51,6 +51,12 @@ interface InfoElement {
     id?: string,
 }
 
+interface ZoomEvent {
+    delta: number,
+    centerX: number,
+    centerY: number,
+}
+
 @Component({
     selector: 'app-board',
     templateUrl: './board.component.html',
@@ -344,22 +350,35 @@ export class BoardComponent implements OnInit {
         this.draw();
     }
 
-    zoom(event: WheelEvent): boolean {
-        const factor = event.deltaY > 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
+    zoom(delta: number, centerX: number, centerY: number): void {
+        const factor = delta > 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
         const deltaScale = (this.scale * factor) - this.scale;
 
         const newScale = this.scale + deltaScale;
-        if (newScale < MIN_ZOOM || newScale > MAX_ZOOM) return false;
+        if (newScale < MIN_ZOOM || newScale > MAX_ZOOM) return;
 
         this.scale += deltaScale;
-        this.positionX -= this.mousePositionX * deltaScale;
-        this.positionY -= this.mousePositionY * deltaScale;
+        this.positionX -= centerX * deltaScale;
+        this.positionY -= centerY * deltaScale;
 
         this.updateBackgroundCanvases();
         this.draw();
+    }
+
+    rawZoom(event: WheelEvent): boolean {
+        this.zoom(event.deltaY, this.mousePositionX, this.mousePositionY);
 
         // Prevent the page from moving up or down.
         return false;
+    }
+
+    zoomCenter(delta: number): void {
+        const [offsetX, offsetY] = this.rotateVector(this.canvas.width / 2, this.canvas.height / 2);
+        this.zoom(
+            delta,
+            (offsetX - this.positionX) / this.scale,
+            (offsetY - this.positionY) / this.scale,
+        )
     }
 
     draw(): void {

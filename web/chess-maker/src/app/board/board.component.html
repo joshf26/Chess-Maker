@@ -1,5 +1,5 @@
 <canvas #canvas
-        (wheel)="zoom($event)"
+        (wheel)="rawZoom($event)"
         (mousedown)="mouseDown($event)"
         (mouseup)="mouseUp()"
         (mouseleave)="mouseUp()"
@@ -24,4 +24,6 @@
     <button mat-raised-button (click)="sidenav.toggle()" *ngIf="!sidenav.opened">Show Sidebar</button>
     <button mat-raised-button (click)="rotate()">Rotate</button>
     <button mat-raised-button (click)="leaveGame()" *ngIf="game && game.playing_as != undefined">Leave Game</button>
+    <button mat-raised-button class="small" (click)="zoomCenter(5)">-</button>
+    <button mat-raised-button class="small" (click)="zoomCenter(-5)">+</button>
 </div>

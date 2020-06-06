@@ -100,7 +100,7 @@ class Chess(Controller):
         ):
             plies = pawn_promotions(piece, from_pos, to_pos)
         else:
-            plies = piece.get_plies(from_pos, to_pos, self.game.game_data)
+            plies = list(piece.get_plies(from_pos, to_pos, self.game.game_data))
             if not plies:
                 self.game.send_error(color, 'That piece cannot move like that.')
                 return
