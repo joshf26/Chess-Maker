@@ -13,14 +13,12 @@ from packs.standard.pieces.knight import Knight
 from packs.standard.pieces.pawn import Pawn
 from packs.standard.pieces.queen import Queen
 from packs.standard.pieces.rook import Rook
-from packs.standard.pieces.wall import Wall
 from piece import Direction
 from ply import MoveAction, CreateAction, Ply
 from vector2 import Vector2
 
 if TYPE_CHECKING:
     from piece import Piece
-    from game import Game
 
 
 class Creative(Controller):
@@ -35,8 +33,8 @@ class Creative(Controller):
         Color.PURPLE,
     ]
 
-    def __init__(self, game: Game):
-        super().__init__(game)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.directions: Dict[Color, Direction] = {color: Direction.NORTH for color in self.colors}
         self.rotate_pieces_button = InfoButton('Rotate Pieces', self.rotate_pieces)
@@ -52,7 +50,6 @@ class Creative(Controller):
             InventoryItem(Rook(color, self.directions[color]), -1),
             InventoryItem(Queen(color, self.directions[color]), -1),
             InventoryItem(King(color, self.directions[color]), -1),
-            InventoryItem(Wall(color, self.directions[color]), -1),
         ]
 
     def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:

@@ -99,8 +99,7 @@ class Game:
 
         self.id = str(uuid4())
         self.players = ColorConnections()
-        self.controller = controller_type(self)
-        self.controller.options = controller_options
+        self.controller = controller_type(self, controller_options)
         self.game_data = GameData([], self.controller.board_size, self.controller.colors)
         self.winners: Optional[WinnerData] = None
 
@@ -142,6 +141,12 @@ class Game:
             'color': piece.color.value,
             'direction': piece.direction.value,
         } for position, piece in self.board.items()]
+        decorators = [{
+            'row': position.row,
+            'col': position.col,
+            'pack': get_pack(decorator),
+            'decorator': decorator.__class__.__name__,
+        } for position, decorator in self.controller.get_decorators().items()]
         info = [info_element.to_json() for info_element in self.controller.get_info(color)]
         inventory = [dict(
             pack=get_pack(inventory_item.piece),
@@ -152,6 +157,7 @@ class Game:
         return {
             'id': self.id,
             'pieces': pieces,
+            'decorators': decorators,
             'info': info,
             'inventory': inventory,
             'winners': None if self.winners is None else self.winners.to_json(),
@@ -192,23 +198,24 @@ class Game:
         color = self.players.get_color(connection)
         yield from self.controller.get_plies(color, from_pos, to_pos)
 
-    def next_state(self, color: Color, ply: Ply) -> GameState:
+    def next_state(self, color: Optional[Color], ply: Optional[Ply]) -> GameState:
         board = deepcopy(self.board)
 
-        for action in ply.actions:
-            if isinstance(action, MoveAction):
-                board[action.from_pos].moves += 1
-                board[action.to_pos] = board.pop(action.from_pos)
+        if ply is not None:
+            for action in ply.actions:
+                if isinstance(action, MoveAction):
+                    board[action.from_pos].moves += 1
+                    board[action.to_pos] = board.pop(action.from_pos)
 
-            elif isinstance(action, DestroyAction):
-                board.pop(action.pos)
+                elif isinstance(action, DestroyAction):
+                    board.pop(action.pos)
 
-            elif isinstance(action, CreateAction):
-                board[action.pos] = action.piece
+                elif isinstance(action, CreateAction):
+                    board[action.pos] = action.piece
 
         return GameState(board, color, ply)
 
-    def apply_ply(self, color: Color, ply: Ply) -> None:
+    def apply_ply(self, color: Optional[Color], ply: Optional[Ply]) -> None:
         self.game_data.history.append(self.next_state(color, ply))
         self.controller.after_ply()
         self.send_update_to_subscribers()

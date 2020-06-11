@@ -1,1 +1,7 @@
 __pycache__
+
+# Ignore all packs except the built-in ones.
+chess_maker/packs/*
+!chess_maker/packs/standard
+!chess_maker/packs/party
+!chess_maker/packs/checkers

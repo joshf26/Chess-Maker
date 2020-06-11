@@ -1,0 +1,3 @@
+class Decorator:
+    name = ''
+    image = ''

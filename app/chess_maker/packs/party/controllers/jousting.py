@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, List, Dict, Generator
+from typing import TYPE_CHECKING, List, Dict, Generator, Optional
 
 from color import Color
 from controller import Controller
@@ -29,8 +29,8 @@ class Jousting(Controller):
         Color.PURPLE,
     ]
 
-    def __init__(self, game: Game):
-        super().__init__(game)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.game_started = False
         self.countdown_started = False
@@ -48,7 +48,7 @@ class Jousting(Controller):
         board[Vector2(5, 0)] = Knight(Color.BLUE, Direction.NORTH)
         board[Vector2(2, 0)] = Knight(Color.PURPLE, Direction.NORTH)
 
-    def get_info(self, color: Color) -> List[InfoElement]:
+    def get_info(self, color: Optional[Color]) -> List[InfoElement]:
         if self.countdown_started and not self.game_started:
             return [InfoText(f'<br>Game starting in {self.start_timer}')]
 

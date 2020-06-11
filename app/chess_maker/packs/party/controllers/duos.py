@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List, Generator
+from typing import Dict, List, Generator, Optional
 
 from color import Color
 from controller import Controller
@@ -60,7 +60,7 @@ class Duos(Chess, Controller):
             for col in range(8):
                 board[Vector2(row, col)] = Pawn(color, direction)
 
-    def get_info(self, color: Color) -> List[InfoElement]:
+    def get_info(self, color: Optional[Color]) -> List[InfoElement]:
         result = []
 
         for king_color in [Color.ORANGE, Color.PURPLE]:

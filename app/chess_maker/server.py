@@ -88,6 +88,7 @@ class Server:
         self._send_pack_data(connection)
         self._send_metadata_update_to_all()
 
+
     def on_create_game(self, connection: Connection, name: str, pack: str, board: str, options: dict) -> None:
         if pack not in self.packs:
             connection.error('Package does not exist.')

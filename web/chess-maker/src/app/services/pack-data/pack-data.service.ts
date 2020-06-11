@@ -11,6 +11,8 @@ export type BoardTypes = {[key: string]: {[key: string]: {
     options: {[key: string]: any},
 }}};
 
+export type DecoratorTypes = {[key: string]: {[key: string]: {raw_image: string, image: HTMLImageElement}}};
+
 const SVG_COLORS = [
     'white',
     'dimgrey',
@@ -28,12 +30,13 @@ const SVG_COLORS = [
 export class PackDataService {
     pieceTypes: PieceTypes = {};
     boardTypes: BoardTypes = {};
+    decoratorTypes: DecoratorTypes = {};
     displayNames: {[key: string]: string} = {};
-    boardNames: {pack: string, name: string}[] = []; // TODO: Is this used anywhere?
 
     updatePackData(rawPackData: any): void {
         for (const [pack, packData] of Object.entries(rawPackData)) {
             this.pieceTypes[pack] = {};
+            this.decoratorTypes[pack] = {};
             this.displayNames[pack] = packData['display_name']
 
             for (const [piece, pieceData] of Object.entries(packData['pieces'])) {
@@ -52,22 +55,17 @@ export class PackDataService {
                 }
             }
 
-            this.boardTypes[pack] = packData['controllers'];
-        }
+            for (const [decorator, decoratorData] of Object.entries(packData['decorators'])) {
+                const image = new Image();
+                image.src = `data:image/svg+xml,${decoratorData['image']}`;
 
-        this.updateBoardNames();
-    }
-
-    updateBoardNames(): void {
-        this.boardNames = [];
-
-        for (const [pack, boards] of Object.entries(this.boardTypes)) {
-            for (const board of Object.keys(boards)) {
-                this.boardNames.push({
-                    pack: pack,
-                    name: board,
-                });
+                this.decoratorTypes[pack][decorator] = {
+                    raw_image: decoratorData['image'] as string,
+                    image: image,
+                };
             }
+
+            this.boardTypes[pack] = packData['controllers'];
         }
     }
 }

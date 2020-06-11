@@ -4,8 +4,9 @@ from typing import Dict, Generator, Iterator, Type, List, Optional, Tuple
 
 from color import Color
 from controller import Controller
+from game import Game
 from info_elements import InfoElement, InfoText
-from option import BoolOption, IntOption
+from option import BoolOption
 from packs.checkers.pieces.king import King
 from packs.checkers.pieces.man import Man
 from packs.standard.helpers import next_color, find_pieces, in_bounds, move_to_promotion, print_color
@@ -134,6 +135,8 @@ class Checkers(Controller):
                 self.game.winner([Color.BLACK if color == Color.RED else Color.RED], 'No Remaining Moves')
 
     def _current_color(self) -> Tuple[Color, Optional[Piece]]:
+        # TODO: Right now, when "Force Jump" is disabled, players are still forced to double jump if possible. This
+        #       needs to be changed to add an "End Turn" button if they choose to not double jump.
         last_state = self.game.game_data.history[-1]
 
         if last_state.ply is not None:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Dict, Generator, TYPE_CHECKING
+from typing import List, Dict, Generator, TYPE_CHECKING, Optional
 
 from color import Color
 from controller import Controller
@@ -66,7 +66,7 @@ class Chess(Controller):
             for col in range(8):
                 board[Vector2(row, col)] = Pawn(color, direction)
 
-    def get_info(self, color: Color) -> List[InfoElement]:
+    def get_info(self, color: Optional[Color]) -> List[InfoElement]:
         result = []
         ply_color = next_color(self.game)
 

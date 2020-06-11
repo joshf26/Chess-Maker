@@ -10,6 +10,7 @@ from types import ModuleType
 from typing import List, Set, Dict, Type, TypeVar, Union, Optional
 
 from controller import Controller
+from decorator import Decorator
 from json_serializable import JsonSerializable
 from piece import Piece
 from user_error import user_error
@@ -32,19 +33,23 @@ class Pack(JsonSerializable):
     display_name: str
     controllers: List[Type[Controller]]
     pieces: List[Type[Piece]]
+    decorators: List[Type[Decorator]]
 
     def to_json(self) -> Union[dict, list]:
         return {
             'display_name': self.display_name,
-            'pieces': {piece.name: {
-                'image': piece.image
-            } for piece in self.pieces},
             'controllers': {controller.name: {
                 'rows': controller.board_size.row,
                 'cols': controller.board_size.col,
                 'colors': [color.value for color in controller.colors],
                 'options': {name: option.to_json() for name, option in controller.options.items()},
             } for controller in self.controllers},
+            'pieces': {piece.name: {
+                'image': piece.image,
+            } for piece in self.pieces},
+            'decorators': {decorator.name: {
+                'image': decorator.image,
+            } for decorator in self.decorators}
         }
 
 
@@ -98,6 +103,7 @@ def load_packs() -> Dict[str, Pack]:
             pack_file.name,
             get_members_of_type(module, Controller),
             get_members_of_type(module, Piece),
+            get_members_of_type(module, Decorator),
         )
 
     return result

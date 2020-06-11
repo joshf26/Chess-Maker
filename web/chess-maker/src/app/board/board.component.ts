@@ -24,6 +24,13 @@ interface Piece {
     direction: number,
 }
 
+interface Decorator {
+    row: number,
+    col: number,
+    pack: string,
+    decorator: string,
+}
+
 interface InventoryPiece {
     pack: string,
     name: string,
@@ -40,6 +47,7 @@ export interface WinnerData {
 interface GameData {
     id: string,
     pieces: Piece[],
+    decorators: Decorator[],
     info: InfoElement[],
     inventory: InventoryPiece[],
     winners?: WinnerData,
@@ -79,6 +87,9 @@ export class BoardComponent implements OnInit {
     private inventoryCanvas: OffscreenCanvas;
     private inventoryContext: OffscreenCanvasRenderingContext2D;
 
+    // Access as noDraw[row][col].
+    private noDraw: {[key: number]: {[key: number]: boolean}} = {};
+
     positionX = 0;
     positionY = 0;
     scale = 40;
@@ -97,6 +108,7 @@ export class BoardComponent implements OnInit {
     angle = 0;
 
     pieces: Piece[] = [];
+    decorators: Decorator[] = [];
     infoElements: InfoElement[] = [];
     inventoryPieces: InventoryPiece[] = [];
 
@@ -154,8 +166,20 @@ export class BoardComponent implements OnInit {
     gameDataHandler(gameData: GameData): void {
         if (gameData.id == this.gameId) {
             this.pieces = gameData.pieces;
+            this.decorators = gameData.decorators;
             this.infoElements = gameData.info;
             this.inventoryPieces = gameData.inventory;
+
+            this.noDraw = {};
+            for (const decorator of this.decorators) {
+                if (this.packDataService.decoratorTypes[decorator.pack][decorator.decorator].raw_image == 'NO DRAW') {
+                    if (!this.noDraw.hasOwnProperty(decorator.row)) {
+                        this.noDraw[decorator.row] = {};
+                    }
+
+                    this.noDraw[decorator.row][decorator.col] = true;
+                }
+            }
 
             this.winner.emit(gameData.winners);
 
@@ -191,14 +215,14 @@ export class BoardComponent implements OnInit {
     updateBackgroundCanvases(): void {
         this.canvas.width = this.canvas.offsetWidth;
         this.canvas.height = this.canvas.offsetHeight;
-        this.boardCanvas.width = this.scale * this.boardSizeRows;
-        this.boardCanvas.height = this.scale * this.boardSizeCols;
-        this.piecesCanvas.width = this.scale * this.boardSizeRows;
-        this.piecesCanvas.height = this.scale * this.boardSizeCols;
+        this.boardCanvas.width = this.scale * this.boardSizeCols;
+        this.boardCanvas.height = this.scale * this.boardSizeRows;
+        this.piecesCanvas.width = this.scale * this.boardSizeCols;
+        this.piecesCanvas.height = this.scale * this.boardSizeRows;
         this.inventoryCanvas.height = this.canvas.offsetHeight;
 
         // Pieces
-        this.piecesContext.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
+        this.piecesContext.clearRect(0, 0, this.piecesCanvas.width, this.piecesCanvas.height);
         for (const piece of this.pieces) {
             this.drawImage(
                 this.piecesContext,
@@ -213,8 +237,25 @@ export class BoardComponent implements OnInit {
         this.boardContext.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
         for (let row = 0; row < this.boardSizeRows; ++row) {
             for (let col = 0; col < this.boardSizeCols; ++col) {
+                if (this.noDraw.hasOwnProperty(row) && this.noDraw[row][col]) {
+                    continue;
+                }
+
                 this.boardContext.fillStyle = (col % 2 == row % 2) ? ODD_TILE_COLOR : EVEN_TILE_COLOR;
                 this.boardContext.fillRect(col * this.scale, row * this.scale, this.scale, this.scale);
+            }
+        }
+
+        for (const decorator of this.decorators) {
+            let decoratorType = this.packDataService.decoratorTypes[decorator.pack][decorator.decorator];
+            if (decoratorType.raw_image != 'NO DRAW') {
+                this.drawImage(
+                    this.boardContext,
+                    decoratorType.image,
+                    (decorator.col + 0.5) * this.scale,
+                    (decorator.row + 0.5) * this.scale,
+                    0,
+                )
             }
         }
 
