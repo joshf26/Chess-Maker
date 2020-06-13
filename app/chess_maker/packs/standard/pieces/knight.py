@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Generator
 
 from packs.standard.helpers import capture_or_move
-from piece import Piece, load_image
+from piece import Piece
+from pack_util import load_image
 from ply import Ply
 
 if TYPE_CHECKING:

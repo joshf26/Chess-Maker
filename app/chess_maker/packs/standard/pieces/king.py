@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING, Generator
 
 from packs.standard.helpers import axis_direction, closest_piece_along_direction, OFFSETS, capture_or_move
 from packs.standard.pieces.rook import Rook
-from piece import Piece, load_image
+from piece import Piece
+from pack_util import load_image
 from ply import Ply, DestroyAction, MoveAction
 
 if TYPE_CHECKING:

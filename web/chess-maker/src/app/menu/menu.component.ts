@@ -16,8 +16,7 @@ export class MenuComponent implements OnInit {
         private router: Router,
     ) {}
 
-    ngOnInit(): void {
-    }
+    ngOnInit(): void {}
 
     connect() {
         this.apiService.connect(this.address);

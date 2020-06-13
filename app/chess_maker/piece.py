@@ -24,12 +24,6 @@ class Direction(Enum):
     NORTH_WEST = 7
 
 
-# TODO: Move outside piece.py
-def load_image(pack_path: str, image_path: str) -> str:
-    with open(f'chess_maker/packs/{pack_path}/{image_path}') as file:
-        return file.read()
-
-
 def get_pack(obj: Union[Piece, Controller]) -> str:
     return obj.__module__.split('.')[1]
 

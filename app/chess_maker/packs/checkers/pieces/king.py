@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Generator
 
 from game import GameData
-from piece import Piece, load_image
+from piece import Piece
+from pack_util import load_image
 from ply import Ply, MoveAction, DestroyAction
 from vector2 import Vector2
 

@@ -4,7 +4,8 @@ from typing import TYPE_CHECKING, Generator
 
 from game import GameData
 from packs.standard.helpers import n_state_by_color
-from piece import Piece, Direction, load_image
+from piece import Piece, Direction
+from pack_util import load_image
 from ply import Ply, MoveAction, DestroyAction
 from vector2 import Vector2
 

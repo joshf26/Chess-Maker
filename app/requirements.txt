@@ -2,3 +2,4 @@ websockets
 pyyaml
 argh
 watchdog
+Pillow

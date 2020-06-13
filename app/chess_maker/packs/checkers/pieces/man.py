@@ -4,7 +4,8 @@ from typing import Generator
 
 from game import GameData
 from packs.checkers.pieces.king import King
-from piece import Piece, load_image, Direction
+from piece import Piece, Direction
+from pack_util import load_image
 from ply import Ply
 from vector2 import Vector2
 
