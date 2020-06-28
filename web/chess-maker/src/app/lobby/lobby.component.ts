@@ -1,45 +1,30 @@
 import {ChangeDetectorRef, Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
-import {PackDataService} from '../services/pack-data/pack-data.service';
+import {Controller, Pack, PackService} from '../services/pack/pack.service';
 import {MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
-import {BoardComponent, WinnerData} from '../board/board.component';
 import {Router} from '@angular/router';
 import {PlayersComponent} from "../players/players.component";
-import {ColorService} from "../services/color/color.service";
+import {Color, ColorService} from "../services/color/color.service";
 import {CreateGameDialog} from "./create-game-dialog.component";
 import {MatSnackBar} from "@angular/material/snack-bar";
-
-export interface GameMetaData {
-    name: string,
-    creator: string,
-    pack: string,
-    board: string,
-    players: {
-        nickname: string,
-        color: number,
-    }[],
-    playing_as?: number,
-}
+import {Game, GameService, Ply, Vector2} from "../services/game/game.service";
+import {WinnerData} from "../game/board/board.component";
+import {Player, PlayerService} from "../services/player/player.service";
+import {GameComponent} from "../game/game.component";
 
 export interface CreateGameDialogData {
-    name: string,
-    board: {pack: string, name: string},
+    displayName: string,
     public: boolean,
+    pack?: Pack,
+    controller?: Controller,
     password?: string,
 }
 
-export interface Ply {
-    name: string,
-    actions: object[],
-}
-
 export interface SelectPlyDialogData {
-    fromRow: number,
-    fromCol: number,
-    toRow: number,
-    toCol: number,
+    game: Game,
+    from: Vector2,
+    to: Vector2,
     plies: Ply[],
-    gameId: string,
 }
 
 @Component({
@@ -47,76 +32,51 @@ export interface SelectPlyDialogData {
     templateUrl: './lobby.component.html',
     styleUrls: ['./lobby.component.less'],
 })
-export class LobbyComponent implements OnInit {
-    @ViewChild('board') private board: BoardComponent;
+export class LobbyComponent {
     @ViewChild('playersComponent') private playersComponent: PlayersComponent;
-    games: {[key: string]: GameMetaData};
+    @ViewChild('gameComponent') gameComponent: GameComponent;
     availableColors: number[];
-    players: string[];
+    players: Player[];
     hasNotification: {[key: string]: boolean} = {};
-    selectedGameId: string;
+    selectedGame: Game;
     winnerData?: WinnerData = null;
 
     constructor(
         public createGameDialog: MatDialog,
         public selectPlyDialog: MatDialog,
-        public api: ApiService,
+        public apiService: ApiService,
+        public gameService: GameService,
+        public playerService: PlayerService,
         public colorService: ColorService,
-        public packDataService: PackDataService,
         private changeDetectorRef: ChangeDetectorRef,
         private router: Router,
         private snackBar: MatSnackBar,
     ) {
-        api.getCommand('update_metadata').subscribe(this.updateMetadata.bind(this));
-        api.getCommand('update_pack_data').subscribe(this.updatePackData.bind(this));
-        api.getCommand('plies').subscribe(this.showPlies.bind(this));
-        api.getCommand('focus_game').subscribe(this.focusGame.bind(this));
-        api.getCommand('error').subscribe(this.error.bind(this));
+        apiService.handlers.offerPlies = this.offerPlies.bind(this);
+        apiService.handlers.focusGame = this.showGame.bind(this);
+        apiService.getCommand('error').subscribe(this.error.bind(this));
     }
 
-    ngOnInit(): void {}
-
-    updateAvailableColors(): void {
-        if (!this.selectedGameId) {
+    private updateAvailableColors(): void {
+        if (!this.selectedGame) {
             return;
         }
 
-        this.availableColors = [...this.packDataService.boardTypes[this.games[this.selectedGameId].pack][this.games[this.selectedGameId].board].colors];
-        for (const player of this.games[this.selectedGameId].players) {
-            this.availableColors.splice(this.availableColors.indexOf(player.color), 1);
+        this.availableColors = [...this.selectedGame.metadata.controller.colors];
+        for (const color of Object.keys(this.selectedGame.metadata.players)) {
+            this.availableColors.splice(this.availableColors.indexOf(Number(color)), 1);
         }
     }
 
-    updateMetadata(parameters: {[key: string]: any}): void {
-        this.players = parameters.players;
-        this.games = parameters.game_metadata;
-
-        if (!this.games.hasOwnProperty(this.selectedGameId)) {
-            this.selectedGameId = '';
-        }
-
-        this.updateAvailableColors();
-    }
-
-    updatePackData(parameters: {[key: string]: any}): void {
-        this.packDataService.updatePackData(parameters.pack_data);
-    }
-
-    showPlies(parameters: {[key: string]: any}): void {
+    private offerPlies(from: Vector2, to: Vector2, plies: Ply[]): void {
         this.selectPlyDialog.open(SelectPlyDialog, {
             data: {
-                fromRow: parameters.from_row,
-                fromCol: parameters.from_col,
-                toRow: parameters.to_row,
-                toCol: parameters.to_col,
-                plies: parameters.plies,
-                gameId: this.selectedGameId,
+                game: this.selectedGame,
+                from: from,
+                to: to,
+                plies: plies,
             },
         });
-    }
-
-    focusGame(parameters: {[key: string]: any}): void {
-        this.showGame(parameters.game_id);
     }
 
     error(parameters: {[key: string]: any}): void {
@@ -128,7 +88,7 @@ export class LobbyComponent implements OnInit {
     }
 
     disconnect() {
-        this.api.disconnect();
+        this.apiService.disconnect();
         this.router.navigate(['/']);
     }
 
@@ -139,41 +99,33 @@ export class LobbyComponent implements OnInit {
     createGame(): void {
         this.createGameDialog.open(CreateGameDialog, {
             data: {
-                name: 'New Game',
-                board: {pack: '', name: ''},
+                displayName: 'New Game',
                 public: true,
-                password: null,
             },
         });
     }
 
-    showGame(gameId: string): void {
-        this.api.run('show_game', {
-            game_id: gameId,
-        })
+    showGame(game: Game): void {
+        this.apiService.showGame(game);
 
-        this.hasNotification[gameId] = false;
-        this.selectedGameId = gameId;
+        this.hasNotification[game.id] = false;
+        this.selectedGame = game;
         this.updateAvailableColors();
         this.changeDetectorRef.detectChanges();
-        this.board.updateBoardSize();
 
         // Switch to the "Game" tab.
         this.playersComponent.selectedTab = 1;
     }
 
-    joinGame(gameId: string, color: number): void {
-        this.api.run('join_game', {
-            game_id: gameId,
-            color: color,
-        })
+    joinGame(game: Game, color: Color): void {
+        this.apiService.joinGame(game, color);
     }
 
     onWinner(winnerData: WinnerData): void {
         this.winnerData = winnerData;
     }
 
-    winner_string(colors: number[]): string {
+    winnerString(colors: number[]): string {
         if (colors.length == 0) {
             return 'No winners!';
         }
@@ -207,13 +159,11 @@ export class SelectPlyDialog {
     ) {}
 
     selectPly(ply: Ply): void {
-        this.api.run('submit_ply', {
-            game_id: this.data.gameId,
-            from_row: this.data.fromRow,
-            from_col: this.data.fromCol,
-            to_row: this.data.toRow,
-            to_col: this.data.toCol,
-            ply: ply,
-        })
+        this.api.submitPly(
+            this.data.game,
+            this.data.from,
+            this.data.to,
+            ply,
+        );
     }
 }

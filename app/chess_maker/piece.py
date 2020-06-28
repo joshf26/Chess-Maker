@@ -4,13 +4,13 @@ from enum import Enum
 from typing import TYPE_CHECKING, Union, Generator
 
 from json_serializable import JsonSerializable
+from pack_util import get_pack
 from vector2 import Vector2
 
 if TYPE_CHECKING:
     from ply import Ply
     from color import Color
     from game import GameData
-    from controller import Controller
 
 
 class Direction(Enum):
@@ -22,10 +22,6 @@ class Direction(Enum):
     SOUTH_WEST = 5
     WEST = 6
     NORTH_WEST = 7
-
-
-def get_pack(obj: Union[Piece, Controller]) -> str:
-    return obj.__module__.split('.')[1]
 
 
 class Piece(JsonSerializable):
@@ -43,10 +39,14 @@ class Piece(JsonSerializable):
 
     def to_json(self) -> Union[dict, list]:
         return {
-            'name': self.name,
+            'pack_id': get_pack(self),
+            'piece_type_id': self.name,
             'color': self.color.value,
             'direction': self.direction.value,
         }
+
+    def copy(self):
+        return self.__class__(self.color, self.direction)
 
     def get_plies(self, from_pos: Vector2, to_pos: Vector2, game_data: GameData) -> Generator[Ply]:
         yield from ()

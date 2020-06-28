@@ -1,0 +1,7 @@
+<canvas #canvas
+        (wheel)="rawZoom($event)"
+        (mousedown)="mouseDown($event)"
+        (mouseup)="mouseUp()"
+        (mouseleave)="mouseUp()"
+        (mousemove)="mouseMove($event)"
+        (contextmenu)="hideContextMenu($event)"></canvas>

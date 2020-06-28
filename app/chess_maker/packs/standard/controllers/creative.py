@@ -36,21 +36,22 @@ class Creative(Controller):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.directions: Dict[Color, Direction] = {color: Direction.NORTH for color in self.colors}
+        self.inventories: Dict[Color, List[InventoryItem]] = {color: [
+            InventoryItem(Pawn(color, Direction.NORTH), '&infin;'),
+            InventoryItem(Knight(color, Direction.NORTH), '&infin;'),
+            InventoryItem(Bishop(color, Direction.NORTH), '&infin;'),
+            InventoryItem(Rook(color, Direction.NORTH), '&infin;'),
+            InventoryItem(Queen(color, Direction.NORTH), '&infin;'),
+            InventoryItem(King(color, Direction.NORTH), '&infin;'),
+        ] for color in self.colors}
+
         self.rotate_pieces_button = InfoButton('Rotate Pieces', self.rotate_pieces)
 
     def get_info(self, color: Color) -> List[InfoElement]:
         return [self.rotate_pieces_button]
 
     def get_inventory(self, color: Color) -> List[InventoryItem]:
-        return [
-            InventoryItem(Pawn(color, self.directions[color]), -1),
-            InventoryItem(Knight(color, self.directions[color]), -1),
-            InventoryItem(Bishop(color, self.directions[color]), -1),
-            InventoryItem(Rook(color, self.directions[color]), -1),
-            InventoryItem(Queen(color, self.directions[color]), -1),
-            InventoryItem(King(color, self.directions[color]), -1),
-        ]
+        return self.inventories[color]
 
     def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
         yield Ply('Move', [MoveAction(from_pos, to_pos)])
@@ -59,7 +60,8 @@ class Creative(Controller):
         yield Ply('Create', [CreateAction(piece, pos)])
 
     def rotate_pieces(self, color: Color) -> None:
-        self.directions[color] = rotate_direction(self.directions[color])
+        for item in self.inventories[color]:
+            item.piece.direction = rotate_direction(item.piece.direction)
 
         self.game.send_update_to_subscribers()
 

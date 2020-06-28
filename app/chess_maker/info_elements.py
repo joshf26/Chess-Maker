@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Callable, Awaitable, Union
+from typing import Callable, Union
 from uuid import uuid4
 
 from color import Color

@@ -26,7 +26,7 @@ class DestroyAction(JsonSerializable):
     def to_json(self) -> Union[dict, list]:
         return {
             'type': 'destroy',
-            'pos': list(self.pos),
+            'to_pos': list(self.pos),
         }
 
 
@@ -38,8 +38,8 @@ class CreateAction(JsonSerializable):
     def to_json(self) -> Union[dict, list]:
         return {
             'type': 'create',
+            'to_pos': list(self.pos),
             'piece': self.piece.to_json(),
-            'pos': list(self.pos),
         }
 
 
@@ -53,6 +53,6 @@ class Ply(JsonSerializable):
 
     def to_json(self) -> Union[dict, list]:
         return {
-            'actions': [action.to_json() for action in self.actions],
             'name': self.name,
+            'actions': [action.to_json() for action in self.actions],
         }

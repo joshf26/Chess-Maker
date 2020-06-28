@@ -31,31 +31,11 @@ class Server:
         self.network.register_command('submit_ply', self.on_submit_ply)
         self.network.register_command('click_button', self.on_click_button)
 
-    def _get_game_metadata(self, connection: Connection) -> dict:
-        return {game_id: game.get_metadata(connection) for game_id, game in self.games.items()}
-
-    def _get_players(self):
-        return [connection.nickname for connection in self.network.connections]
-
-    def _send_pack_data(self, connection: Connection) -> None:
-        pack_data: Dict[str, dict] = {}
-
-        for name, pack in self.packs.items():
-            pack_data[name] = pack.to_json()
-
-        connection.run('update_pack_data', {
-            'pack_data': pack_data,
-        })
-
-    def _send_metadata_update(self, connection: Connection) -> None:
-        connection.run('update_metadata', {
-            'game_metadata': self._get_game_metadata(connection),
-            'players': self._get_players(),
-        })
-
     def _send_metadata_update_to_all(self) -> None:
         for connection in self.network.connections:
-            self._send_metadata_update(connection)
+            # TODO: These two calls should be split up.
+            connection.update_players(self.network.connections)
+            connection.update_game_metadata(self.games)
 
     def start(self, port: int) -> None:
         self.network.serve(port)
@@ -75,48 +55,47 @@ class Server:
         if change_made:
             self._send_metadata_update_to_all()
 
-    def on_login(self, connection: Connection, nickname: str) -> None:
-        # Ensure there are no duplicate nicknames.
-        nicknames = {connection.nickname for connection in self.network.connections}
-        while nickname in nicknames:
-            nickname += ' 2'
+    def on_login(self, connection: Connection, display_name: str) -> None:
+        # Ensure there are no duplicate display names.
+        display_names = {connection.display_name for connection in self.network.connections}
+        while display_name in display_names:
+            display_name += ' (2)'
 
-        print(f'{nickname} logged in!')
-        connection.nickname = nickname
+        print(f'{display_name} logged in!')
+        connection.display_name = display_name
 
-        connection.run('set_nickname', {'nickname': nickname})
-        self._send_pack_data(connection)
+        connection.update_pack_data(self.packs)
         self._send_metadata_update_to_all()
+        connection.set_player()
 
-
-    def on_create_game(self, connection: Connection, name: str, pack: str, board: str, options: dict) -> None:
-        if pack not in self.packs:
-            connection.error('Package does not exist.')
+    def on_create_game(self, connection: Connection, name: str, controller_pack_id: str, controller_id: str, options: dict) -> None:
+        if controller_pack_id not in self.packs:
+            connection.show_error('Package does not exist.')
             return
 
-        controller_class = next(filter(lambda b: b.name == board, self.packs[pack].controllers), None)
+        controller_class = next(filter(lambda b: b.name == controller_id, self.packs[controller_pack_id].controllers), None)
 
         if controller_class is None:
-            connection.error('Controller does not exist.')
+            connection.show_error('Controller does not exist.')
             return
 
         if options.keys() != controller_class.options.keys():  # TODO: Improve error reporting and add type checking.
-            connection.error('Options not supplied successfully.')
+            connection.show_error('Options not supplied successfully.')
             return
 
         game = Game(name, connection, controller_class, options, self.network, self.subscribers)
         self.games[game.id] = game
 
         self._send_metadata_update_to_all()
-        connection.run('focus_game', {'game_id': game.id})
+        connection.focus_game(game)
 
     def on_delete_game(self, connection: Connection, game_id: str) -> None:
         if game_id not in self.games:
-            connection.error('Game does not exist.')
+            connection.show_error('Game does not exist.')
             return
 
-        if self.games[game_id].owner.nickname != connection.nickname:
-            connection.error('Only the owner of this game can delete it.')
+        if self.games[game_id].owner.display_name != connection.display_name:
+            connection.show_error('Only the owner of this game can delete it.')
             return
 
         del self.games[game_id]
@@ -124,32 +103,32 @@ class Server:
 
     def on_show_game(self, connection: Connection, game_id: str) -> None:
         if game_id not in self.games:
-            connection.error('Game does not exist.')
+            connection.show_error('Game does not exist.')
             return
 
         game = self.games[game_id]
         self.subscribers.set(game, connection)
-        connection.run('full_game_data', game.get_full_data(connection))
+        connection.update_game_data(game)
 
     def on_join_game(self, connection: Connection, game_id: str, color: int) -> None:
         if game_id not in self.games:
-            connection.error('Game id does not exist.')
+            connection.show_error('Game id does not exist.')
             return
 
         game = self.games[game_id]
 
         if connection in game.players:
-            connection.error('Player is already in this game.')
+            connection.show_error('Player is already in this game.')
             return
 
         color_object = next(filter(lambda x: x.value == color, Color.__iter__()), None)
 
         if color_object is None:
-            connection.error('Color does not exist.')
+            connection.show_error('Color does not exist.')
             return
 
         if color_object in game.players:
-            connection.error('That color is already taken in this game.')
+            connection.show_error('That color is already taken in this game.')
             return
 
         game.add_player(connection, color_object)
@@ -159,13 +138,13 @@ class Server:
 
     def on_leave_game(self, connection: Connection, game_id: str) -> None:
         if game_id not in self.games:
-            connection.error('Game id does not exist.')
+            connection.show_error('Game id does not exist.')
             return
 
         game = self.games[game_id]
 
         if connection not in game.players:
-            connection.error('Player is not in this game.')
+            connection.show_error('Player is not in this game.')
             return
 
         if connection in game.players:
@@ -184,59 +163,48 @@ class Server:
         to_col: int,
     ) -> None:
         if game_id not in self.games:
-            connection.error('Game id does not exist.')
+            connection.show_error('Game id does not exist.')
             return
 
         game = self.games[game_id]
 
         if connection not in game.players:
-            connection.error('Player is not in this game.')
+            connection.show_error('Player is not in this game.')
             return
 
         from_pos = Vector2(from_row, from_col)
         to_pos = Vector2(to_row, to_col)
 
-        plies = game.get_plies(connection, from_pos, to_pos)
+        plies = list(game.get_plies(connection, from_pos, to_pos))
         game.apply_or_offer_choices(from_pos, to_pos, plies, connection)
 
     def on_inventory_plies(
         self,
         connection: Connection,
         game_id: str,
-        pack_name: str,
-        piece_name: str,
-        piece_color: int,
-        piece_direction: int,
+        inventory_item_id: str,
         to_row: int,
         to_col: int,
     ) -> None:
         if game_id not in self.games:
-            connection.error('Game id does not exist.')
-            return
-
-        if piece_color < 0 or piece_color > 7 or piece_direction < 0 or piece_direction > 7:
-            connection.error('Invalid piece color or direction.')
+            connection.show_error('Game id does not exist.')
             return
 
         game = self.games[game_id]
+        inventory = game.controller.get_inventory(game.players.get_color(connection))
+        inventory_item = next(filter(lambda item: item.id == inventory_item_id, inventory), None)
 
-        if connection not in game.players:
-            connection.error('Player is not in this game.')
+        if not inventory_item:
+            connection.show_error('You do not have that item in your inventory.')
             return
 
-        selected_piece = next(filter(lambda piece: piece.name == piece_name, self.packs[pack_name].pieces), None)
-
-        if selected_piece is None:
-            connection.error('Piece does not exist.')
+        if connection not in game.players:
+            connection.show_error('Player is not in this game.')
             return
 
         to_pos = Vector2(to_row, to_col)
-        color = Color(piece_color)
-        inventory_plies = game.controller.get_inventory_plies(
-            color,
-            selected_piece(color, Direction(piece_direction)),
-            to_pos,
-        )
+        color = Color(inventory_item.piece.color)
+        inventory_plies = list(game.controller.get_inventory_plies(color, inventory_item.piece, to_pos))
 
         game.apply_or_offer_choices(Vector2(-1, -1), to_pos, inventory_plies, connection)
 
@@ -251,7 +219,7 @@ class Server:
         ply: dict,
     ) -> None:
         if game_id not in self.games:
-            connection.error('Game id does not exist.')
+            connection.show_error('Game id does not exist.')
             return
 
         game = self.games[game_id]
@@ -260,7 +228,7 @@ class Server:
         dict_plies = [ply_data.to_json() for ply_data in plies]
 
         if ply not in dict_plies:
-            connection.error('Ply not available.')
+            connection.show_error('Ply not available.')
             return
 
         ply_index = dict_plies.index(ply)
@@ -274,7 +242,7 @@ class Server:
         button_id: str
     ) -> None:
         if game_id not in self.games:
-            connection.error('Game id does not exist.')
+            connection.show_error('Game id does not exist.')
             return
 
         game = self.games[game_id]

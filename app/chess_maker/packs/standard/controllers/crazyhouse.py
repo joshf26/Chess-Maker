@@ -4,7 +4,6 @@ from typing import Generator, List, Dict
 
 from color import Color
 from controller import Controller
-from game import Game
 from inventory_item import InventoryItem
 from packs.standard.controllers.chess import Chess
 from piece import Piece, Direction
@@ -15,8 +14,8 @@ from vector2 import Vector2
 class CrazyHouse(Chess, Controller):
     name = 'Crazy House'
 
-    def __init__(self, game: Game):
-        super().__init__(game)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         self.inventories: Dict[Color, List[InventoryItem]] = {
             Color.WHITE: [],

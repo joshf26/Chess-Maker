@@ -11,7 +11,8 @@ from game_subscribers import GameSubscribers
 from info_elements import InfoButton
 from inventory_item import InventoryItem
 from json_serializable import JsonSerializable
-from piece import get_pack, Piece
+from pack_util import get_pack
+from piece import Piece
 from ply import Ply, MoveAction, DestroyAction, CreateAction
 from vector2 import Vector2
 
@@ -113,20 +114,15 @@ class Game:
         self.game_data.history.append(GameState(board, None, None))
         self.controller.init_board(board)
 
-    def get_metadata(self, connection: Connection) -> dict:
+    def get_metadata(self) -> dict:
         return {
-            'name': self.name,
-            'creator': self.owner.nickname,
-            'pack': get_pack(self.controller),
-            'board': self.controller.name,
-            'players': [
-                {
-                    'color': color.value,
-                    'nickname': connection.nickname,
-                } for color, connection in self.players.color_to_connection.items()
-            ],
-            'total_players': [color.value for color in self.controller.colors],  # TODO: This should probably be sent with pack data.
-            'playing_as': None if (color := self.players.get_color(connection)) is None else color.value,
+            'displayName': self.name,
+            'creator': self.owner.id,
+            'controller_pack_id': get_pack(self.controller),
+            'controller_id': self.controller.name,
+            'players': {
+                color.value: connection.id for color, connection in self.players.color_to_connection.items()
+            },
         }
 
     def get_full_data(self, connection: Connection) -> dict:
@@ -136,30 +132,26 @@ class Game:
         pieces = [{
             'row': position.row,
             'col': position.col,
-            'pack': get_pack(piece),
-            'piece': piece.__class__.__name__,
+            'pack_id': get_pack(piece),  # TODO: Change to use piece.to_json().
+            'piece_type_id': piece.__class__.__name__,
             'color': piece.color.value,
             'direction': piece.direction.value,
         } for position, piece in self.board.items()]
         decorators = [{
             'row': position.row,
             'col': position.col,
-            'pack': get_pack(decorator),
-            'decorator': decorator.__class__.__name__,
+            'pack_id': get_pack(decorator),
+            'decorator_type_id': decorator.__class__.__name__,
         } for position, decorator in self.controller.get_decorators().items()]
         info = [info_element.to_json() for info_element in self.controller.get_info(color)]
-        inventory = [dict(
-            pack=get_pack(inventory_item.piece),
-            quantity=inventory_item.quantity,
-            **inventory_item.piece.to_json(),
-        ) for inventory_item in inventory_items]
+        inventory = [inventory_item.to_json() for inventory_item in inventory_items]
 
         return {
             'id': self.id,
             'pieces': pieces,
             'decorators': decorators,
-            'info': info,
-            'inventory': inventory,
+            'info_elements': info,
+            'inventory_items': inventory,
             'winners': None if self.winners is None else self.winners.to_json(),
         }
 
@@ -169,19 +161,13 @@ class Game:
 
         return colors - taken_colors
 
-    def send_update(self, connection: Connection) -> None:
-        game_data = self.get_full_data(connection)
-        connection.run('full_game_data', game_data)
-
     def send_update_to_subscribers(self) -> None:
         for connection in self.subscribers.get_connections(self):
-            self.send_update(connection)
+            connection.update_game_data(self)
 
     def send_error(self, color: Color, message: str) -> None:
         connection = self.players.get_connection(color)
-        connection.run('error', {
-            'message': message,
-        })
+        connection.show_error(message)
 
     def get_plies(self, connection: Connection, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
         if (
@@ -211,7 +197,7 @@ class Game:
                     board.pop(action.pos)
 
                 elif isinstance(action, CreateAction):
-                    board[action.pos] = action.piece
+                    board[action.pos] = action.piece.copy()
 
         return GameState(board, color, ply)
 
@@ -228,32 +214,20 @@ class Game:
         self,
         from_pos: Vector2,
         to_pos: Vector2,
-        plies: Generator[Ply],
+        plies: List[Ply],
         connection: Connection,
     ) -> None:
-        first = next(plies, None)
-        if first is None:
+        if len(plies) == 0:
             # No plies available.
             return
 
-        second = next(plies, None)
-        if second is None:
+        if len(plies) == 1:
             # There is only one ply available, so just apply it immediately.
-            self.apply_ply(self.players.get_color(connection), first)
+            self.apply_ply(self.players.get_color(connection), plies[0])
             return
 
-        full_plies = [first, second, *plies]
-
         # There are multiple plies available, so present the user with a choice.
-        result = [ply.to_json() for ply in full_plies]
-
-        connection.run('plies', {
-            'from_row': from_pos.row,
-            'from_col': from_pos.col,
-            'to_row': to_pos.row,
-            'to_col': to_pos.col,
-            'plies': result,
-        })
+        connection.offer_plies(from_pos, to_pos, plies)
 
     def add_player(self, connection: Connection, color: Color) -> None:
         self.players.set(color, connection)

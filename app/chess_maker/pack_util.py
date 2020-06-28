@@ -1,9 +1,19 @@
-from typing import Tuple, Dict, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Tuple, Dict, Union
 
 from PIL import Image
 
+from controller import Controller
 from decorator import Decorator
 from vector2 import Vector2
+
+if TYPE_CHECKING:
+    from piece import Piece
+
+
+def get_pack(obj: Union[Piece, Controller, Decorator]) -> str:
+    return obj.__module__.split('.')[1]
 
 
 def load_image(pack_path: str, image_path: str) -> str:

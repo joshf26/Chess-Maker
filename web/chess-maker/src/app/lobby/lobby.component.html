@@ -1,12 +1,16 @@
 <mat-sidenav-container>
-    <mat-sidenav #sidenav mode="side" opened (opened)="board.onResize()" (closed)="board.onResize()">
+    <mat-sidenav #sidenav
+                 mode="side"
+                 opened
+                 (opened)="selectedGame && gameComponent.board.updateAndCenter()"
+                 (closed)="selectedGame && gameComponent.board.updateAndCenter()">
         <div class="padded">
             <mat-card class="darker">
                 <mat-card-content>
                     <app-players #playersComponent
                                  [serverPlayers]="players"
-                                 [gamePlayers]="selectedGameId ? games[selectedGameId].players : []"
-                                 [disableGameTab]="!selectedGameId"></app-players>
+                                 [gamePlayers]="selectedGame ? selectedGame.metadata.players : []"
+                                 [disableGameTab]="!selectedGame"></app-players>
                 </mat-card-content>
             </mat-card>
             <br>
@@ -14,20 +18,20 @@
                 <button mat-raised-button color="primary" (click)="createGame()">New Game</button>
             </div>
             <br>
-            <ng-template ngFor let-game [ngForOf]="games | keyvalue">
+            <ng-template ngFor let-game [ngForOf]="gameService.values()">
                 <button mat-mini-fab
                         color="accent"
                         class="delete-game-button"
-                        *ngIf="game.value.creator == api.nickname"
-                        (click)="api.run('delete_game', {game_id: game.key})">
+                        *ngIf="game.creator == playerService.currentPlayer"
+                        (click)="apiService.deleteGame(game)">
                     <mat-icon>close</mat-icon>
                 </button>
-                <mat-card (click)="showGame(game.key)"
-                          [ngStyle]="{backgroundColor: game.key == selectedGameId ? '#c2185b' : '#303030'}">
+                <mat-card (click)="showGame(game)"
+                          [ngStyle]="{backgroundColor: game == selectedGame ? '#c2185b' : '#303030'}">
                     <mat-card-content>
-                        <h1>{{hasNotification[game.key] ? '*' : ''}}{{game.value.name}}</h1>
-                        Created by {{game.value.creator}}<br>
-                        A <strong>{{game.value.board}}</strong> game with <strong>{{game.value.players.length}}/{{game.value.total_players.length}}</strong> players.
+                        <h1>{{hasNotification[game.id] ? '*' : ''}}{{game.metadata.displayName}}</h1>
+                        <ng-template [ngIf]="game.metadata.creator">Created by {{game.metadata.creator.displayName}}<br></ng-template>
+                        <em [innerHTML]="game"></em>
                     </mat-card-content>
                 </mat-card>
             </ng-template>
@@ -42,26 +46,28 @@
         </div>
     </mat-sidenav>
     <mat-sidenav-content>
-        <app-board #board
-                   [gameId]="selectedGameId"
-                   [game]="selectedGameId ? games[selectedGameId] : null"
-                   [notify]="notify.bind(this)"
-                   [sidenav]="sidenav"
-                   (winner)="onWinner($event)"></app-board>
-        <mat-card id="control-box" *ngIf="(selectedGameId && games[selectedGameId].playing_as == null) || winnerData != null">
+        <app-game #gameComponent
+                  [game]="selectedGame"
+                  [infoElements]="selectedGame.data.infoElements"
+                  *ngIf="selectedGame"></app-game>
+        <div *ngIf="!selectedGame" class="full-center center">
+            <h1>Welcome to Chess Maker</h1>
+            <p>Create or select a game on the left to get started.</p>
+        </div>
+        <mat-card id="control-box" *ngIf="(selectedGame && !selectedGame.playerInGame(playerService.currentPlayer)) || winnerData != null">
             <mat-card-content>
                 <ng-template [ngIf]="winnerData == null">
-                    <h1>{{games[selectedGameId].players.length == packDataService.boardTypes[games[selectedGameId].pack][games[selectedGameId].board].colors.length ? 'Spectating' : 'Join As'}}</h1>
+                    <h1>{{selectedGame.playerCount() == selectedGame.metadata.controller.colors.length ? 'Spectating' : 'Join As'}}</h1>
                     <mat-chip-list>
                         <mat-chip *ngFor="let color of availableColors"
-                                  [ngStyle]="{backgroundColor: colorService.names[color], color: color == 0 || color == 3 || color == 4 ? 'black' : 'white'}"
-                                  (click)="joinGame(selectedGameId, color)">
+                                  [ngStyle]="{backgroundColor: colorService.names[color], color: [0, 3, 4].includes(color) ? 'black' : 'white'}"
+                                  (click)="joinGame(selectedGame, color)">
                             {{colorService.names[color]}}
                         </mat-chip>
                     </mat-chip-list>
                 </ng-template>
                 <ng-template [ngIf]="winnerData != null">
-                    <h1>{{winner_string(winnerData.colors)}}</h1>
+                    <h1>{{winnerString(winnerData.colors)}}</h1>
                     <p>{{winnerData.reason}}</p>
                 </ng-template>
             </mat-card-content>

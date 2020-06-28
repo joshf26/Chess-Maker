@@ -1,34 +1,89 @@
+from __future__ import annotations
+
 import asyncio
 import inspect
 import json
-import uuid
-from dataclasses import dataclass
-from itertools import islice
-from typing import Dict, Callable, Set, Awaitable
-
 import websockets
 
+from uuid import uuid4
+from dataclasses import dataclass
+from itertools import islice
+from typing import TYPE_CHECKING, Dict, Callable, Set, Iterable, Union
 
-class Connection:
+from json_serializable import JsonSerializable
+from ply import Ply
+from vector2 import Vector2
+
+if TYPE_CHECKING:
+    from game import Game
+    from pack import Pack
+
+
+class Connection(JsonSerializable):
 
     def __init__(self, socket: websockets.WebSocketServerProtocol):
         self.socket = socket
-        self.id = uuid.uuid4()
-        self.nickname = 'Player'
+        self.id = str(uuid4())
+        self.display_name = 'Player'
 
-    def run(self, command: str, parameters: dict):
+    def __str__(self):
+        return f'Connection({self.id}, {self.display_name})'
+
+    def __hash__(self):
+        return hash(self.socket)
+
+    def _run(self, command: str, parameters: dict) -> None:
         asyncio.create_task(self.socket.send(json.dumps({
             'command': command,
             'parameters': parameters,
         })))
 
-    def error(self, message: str):
-        asyncio.create_task(self.socket.send(json.dumps({
-            'error': message,
-        })))
+    def set_player(self) -> None:
+        self._run('set_player', {
+            'id': self.id,
+        })
 
-    def __hash__(self):
-        return hash(self.socket)
+    def focus_game(self, game: Game) -> None:
+        self._run('focus_game', {
+            'game_id': game.id,
+        })
+
+    def update_pack_data(self, packs: Dict[str, Pack]) -> None:
+        self._run('update_pack_data', {
+            'packs': {name: pack.to_json() for name, pack in packs.items()},
+        })
+
+    def update_players(self, players: Iterable[Connection]) -> None:
+        self._run('update_players', {
+            'players': {connection.id: connection.to_json() for connection in players},
+        })
+
+    def update_game_metadata(self, games: Dict[str, Game]) -> None:
+        self._run('update_game_metadata', {
+            'game_metadata': {game_id: game.get_metadata() for game_id, game in games.items()},
+        })
+
+    def update_game_data(self, game: Game) -> None:
+        self._run('update_game_data', game.get_full_data(self))
+
+    def show_error(self, message: str) -> None:
+        self._run('show_error', {
+            'message': message,
+        })
+
+    def offer_plies(self, from_pos: Vector2, to_pos: Vector2, plies: Iterable[Ply]) -> None:
+        self._run('plies', {
+            'from_row': from_pos.row,
+            'from_col': from_pos.col,
+            'to_row': to_pos.row,
+            'to_col': to_pos.col,
+            'plies': [ply.to_json() for ply in plies],
+        })
+
+    def to_json(self) -> Union[dict, list]:
+        return {
+            'displayName': self.display_name,
+        }
 
 
 @dataclass
@@ -39,7 +94,7 @@ class Command:
 
 class Network:
 
-    def __init__(self, on_disconnect: Callable[[Connection], Awaitable[None]]):
+    def __init__(self, on_disconnect: Callable[[Connection], None]):
         self.on_disconnect = on_disconnect
 
         self.commands: Dict[str, Command] = {}
@@ -54,10 +109,6 @@ class Network:
 
         self.commands[command] = Command(callback, parameters)
 
-    def run_all(self, command: str, parameters: dict):
-        for connection in self.connections:
-            connection.run(command, parameters)
-
     def serve(self, port: int):
         print(f'Serving on port {port}...')
 
@@ -67,27 +118,27 @@ class Network:
 
     def try_command(self, connection: Connection, data: dict):
         if 'command' not in data:
-            connection.error('Command Not Specified')
+            connection.show_error('Command Not Specified')
             return
 
         if data['command'] not in self.commands:
-            connection.error('Command Not Found')
+            connection.show_error('Command Not Found')
             return
 
         parameters = self.commands[data['command']].parameters
 
         if parameters and 'parameters' not in data:
-            connection.error(f'This command requires the following parameters: {", ".join(parameters.keys())}.')
+            connection.show_error(f'This command requires the following parameters: {", ".join(parameters.keys())}.')
             return
 
         payload = {}
         for parameter_name, parameter_type in parameters.items():
             if parameter_name not in data['parameters']:
-                connection.error(f'"{parameter_name}" parameter not specified.')
+                connection.show_error(f'"{parameter_name}" parameter not specified.')
                 return
 
             if type(data['parameters'][parameter_name]) is not parameter_type:
-                connection.error(f'"{parameter_name}" parameter needs to be of type {parameter_type.__name__}.')
+                connection.show_error(f'"{parameter_name}" parameter needs to be of type {parameter_type.__name__}.')
                 return
 
             payload[parameter_name] = data['parameters'][parameter_name]
@@ -105,7 +156,7 @@ class Network:
                 try:
                     data = json.loads(raw_data)
                 except json.JSONDecodeError:
-                    connection.error('Invalid JSON')
+                    connection.show_error('Invalid JSON')
                     continue
 
                 self.try_command(connection, data)

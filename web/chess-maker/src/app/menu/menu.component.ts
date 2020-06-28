@@ -5,11 +5,11 @@ import {Router} from '@angular/router';
 @Component({
     selector: 'app-menu',
     templateUrl: './menu.component.html',
-    styleUrls: ['./menu.component.less']
+    styleUrls: ['./menu.component.less'],
 })
 export class MenuComponent implements OnInit {
     address: string = 'localhost:8000';
-    nickname: string = 'Josh';
+    displayName: string = 'Josh';
 
     constructor(
         private apiService: ApiService,
@@ -20,9 +20,7 @@ export class MenuComponent implements OnInit {
 
     connect() {
         this.apiService.connect(this.address);
-        this.apiService.run('login', {
-            nickname: this.nickname,
-        })
+        this.apiService.login(this.displayName);
         this.router.navigate(['/lobby']);
     }
 }

@@ -6,13 +6,13 @@ from typing import List, Generator, TYPE_CHECKING, Dict, Optional
 from color import Color
 from decorator import Decorator
 from info_elements import InfoElement
-from inventory_item import InventoryItem
-from piece import Piece
-from ply import Ply
 from vector2 import Vector2
 
 if TYPE_CHECKING:
     from game import Game
+    from piece import Piece
+    from inventory_item import InventoryItem
+    from ply import Ply
 
 
 class Controller(ABC):

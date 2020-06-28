@@ -1,0 +1,30 @@
+<app-board #board
+           [pieces]="game.data.pieces"
+           [decorators]="game.data.decorators"
+           [inventory]="game.data.inventoryItems"
+           [boardSize]="game.metadata.controller.boardSize"
+           [direction]="direction"
+           (move)="move($event)"
+           (place)="place($event)"></app-board>
+
+<mat-card id="info-box" *ngIf="infoElements.length">
+    <mat-card-content>
+        <ng-template ngFor let-infoElement [ngForOf]="infoElements">
+            <button mat-raised-button
+                    class="info-button"
+                    color="primary"
+                    [disabled]="!game.playerInGame(playerService.currentPlayer)"
+                    *ngIf="infoElement.type == 'button'"
+                    (click)="apiService.clickButton(game, infoElement)">{{infoElement.text}}</button>
+            <div *ngIf="infoElement.type == 'text'" [innerHTML]="sanitizer.bypassSecurityTrustHtml(infoElement.text)"></div>
+        </ng-template>
+    </mat-card-content>
+</mat-card>
+
+<div class="bottom-buttons">
+    <button mat-raised-button (click)="toggleSidebar.emit()">&lt;&gt;</button>
+    <button mat-raised-button (click)="rotate()">Rotate</button>
+    <button mat-raised-button (click)="leaveGame()" *ngIf="game && game.playerInGame(playerService.currentPlayer)">Leave Game</button>
+    <button mat-raised-button class="small" (click)="board.zoomCenter(5)">-</button>
+    <button mat-raised-button class="small" (click)="board.zoomCenter(-5)">+</button>
+</div>

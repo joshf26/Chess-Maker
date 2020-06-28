@@ -1,20 +1,24 @@
-import {Component, Input, OnInit} from '@angular/core';
-import {ColorService} from "../services/color/color.service";
+import {Component, Input} from '@angular/core';
+import {Color, ColorService} from "../services/color/color.service";
+import {Player} from "../services/player/player.service";
 
 @Component({
     selector: 'app-players',
     templateUrl: './players.component.html',
-    styleUrls: ['./players.component.less']
+    styleUrls: ['./players.component.less'],
 })
-export class PlayersComponent implements OnInit {
-    @Input('serverPlayers') serverPlayers: string[];
-    @Input('gamePlayers') gamePlayers: {color: number, nickname: string}[];
+export class PlayersComponent {
+    @Input('serverPlayers') serverPlayers: Player[];
+    @Input('gamePlayers') gamePlayers: {[color in Color]?: Player};
     @Input('disableGameTab') disableGameTab: boolean;
+
     selectedTab: number = 0;
 
     constructor(
         public colorService: ColorService,
     ) {}
 
-    ngOnInit(): void {}
+    hasPlayers() {
+        return Object.keys(this.gamePlayers).length > 0;
+    }
 }
