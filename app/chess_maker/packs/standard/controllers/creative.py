@@ -37,12 +37,12 @@ class Creative(Controller):
         super().__init__(*args, **kwargs)
 
         self.inventories: Dict[Color, List[InventoryItem]] = {color: [
-            InventoryItem(Pawn(color, Direction.NORTH), '&infin;'),
-            InventoryItem(Knight(color, Direction.NORTH), '&infin;'),
-            InventoryItem(Bishop(color, Direction.NORTH), '&infin;'),
-            InventoryItem(Rook(color, Direction.NORTH), '&infin;'),
-            InventoryItem(Queen(color, Direction.NORTH), '&infin;'),
-            InventoryItem(King(color, Direction.NORTH), '&infin;'),
+            InventoryItem(Pawn(color, Direction.NORTH), '∞'),
+            InventoryItem(Knight(color, Direction.NORTH), '∞'),
+            InventoryItem(Bishop(color, Direction.NORTH), '∞'),
+            InventoryItem(Rook(color, Direction.NORTH), '∞'),
+            InventoryItem(Queen(color, Direction.NORTH), '∞'),
+            InventoryItem(King(color, Direction.NORTH), '∞'),
         ] for color in self.colors}
 
         self.rotate_pieces_button = InfoButton('Rotate Pieces', self.rotate_pieces)
