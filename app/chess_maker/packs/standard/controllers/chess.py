@@ -5,7 +5,7 @@ from typing import List, Dict, Generator, TYPE_CHECKING, Optional
 from color import Color
 from controller import Controller
 from info_elements import InfoText
-from packs.standard.helpers import next_color, threatened, find_pieces, print_color, OFFSETS, opposite
+from packs.standard.helpers import next_color, threatened, find_pieces, print_color, OFFSETS, opposite, empty_along_axis
 from packs.standard.pieces.bishop import Bishop
 from packs.standard.pieces.king import King
 from packs.standard.pieces.knight import Knight
@@ -13,7 +13,7 @@ from packs.standard.pieces.pawn import Pawn
 from packs.standard.pieces.queen import Queen
 from packs.standard.pieces.rook import Rook
 from piece import Direction
-from ply import DestroyAction, CreateAction, Ply
+from ply import DestroyAction, CreateAction, Ply, MoveAction
 from vector2 import Vector2
 
 if TYPE_CHECKING:
@@ -101,6 +101,19 @@ class Chess(Controller):
             plies = pawn_promotions(piece, from_pos, to_pos)
         else:
             plies = list(piece.get_plies(from_pos, to_pos, self.game.game_data))
+
+            # Allow pawns to double advance.
+            if (
+                isinstance(piece, Pawn)
+                and (
+                    (color == Color.WHITE and from_pos.row == 6 and to_pos.row == 4)
+                    or (color == Color.BLACK and from_pos.row == 1 and to_pos.row == 3)
+                )
+                and to_pos.col - from_pos.col == 0
+                and empty_along_axis(self.game.board, from_pos, to_pos, include_end=True)
+             ):
+                plies.append(Ply('Double Advance', [MoveAction(from_pos, to_pos)]))
+
             if not plies:
                 self.game.send_error(color, 'That piece cannot move like that.')
                 return

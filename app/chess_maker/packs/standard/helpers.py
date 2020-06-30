@@ -70,7 +70,7 @@ def closest_piece_along_direction(
     return None
 
 
-def empty_along_axis(board: Dict[Vector2, Piece], start: Vector2, end: Vector2) -> bool:
+def empty_along_axis(board: Dict[Vector2, Piece], start: Vector2, end: Vector2, include_end=False) -> bool:
     direction = axis_direction(start, end)
 
     if direction is None:
@@ -81,6 +81,9 @@ def empty_along_axis(board: Dict[Vector2, Piece], start: Vector2, end: Vector2) 
         current_position += OFFSETS[direction]
         if current_position in board:
             return False
+
+    if include_end and current_position + OFFSETS[direction] in board:
+        return False
 
     return True
 

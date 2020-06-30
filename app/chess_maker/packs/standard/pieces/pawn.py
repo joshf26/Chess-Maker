@@ -22,11 +22,9 @@ class Pawn(Piece):
         # directions are added in.
         if self.direction == Direction.NORTH:
             if to_pos not in game_data.board:
-                # Check for single or double advance.
-                if col_diff == 0 and (row_diff == -1 or (
-                    self.moves == 0 and row_diff == -2 and (to_pos.row + 1, to_pos.col) not in game_data.board
-                )):
-                    yield Ply('Move', [MoveAction(from_pos, to_pos)])
+                # Check for single advance.
+                if col_diff == 0 and row_diff == -1:
+                    yield Ply('Single Advance', [MoveAction(from_pos, to_pos)])
 
                 # Check for en passant.
                 if abs(col_diff) == 1:
@@ -49,11 +47,9 @@ class Pawn(Piece):
 
         elif self.direction == Direction.SOUTH:
             if to_pos not in game_data.board:
-                # Check for single or double advance.
-                if col_diff == 0 and (row_diff == 1 or (
-                    self.moves == 0 and row_diff == 2 and (to_pos.row - 1, to_pos.col) not in game_data.board
-                )):
-                    yield Ply('Move', [MoveAction(from_pos, to_pos)])
+                # Check for single advance.
+                if col_diff == 0 and row_diff == 1:
+                    yield Ply('Single Advance', [MoveAction(from_pos, to_pos)])
 
                 # Check for en passant.
                 if abs(col_diff) == 1:
