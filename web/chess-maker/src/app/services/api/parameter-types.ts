@@ -1,3 +1,20 @@
+type RawPly = {
+    name: string,
+    actions: {
+        type: string,
+        to_pos_row: number,
+        to_pos_col: number,
+        from_pos_row?: number,
+        from_pos_col?: number,
+        piece?: {
+            pack_id: string,
+            piece_type_id: string,
+            color: number,
+            direction: number,
+        },
+    }[],
+}
+
 export type RawSetPlayerParameters = {
     id: string,
 }
@@ -76,25 +93,18 @@ export type RawUpdateGameDataParameters = {
     },
 }
 
+export type RawDoPly = {
+    ply: RawPly,
+}
+
+export type RawShowErrorParameters = {
+    message: string,
+}
+
 export type RawOfferPliesParameters = {
     from_row: number,
     from_col: number,
     to_row: number,
     to_col: number,
-    plies: {
-        name: string,
-        actions: {
-            type: string,
-            to_pos_row: number,
-            to_pos_col: number,
-            from_pos_row?: number,
-            from_pos_col?: number,
-            piece?: {
-                pack_id: string,
-                piece_type_id: string,
-                color: number,
-                direction: number,
-            },
-        }[],
-    }[],
+    plies: RawPly[],
 }

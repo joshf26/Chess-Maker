@@ -122,6 +122,12 @@ export class Game implements Identifiable {
 })
 export class GameService extends ItemService<Game> {
     updateGameMetadata(games: {[id: string]: GameMetadata}) {
+        for (const gameId in this.items) {
+            if (!(gameId in games)) {
+                delete this.items[gameId];
+            }
+        }
+
         for (const [id, metadata] of Object.entries(games)) {
             if (id in this.items) {
                 this.items[id].metadata = metadata;

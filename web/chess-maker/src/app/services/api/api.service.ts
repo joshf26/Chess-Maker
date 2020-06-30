@@ -17,11 +17,12 @@ import {
     Vector2
 } from "../game/game.service";
 import {
-    RawFocusGameParameters, RawOfferPliesParameters, RawSetPlayerParameters,
+    RawFocusGameParameters, RawOfferPliesParameters, RawSetPlayerParameters, RawShowErrorParameters,
     RawUpdateGameDataParameters, RawUpdateGameMetadataParameters,
     RawUpdatePackDataParameters, RawUpdatePlayersParameters
 } from "./parameter-types";
 import {Player, PlayerService} from "../player/player.service";
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 @Injectable({
     providedIn: 'root',
@@ -53,6 +54,7 @@ export class ApiService {
         private gameService: GameService,
         private packService: PackService,
         private playerService: PlayerService,
+        private snackBar: MatSnackBar,
     ) {
         this.handlers.updatePackData = packService.updatePackData.bind(packService);
         this.handlers.updatePlayers = playerService.updatePlayers.bind(playerService);
@@ -203,6 +205,14 @@ export class ApiService {
         ));
     }
 
+    private showError(parameters: RawShowErrorParameters): void {
+        this.snackBar.open(parameters.message, 'Ok', {
+            duration: 5000,
+            horizontalPosition: 'end',
+            panelClass: 'error',
+        });
+    }
+
     private offerPlies(parameters: RawOfferPliesParameters): void {
         const from = new Vector2(parameters.from_row, parameters.from_col);
         const to = new Vector2(parameters.to_row, parameters.to_col);
@@ -275,6 +285,7 @@ export class ApiService {
         this.getCommand('update_players').subscribe(this.updatePlayers.bind(this));
         this.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
         this.getCommand('update_game_data').subscribe(this.updateGameData.bind(this));
+        this.getCommand('show_error').subscribe(this.showError.bind(this));
         this.getCommand('offer_plies').subscribe(this.offerPlies.bind(this));
     }
 

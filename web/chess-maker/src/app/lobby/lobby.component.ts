@@ -50,11 +50,9 @@ export class LobbyComponent {
         public colorService: ColorService,
         private changeDetectorRef: ChangeDetectorRef,
         private router: Router,
-        private snackBar: MatSnackBar,
     ) {
         apiService.handlers.offerPlies = this.offerPlies.bind(this);
         apiService.handlers.focusGame = this.showGame.bind(this);
-        apiService.getCommand('error').subscribe(this.error.bind(this));
     }
 
     private updateAvailableColors(): void {
@@ -76,14 +74,6 @@ export class LobbyComponent {
                 to: to,
                 plies: plies,
             },
-        });
-    }
-
-    error(parameters: {[key: string]: any}): void {
-        this.snackBar.open(parameters.message, 'Ok', {
-            duration: 5000,
-            horizontalPosition: 'end',
-            panelClass: 'error',
         });
     }
 

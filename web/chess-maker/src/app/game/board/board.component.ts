@@ -174,7 +174,7 @@ export class BoardComponent implements OnInit, OnChanges {
 
         // Inventory
         this.inventorySurface.context.clearRect(0, 0, this.inventorySurface.canvas.width, this.inventorySurface.canvas.height);
-        this.inventorySurface.context.font = '20px Arial';
+        this.inventorySurface.context.font = '15px Arial';
         this.inventorySurface.context.fillStyle = 'white';
         for (const [index, piece] of this.inventory.entries()) {
             const image = piece.type.images[piece.color];
