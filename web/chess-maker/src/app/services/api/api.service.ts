@@ -197,7 +197,7 @@ export class ApiService {
             ));
         }
 
-        const winnerData = new WinnerData(parameters.winners.colors, parameters.winners.reason);
+        const winnerData = parameters.winners ? new WinnerData(parameters.winners.colors, parameters.winners.reason) : null;
 
         this.handlers.updateGameData(parameters.id, new GameData(
             pieces,

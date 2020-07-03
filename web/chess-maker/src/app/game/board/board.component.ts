@@ -205,7 +205,7 @@ export class BoardComponent implements OnInit, OnChanges {
 
         this.updateAndCenter();
 
-        fromEvent(window, 'resize').pipe(debounceTime(200)).subscribe(this.updateAndCenter);
+        fromEvent(window, 'resize').pipe(debounceTime(200)).subscribe(this.updateAndCenter.bind(this));
     }
 
     ngOnChanges(changes: SimpleChanges): void {
