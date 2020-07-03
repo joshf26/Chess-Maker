@@ -9,6 +9,8 @@ import {CreateGameDialog} from "./create-game-dialog.component";
 import {Game, GameService, Ply, Vector2} from "../services/game/game.service";
 import {Player, PlayerService} from "../services/player/player.service";
 import {GameComponent} from "../game/game.component";
+import {SidebarService} from "../services/sidebar/sidebar.service";
+import {MatSidenav} from "@angular/material/sidenav";
 
 export interface CreateGameDialogData {
     displayName: string,
@@ -30,9 +32,10 @@ export interface SelectPlyDialogData {
     templateUrl: './lobby.component.html',
     styleUrls: ['./lobby.component.less'],
 })
-export class LobbyComponent {
+export class LobbyComponent implements OnInit {
     @ViewChild('playersComponent') private playersComponent: PlayersComponent;
     @ViewChild('gameComponent') gameComponent: GameComponent;
+    @ViewChild('sidebar') sidebar: MatSidenav;
     availableColors: number[];
     players: Player[];
     hasNotification: {[key: string]: boolean} = {};
@@ -45,11 +48,18 @@ export class LobbyComponent {
         public gameService: GameService,
         public playerService: PlayerService,
         public colorService: ColorService,
+        public sidebarService: SidebarService,
         private changeDetectorRef: ChangeDetectorRef,
         private router: Router,
     ) {
         apiService.handlers.offerPlies = this.offerPlies.bind(this);
         apiService.handlers.focusGame = this.showGame.bind(this);
+    }
+
+    ngOnInit() {}
+
+    ngAfterViewInit() {
+        this.sidebarService.registerSidenav(this.sidebar);
     }
 
     private updateAvailableColors(): void {

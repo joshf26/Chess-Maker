@@ -4,6 +4,7 @@ import {PlayerService} from "../services/player/player.service";
 import {ApiService} from "../services/api/api.service";
 import {DomSanitizer} from "@angular/platform-browser";
 import {BoardComponent, Move, Place} from "./board/board.component";
+import {SidebarService} from "../services/sidebar/sidebar.service";
 
 @Component({
     selector: 'app-game',
@@ -22,10 +23,19 @@ export class GameComponent {
         public playerService: PlayerService,
         public apiService: ApiService,
         public sanitizer: DomSanitizer,
+        public sidebarService: SidebarService,
     ) {}
 
-    rotate() {
+    rotateBoardLeft() {
+        this.direction = (this.direction + 7) % 8;
+    }
+
+    rotateBoardRight() {
         this.direction = (this.direction + 1) % 8;
+    }
+
+    centerBoard() {
+        this.board.updateAndCenter();
     }
 
     move(move: Move) {

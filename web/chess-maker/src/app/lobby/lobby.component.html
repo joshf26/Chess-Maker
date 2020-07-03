@@ -1,5 +1,5 @@
 <mat-sidenav-container>
-    <mat-sidenav #sidenav
+    <mat-sidenav #sidebar
                  mode="side"
                  opened
                  (opened)="selectedGame && gameComponent.board.updateAndCenter()"
@@ -41,7 +41,8 @@
                         color="warn">Disconnect</button>
                 <button mat-raised-button
                         color="accent"
-                        (click)="sidenav.toggle()">Hide Sidebar</button>
+                        *ngIf="selectedGame"
+                        (click)="sidebarService.close()">Hide Sidebar</button>
             </div>
         </div>
     </mat-sidenav>
@@ -53,6 +54,7 @@
         <div *ngIf="!selectedGame" class="full-center center">
             <h1>Welcome to Chess Maker</h1>
             <p>Create or select a game on the left to get started.</p>
+            <button mat-raised-button color="primary" *ngIf="!sidebarService.isOpen()" (click)="sidebarService.open()">Show Sidebar</button>
         </div>
         <mat-card id="control-box" *ngIf="selectedGame && (!selectedGame.playerInGame(playerService.currentPlayer) || selectedGame.data.winnerData != null)">
             <mat-card-content>
