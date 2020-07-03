@@ -54,9 +54,9 @@
             <h1>Welcome to Chess Maker</h1>
             <p>Create or select a game on the left to get started.</p>
         </div>
-        <mat-card id="control-box" *ngIf="(selectedGame && !selectedGame.playerInGame(playerService.currentPlayer)) || winnerData != null">
+        <mat-card id="control-box" *ngIf="selectedGame && (!selectedGame.playerInGame(playerService.currentPlayer) || selectedGame.data.winnerData != null)">
             <mat-card-content>
-                <ng-template [ngIf]="winnerData == null">
+                <ng-template [ngIf]="selectedGame.data.winnerData == null">
                     <h1>{{selectedGame.playerCount() == selectedGame.metadata.controller.colors.length ? 'Spectating' : 'Join As'}}</h1>
                     <mat-chip-list>
                         <mat-chip *ngFor="let color of availableColors"
@@ -66,9 +66,9 @@
                         </mat-chip>
                     </mat-chip-list>
                 </ng-template>
-                <ng-template [ngIf]="winnerData != null">
-                    <h1>{{winnerString(winnerData.colors)}}</h1>
-                    <p>{{winnerData.reason}}</p>
+                <ng-template [ngIf]="selectedGame.data.winnerData != null">
+                    <h1>{{winnerString(selectedGame.data.winnerData.colors)}}</h1>
+                    <p>{{selectedGame.data.winnerData.reason}}</p>
                 </ng-template>
             </mat-card-content>
         </mat-card>

@@ -31,11 +31,6 @@ export type Place = {
     to: Vector2,
 }
 
-export interface WinnerData {
-    colors: number[],
-    reason: string,
-}
-
 class Surface {
     public canvas: OffscreenCanvas;
     public context: OffscreenCanvasRenderingContext2D;

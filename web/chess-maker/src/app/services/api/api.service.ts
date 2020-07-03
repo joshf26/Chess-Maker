@@ -14,7 +14,7 @@ import {
     InventoryItem,
     Piece,
     Ply,
-    Vector2
+    Vector2, WinnerData
 } from "../game/game.service";
 import {
     RawFocusGameParameters, RawOfferPliesParameters, RawSetPlayerParameters, RawShowErrorParameters,
@@ -197,11 +197,14 @@ export class ApiService {
             ));
         }
 
+        const winnerData = new WinnerData(parameters.winners.colors, parameters.winners.reason);
+
         this.handlers.updateGameData(parameters.id, new GameData(
             pieces,
             decorators,
             infoElements,
             inventoryItems,
+            winnerData,
         ));
     }
 

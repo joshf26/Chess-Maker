@@ -78,6 +78,13 @@ export class Ply {
     ) {}
 }
 
+export class WinnerData {
+    constructor(
+        public colors: number[],
+        public reason: string,
+    ) {}
+}
+
 export class GameMetadata {
     constructor(
         public displayName: string,
@@ -94,6 +101,7 @@ export class GameData {
         public decorators: Decorator[],
         public infoElements: InfoElement[],
         public inventoryItems: InventoryItem[],
+        public winnerData?: WinnerData,
     ) {}
 }
 

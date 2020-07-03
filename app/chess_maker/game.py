@@ -245,6 +245,7 @@ class Game:
                 break
 
     def winner(self, colors: List[Color], reason: str = None) -> None:
+        print('WINNER ANNOUNCED!')
         self.winners = WinnerData(colors, reason)
 
     @property

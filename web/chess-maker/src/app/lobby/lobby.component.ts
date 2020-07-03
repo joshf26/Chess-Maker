@@ -6,9 +6,7 @@ import {Router} from '@angular/router';
 import {PlayersComponent} from "../players/players.component";
 import {Color, ColorService} from "../services/color/color.service";
 import {CreateGameDialog} from "./create-game-dialog.component";
-import {MatSnackBar} from "@angular/material/snack-bar";
 import {Game, GameService, Ply, Vector2} from "../services/game/game.service";
-import {WinnerData} from "../game/board/board.component";
 import {Player, PlayerService} from "../services/player/player.service";
 import {GameComponent} from "../game/game.component";
 
@@ -39,7 +37,6 @@ export class LobbyComponent {
     players: Player[];
     hasNotification: {[key: string]: boolean} = {};
     selectedGame: Game;
-    winnerData?: WinnerData = null;
 
     constructor(
         public createGameDialog: MatDialog,
@@ -109,10 +106,6 @@ export class LobbyComponent {
 
     joinGame(game: Game, color: Color): void {
         this.apiService.joinGame(game, color);
-    }
-
-    onWinner(winnerData: WinnerData): void {
-        this.winnerData = winnerData;
     }
 
     winnerString(colors: number[]): string {

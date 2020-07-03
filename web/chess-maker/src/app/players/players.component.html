@@ -14,7 +14,7 @@
         <p class="no-players" *ngIf="!hasPlayers()">No players are in this game yet.</p>
         <mat-selection-list [multiple]="false" *ngIf="hasPlayers()">
             <mat-list-option *ngFor="let gamePlayer of gamePlayers | keyvalue">
-                {{gamePlayer.value.displayName}} (<span [ngStyle]="{color: colorService.names[gamePlayer.key], display: 'contents'}">{{colorService.names[gamePlayer.key]}}</span>)
+                {{gamePlayer.value.displayName}} (<span [ngStyle]="{color: colorService.names[gamePlayer.key], display: 'contents', fontWeight: 'bold'}">{{colorService.names[gamePlayer.key]}}</span>)
             </mat-list-option>
         </mat-selection-list>
     </mat-tab>
