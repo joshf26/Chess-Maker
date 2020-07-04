@@ -28,7 +28,7 @@ import {MatSnackBar} from "@angular/material/snack-bar";
     providedIn: 'root',
 })
 export class ApiService {
-    private socket: WebSocketSubject<unknown>;
+    private socket?: WebSocketSubject<unknown>;
     private commands: Observable<unknown>;
 
     public handlers: {
@@ -294,6 +294,11 @@ export class ApiService {
 
     disconnect(): void {
         this.socket.complete();
+        this.socket = null;
+    }
+
+    isConnected(): boolean {
+        return !!this.socket;
     }
 
     // TODO: This could be a decorator.

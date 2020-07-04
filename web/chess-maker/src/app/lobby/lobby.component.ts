@@ -56,7 +56,11 @@ export class LobbyComponent implements OnInit {
         apiService.handlers.focusGame = this.showGame.bind(this);
     }
 
-    ngOnInit() {}
+    ngOnInit() {
+        if (!this.apiService.isConnected()) {
+            this.router.navigate(['/']);
+        }
+    }
 
     ngAfterViewInit() {
         this.sidebarService.registerSidenav(this.sidebar);
