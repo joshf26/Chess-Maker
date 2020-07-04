@@ -12,7 +12,7 @@ import {
 import {fromEvent} from "rxjs";
 import {debounceTime} from "rxjs/operators";
 import {MatSnackBar} from "@angular/material/snack-bar";
-import {Direction, Vector2, Decorator, InventoryItem, Piece} from "../../services/game/game.service";
+import {Direction, Vector2, Decorator, InventoryItem, Piece, RenderData} from "../../services/game/game.service";
 
 const EVEN_TILE_COLOR = '#A85738';
 const ODD_TILE_COLOR = '#F3C1A9';
@@ -51,7 +51,7 @@ export class BoardComponent implements OnInit, OnChanges {
     @Input('decorators') private decorators: Decorator[];
     @Input('inventory') private inventory: InventoryItem[];
     @Input('boardSize') private boardSize: Vector2;
-    @Input('direction') private direction: Direction;
+    @Input('renderData') private renderData: RenderData;
     @Output('move') private move = new EventEmitter<Move>();
     @Output('place') private place = new EventEmitter<Place>();
     @ViewChild('canvas') private canvasElement: ElementRef<HTMLElement>;
@@ -61,10 +61,6 @@ export class BoardComponent implements OnInit, OnChanges {
     private boardSurface: Surface;
     private piecesSurface: Surface;
     private inventorySurface: Surface;
-
-    positionX = 0;
-    positionY = 0;
-    scale = 40;
 
     mousePositionX = 0;
     mousePositionY = 0;
@@ -78,7 +74,7 @@ export class BoardComponent implements OnInit, OnChanges {
     constructor(private snackBar: MatSnackBar) {}
 
     private rotateVector(x: number, y: number): number[] {
-        const radAngle = -this.direction * Math.PI / 4;
+        const radAngle = -this.renderData.direction * Math.PI / 4;
 
         return [
             x * Math.cos(radAngle) - y * Math.sin(radAngle),
@@ -105,32 +101,20 @@ export class BoardComponent implements OnInit, OnChanges {
         if (fixed) {
             context.drawImage(image, -image.width / 2, -image.height / 2, image.width, image.height);
         } else {
-            context.drawImage(image, -this.scale / 2, -this.scale / 2, this.scale, this.scale);
+            context.drawImage(image, -this.renderData.scale / 2, -this.renderData.scale / 2, this.renderData.scale, this.renderData.scale);
         }
 
         context.rotate(-rotationAmount);
         context.translate(-x, -y);
     }
 
-    private centerBoard(): void {
-        const [x, y] = this.rotateVector(
-            (this.canvas.width) / 2,
-            (this.canvas.height) / 2,
-        )
-
-        this.positionX = x - this.boardSize.col * this.scale / 2;
-        this.positionY = y - this.boardSize.row * this.scale / 2;
-
-        this.draw();
-    }
-
     private updateBackgroundCanvases(): void {
         this.canvas.width = this.canvas.offsetWidth;
         this.canvas.height = this.canvas.offsetHeight;
-        this.boardSurface.canvas.width = this.scale * this.boardSize.col;
-        this.boardSurface.canvas.height = this.scale * this.boardSize.row;
-        this.piecesSurface.canvas.width = this.scale * this.boardSize.col;
-        this.piecesSurface.canvas.height = this.scale * this.boardSize.row;
+        this.boardSurface.canvas.width = this.renderData.scale * this.boardSize.col;
+        this.boardSurface.canvas.height = this.renderData.scale * this.boardSize.row;
+        this.piecesSurface.canvas.width = this.renderData.scale * this.boardSize.col;
+        this.piecesSurface.canvas.height = this.renderData.scale * this.boardSize.row;
         this.inventorySurface.canvas.width = PIECE_SIZE;
         this.inventorySurface.canvas.height = this.canvas.offsetHeight;
 
@@ -140,8 +124,8 @@ export class BoardComponent implements OnInit, OnChanges {
             this.drawImage(
                 this.piecesSurface.context,
                 piece.type.images[piece.color],
-                (piece.pos.col + 0.5) * this.scale,
-                (piece.pos.row + 0.5) * this.scale,
+                (piece.pos.col + 0.5) * this.renderData.scale,
+                (piece.pos.row + 0.5) * this.renderData.scale,
                 piece.direction * Math.PI / 4,
             );
         }
@@ -151,7 +135,7 @@ export class BoardComponent implements OnInit, OnChanges {
         for (let row = 0; row < this.boardSize.row; ++row) {
             for (let col = 0; col < this.boardSize.col; ++col) {
                 this.boardSurface.context.fillStyle = (col % 2 == row % 2) ? ODD_TILE_COLOR : EVEN_TILE_COLOR;
-                this.boardSurface.context.fillRect(col * this.scale, row * this.scale, this.scale, this.scale);
+                this.boardSurface.context.fillRect(col * this.renderData.scale, row * this.renderData.scale, this.renderData.scale, this.renderData.scale);
             }
         }
 
@@ -160,8 +144,8 @@ export class BoardComponent implements OnInit, OnChanges {
                 this.drawImage(
                     this.boardSurface.context,
                     decorator.type.image,
-                    (decorator.pos.col + 0.5) * this.scale,
-                    (decorator.pos.row + 0.5) * this.scale,
+                    (decorator.pos.col + 0.5) * this.renderData.scale,
+                    (decorator.pos.row + 0.5) * this.renderData.scale,
                     0,
                 )
             }
@@ -173,7 +157,7 @@ export class BoardComponent implements OnInit, OnChanges {
         this.inventorySurface.context.fillStyle = 'white';
         for (const [index, piece] of this.inventory.entries()) {
             const image = piece.type.images[piece.color];
-            const rotation = ((piece.direction + this.direction) % 8) * Math.PI / 4;
+            const rotation = ((piece.direction + this.renderData.direction) % 8) * Math.PI / 4;
             this.drawImage(this.inventorySurface.context, image, PIECE_SIZE / 2, index * PIECE_SIZE + PIECE_SIZE / 2, rotation, true);
             this.inventorySurface.context.fillText(piece.label, 0, (index + 1) * PIECE_SIZE);
         }
@@ -181,14 +165,14 @@ export class BoardComponent implements OnInit, OnChanges {
 
     private zoom(delta: number, centerX: number, centerY: number): void {
         const factor = delta > 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
-        const deltaScale = (this.scale * factor) - this.scale;
+        const deltaScale = (this.renderData.scale * factor) - this.renderData.scale;
 
-        const newScale = this.scale + deltaScale;
+        const newScale = this.renderData.scale + deltaScale;
         if (newScale < MIN_ZOOM || newScale > MAX_ZOOM) return;
 
-        this.scale += deltaScale;
-        this.positionX -= centerX * deltaScale;
-        this.positionY -= centerY * deltaScale;
+        this.renderData.scale += deltaScale;
+        this.renderData.position.col -= centerX * deltaScale;
+        this.renderData.position.row -= centerY * deltaScale;
 
         this.updateBackgroundCanvases();
         this.draw();
@@ -212,12 +196,25 @@ export class BoardComponent implements OnInit, OnChanges {
         if (this.canvas) {
             this.updateBackgroundCanvases();
 
-            if ('direction' in changes) {
+            if (this.renderData.firstDraw) {
                 this.centerBoard();
-            } else {
-                this.draw();
+                this.renderData.firstDraw = false;
             }
+
+            this.draw();
         }
+    }
+
+    centerBoard(): void {
+        const [x, y] = this.rotateVector(
+            (this.canvas.width) / 2,
+            (this.canvas.height) / 2,
+        )
+
+        this.renderData.position.col = x - this.boardSize.col * this.renderData.scale / 2;
+        this.renderData.position.row = y - this.boardSize.row * this.renderData.scale / 2;
+
+        this.draw();
     }
 
     updateAndCenter() {
@@ -306,15 +303,15 @@ export class BoardComponent implements OnInit, OnChanges {
     mouseMove(event: MouseEvent): void {
         const [offsetX, offsetY] = this.rotateVector(event.offsetX, event.offsetY);
 
-        this.mousePositionX = (offsetX - this.positionX) / this.scale;
-        this.mousePositionY = (offsetY - this.positionY) / this.scale;
+        this.mousePositionX = (offsetX - this.renderData.position.col) / this.renderData.scale;
+        this.mousePositionY = (offsetY - this.renderData.position.row) / this.renderData.scale;
 
         if (this.panning) {
             const deltaX = this.panX - offsetX;
             const deltaY = this.panY - offsetY;
 
-            this.positionX -= deltaX;
-            this.positionY -= deltaY;
+            this.renderData.position.col -= deltaX;
+            this.renderData.position.row -= deltaY;
 
             this.updatePan(offsetX, offsetY);
         }
@@ -335,8 +332,8 @@ export class BoardComponent implements OnInit, OnChanges {
         const [offsetX, offsetY] = this.rotateVector(this.canvas.width / 2, this.canvas.height / 2);
         this.zoom(
             delta,
-            (offsetX - this.positionX) / this.scale,
-            (offsetY - this.positionY) / this.scale,
+            (offsetX - this.renderData.position.col) / this.renderData.scale,
+            (offsetY - this.renderData.position.row) / this.renderData.scale,
         )
     }
 
@@ -345,22 +342,22 @@ export class BoardComponent implements OnInit, OnChanges {
             this.context.fillStyle = '#323232';
             this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-            this.context.rotate(this.direction * Math.PI / 4);
+            this.context.rotate(this.renderData.direction * Math.PI / 4);
 
-            this.context.drawImage(this.boardSurface.canvas, this.positionX, this.positionY);
-            this.context.drawImage(this.piecesSurface.canvas, this.positionX, this.positionY);
+            this.context.drawImage(this.boardSurface.canvas, this.renderData.position.col, this.renderData.position.row);
+            this.context.drawImage(this.piecesSurface.canvas, this.renderData.position.col, this.renderData.position.row);
 
             if (this.dragging) {
                 this.drawImage(
                     this.context,
                     this.draggingPiece.type.images[this.draggingPiece.color],
-                    this.positionX + this.mousePositionX * this.scale,
-                    this.positionY + this.mousePositionY * this.scale,
+                    this.renderData.position.col + this.mousePositionX * this.renderData.scale,
+                    this.renderData.position.row + this.mousePositionY * this.renderData.scale,
                     this.draggingPiece.direction * Math.PI / 4,
                 );
             }
 
-            this.context.rotate(-this.direction * Math.PI / 4);
+            this.context.rotate(-this.renderData.direction * Math.PI / 4);
             this.context.drawImage(this.inventorySurface.canvas, this.canvas.width - PIECE_SIZE, 0);
         })
     }

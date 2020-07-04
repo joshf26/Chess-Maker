@@ -27,15 +27,17 @@ export class GameComponent {
     ) {}
 
     rotateBoardLeft() {
-        this.direction = (this.direction + 7) % 8;
+        this.game.renderData.direction = (this.game.renderData.direction + 7) % 8;
+        this.centerBoard();
     }
 
     rotateBoardRight() {
-        this.direction = (this.direction + 1) % 8;
+        this.game.renderData.direction = (this.game.renderData.direction + 1) % 8;
+        this.centerBoard();
     }
 
     centerBoard() {
-        this.board.updateAndCenter();
+        this.board.centerBoard();
     }
 
     move(move: Move) {

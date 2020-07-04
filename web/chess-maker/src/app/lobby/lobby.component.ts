@@ -36,6 +36,7 @@ export class LobbyComponent implements OnInit {
     @ViewChild('playersComponent') private playersComponent: PlayersComponent;
     @ViewChild('gameComponent') gameComponent: GameComponent;
     @ViewChild('sidebar') sidebar: MatSidenav;
+
     availableColors: number[];
     players: Player[];
     hasNotification: {[key: string]: boolean} = {};

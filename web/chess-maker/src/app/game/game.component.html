@@ -3,7 +3,7 @@
            [decorators]="game.data.decorators"
            [inventory]="game.data.inventoryItems"
            [boardSize]="game.metadata.controller.boardSize"
-           [direction]="direction"
+           [renderData]="game.renderData"
            (move)="move($event)"
            (place)="place($event)"></app-board>
 

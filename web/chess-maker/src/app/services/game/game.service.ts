@@ -105,11 +105,22 @@ export class GameData {
     ) {}
 }
 
+export class RenderData {
+    firstDraw = true;
+
+    constructor(
+        public position: Vector2,
+        public direction: Direction,
+        public scale: number,
+    ) {}
+}
+
 export class Game implements Identifiable {
     constructor(
         public id: string,
         public metadata: GameMetadata,
         public data: GameData,
+        public renderData: RenderData,
     ) {}
 
     playerCount(): number {
@@ -144,6 +155,7 @@ export class GameService extends ItemService<Game> {
                     id,
                     metadata,
                     new GameData([], [], [], []),
+                    new RenderData(new Vector2(0, 0), Direction.NORTH, 40),
                 )
             }
         }
