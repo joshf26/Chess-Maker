@@ -1,0 +1,20 @@
+<app-sidebar-card header="Games" (onNew)="newGame.emit()">
+    <mat-tab-group dynamicHeight>
+        <mat-tab label="Public">
+            <mat-accordion>
+                <mat-expansion-panel *ngFor="let game of gameService.values()" (opened)="showGame.emit(game)" (closed)="game == selectedGame && showGame.emit()" hideToggle>
+                    <mat-expansion-panel-header>
+                        <mat-panel-title>{{game.metadata.displayName}}</mat-panel-title>
+                        <mat-panel-description>{{game.metadata.controller.displayName}} ({{game.playerCount()}}/{{game.metadata.controller.colors.length}})</mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <mat-chip-list>
+                        <mat-chip (click)="deleteGame.emit()">Delete</mat-chip>
+                    </mat-chip-list>
+                </mat-expansion-panel>
+            </mat-accordion>
+        </mat-tab>
+        <mat-tab label="My Games">
+            <!-- TODO -->
+        </mat-tab>
+    </mat-tab-group>
+</app-sidebar-card>

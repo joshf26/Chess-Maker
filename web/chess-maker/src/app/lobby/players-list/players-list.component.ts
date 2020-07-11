@@ -1,13 +1,13 @@
 import {Component, Input} from '@angular/core';
-import {Color, ColorService} from "../services/color/color.service";
-import {Player} from "../services/player/player.service";
+import {Player} from "../../services/player/player.service";
+import {Color, ColorService} from "../../services/color/color.service";
 
 @Component({
-    selector: 'app-players',
-    templateUrl: './players.component.html',
-    styleUrls: ['./players.component.less'],
+    selector: 'app-players-list',
+    templateUrl: './players-list.component.html',
+    styleUrls: ['./players-list.component.less'],
 })
-export class PlayersComponent {
+export class PlayersListComponent {
     @Input('serverPlayers') serverPlayers: Player[];
     @Input('gamePlayers') gamePlayers: {[color in Color]?: Player};
     @Input('disableGameTab') disableGameTab: boolean;

@@ -3,7 +3,7 @@
 
     <mat-form-field>
         <mat-label>Name</mat-label>
-        <input required matInput [(ngModel)]="data.displayName">
+        <input required matInput autocomplete="off" [(ngModel)]="data.displayName">
     </mat-form-field>
     <mat-checkbox [(ngModel)]="data.public"
                   required
@@ -13,7 +13,7 @@
     <mat-form-field *ngIf="!data.public"
                     matTooltip="Since your game is not public, you need to set a password. Give this password to the people you want in your game.">
         <mat-label>Password</mat-label>
-        <input type="password" autocomplete="off" required matInput>
+        <input required matInput type="password" autocomplete="off">
     </mat-form-field>
 
     <br>

@@ -1,16 +1,17 @@
-import {ChangeDetectorRef, Component, Inject, OnInit, ViewChild} from '@angular/core';
+import {ChangeDetectorRef, Component, OnInit, ViewChild} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
-import {Controller, Pack, PackService} from '../services/pack/pack.service';
-import {MAT_DIALOG_DATA, MatDialog} from '@angular/material/dialog';
+import {Controller, Pack} from '../services/pack/pack.service';
+import {MatDialog} from '@angular/material/dialog';
 import {Router} from '@angular/router';
-import {PlayersComponent} from "../players/players.component";
 import {Color, ColorService} from "../services/color/color.service";
-import {CreateGameDialog} from "./create-game-dialog.component";
+import {CreateGameDialog} from "./create-game-dialog/create-game-dialog.component";
 import {Game, GameService, Ply, Vector2} from "../services/game/game.service";
 import {Player, PlayerService} from "../services/player/player.service";
 import {GameComponent} from "../game/game.component";
 import {SidebarService} from "../services/sidebar/sidebar.service";
 import {MatSidenav} from "@angular/material/sidenav";
+import {PlayersListComponent} from "./players-list/players-list.component";
+import {SelectPlyDialog} from "./select-ply-dialog/select-ply-dialog.component";
 
 export interface CreateGameDialogData {
     displayName: string,
@@ -33,20 +34,18 @@ export interface SelectPlyDialogData {
     styleUrls: ['./lobby.component.less'],
 })
 export class LobbyComponent implements OnInit {
-    @ViewChild('playersComponent') private playersComponent: PlayersComponent;
+    @ViewChild('playersComponent') private playersComponent: PlayersListComponent;
     @ViewChild('gameComponent') gameComponent: GameComponent;
     @ViewChild('sidebar') sidebar: MatSidenav;
 
     availableColors: number[];
     players: Player[];
-    hasNotification: {[key: string]: boolean} = {};
-    selectedGame: Game;
+    selectedGame?: Game;
 
     constructor(
         public createGameDialog: MatDialog,
         public selectPlyDialog: MatDialog,
         public apiService: ApiService,
-        public gameService: GameService,
         public playerService: PlayerService,
         public colorService: ColorService,
         public sidebarService: SidebarService,
@@ -94,10 +93,6 @@ export class LobbyComponent implements OnInit {
         this.router.navigate(['/']);
     }
 
-    notify(gameId: string) {
-        this.hasNotification[gameId] = true;
-    }
-
     createGame(): void {
         this.createGameDialog.open(CreateGameDialog, {
             data: {
@@ -107,10 +102,11 @@ export class LobbyComponent implements OnInit {
         });
     }
 
-    showGame(game: Game): void {
-        this.apiService.showGame(game);
+    showGame(game?: Game): void {
+        if (game) {
+            this.apiService.showGame(game);
+        }
 
-        this.hasNotification[game.id] = false;
         this.selectedGame = game;
         this.updateAvailableColors();
         this.changeDetectorRef.detectChanges();
@@ -146,22 +142,3 @@ export class LobbyComponent implements OnInit {
     }
 }
 
-@Component({
-    selector: 'select-ply-dialog',
-    templateUrl: 'select-ply.dialog.html',
-})
-export class SelectPlyDialog {
-    constructor(
-        public api: ApiService,
-        @Inject(MAT_DIALOG_DATA) public data: SelectPlyDialogData,
-    ) {}
-
-    selectPly(ply: Ply): void {
-        this.api.submitPly(
-            this.data.game,
-            this.data.from,
-            this.data.to,
-            ply,
-        );
-    }
-}

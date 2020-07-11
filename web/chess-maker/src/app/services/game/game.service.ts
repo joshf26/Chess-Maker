@@ -130,10 +130,6 @@ export class Game implements Identifiable {
     playerInGame(player: Player): boolean {
         return Object.values(this.metadata.players).includes(player);
     }
-
-    toString(): string {
-        return `A <strong>${this.metadata.controller.displayName}</strong> game with <strong>${this.playerCount()}/${this.metadata.controller.colors.length}</strong> players.`
-    }
 }
 
 @Injectable({

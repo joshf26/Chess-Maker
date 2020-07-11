@@ -5,36 +5,14 @@
                  (opened)="selectedGame && gameComponent.board.updateAndCenter()"
                  (closed)="selectedGame && gameComponent.board.updateAndCenter()">
         <div class="padded">
-            <mat-card class="darker">
-                <mat-card-content>
-                    <app-players #playersComponent
-                                 [serverPlayers]="players"
-                                 [gamePlayers]="selectedGame ? selectedGame.metadata.players : []"
-                                 [disableGameTab]="!selectedGame"></app-players>
-                </mat-card-content>
-            </mat-card>
-            <br>
-            <div class="center">
-                <button mat-raised-button color="primary" (click)="createGame()">New Game</button>
-            </div>
-            <br>
-            <ng-template ngFor let-game [ngForOf]="gameService.values()">
-                <button mat-mini-fab
-                        color="accent"
-                        class="delete-game-button"
-                        *ngIf="game.creator == playerService.currentPlayer"
-                        (click)="apiService.deleteGame(game)">
-                    <mat-icon>close</mat-icon>
-                </button>
-                <mat-card (click)="showGame(game)"
-                          [ngStyle]="{backgroundColor: game == selectedGame ? '#c2185b' : '#303030'}">
-                    <mat-card-content>
-                        <h1>{{hasNotification[game.id] ? '*' : ''}}{{game.metadata.displayName}}</h1>
-                        <ng-template [ngIf]="game.metadata.creator">Created by {{game.metadata.creator.displayName}}<br></ng-template>
-                        <em [innerHTML]="game"></em>
-                    </mat-card-content>
-                </mat-card>
-            </ng-template>
+            <app-players-list #playersComponent
+                              [serverPlayers]="playerService.values()"
+                              [gamePlayers]="selectedGame ? selectedGame.metadata.players : []"
+                              [disableGameTab]="!selectedGame"></app-players-list>
+            <app-games-list [selectedGame]="selectedGame"
+                            (showGame)="showGame($event)"
+                            (newGame)="createGame()"
+                            (deleteGame)="apiService.deleteGame(selectedGame)"></app-games-list>
             <div class="sidenav-actions">
                 <button mat-raised-button
                         (click)="disconnect()"

@@ -1,0 +1,11 @@
+<mat-card class="darker">
+    <button mat-mini-fab
+            color="primary"
+            class="new-button"
+            *ngIf="onNew.observers.length > 0"
+            (click)="onNew.emit()"><mat-icon>add</mat-icon></button>
+    <mat-card-content>
+        <h2 class="header">{{header}}</h2>
+        <ng-content></ng-content>
+    </mat-card-content>
+</mat-card>

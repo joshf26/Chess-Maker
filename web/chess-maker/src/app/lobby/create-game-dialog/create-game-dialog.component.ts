@@ -1,8 +1,8 @@
 import {Component, Inject} from "@angular/core";
-import {PackService} from "../services/pack/pack.service";
-import {ApiService} from "../services/api/api.service";
+import {PackService} from "../../services/pack/pack.service";
+import {ApiService} from "../../services/api/api.service";
 import {MAT_DIALOG_DATA} from "@angular/material/dialog";
-import {CreateGameDialogData} from "./lobby.component";
+import {CreateGameDialogData} from "../lobby.component";
 
 @Component({
     selector: 'create-game-dialog',
