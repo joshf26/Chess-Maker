@@ -8,9 +8,9 @@ import {Color, ColorService} from "../../services/color/color.service";
     styleUrls: ['./players-list.component.less'],
 })
 export class PlayersListComponent {
-    @Input('serverPlayers') serverPlayers: Player[];
-    @Input('gamePlayers') gamePlayers: {[color in Color]?: Player};
-    @Input('disableGameTab') disableGameTab: boolean;
+    @Input() serverPlayers: Player[];
+    @Input() gamePlayers: {[color in Color]?: Player};
+    @Input() disableGameTab: boolean;
 
     selectedTab: number = 0;
 

@@ -1,20 +1,46 @@
 <app-sidebar-card header="Games" (onNew)="newGame.emit()">
-    <mat-tab-group dynamicHeight>
+    <mat-spinner *ngIf="loading"></mat-spinner>
+    <mat-tab-group *ngIf="!loading"
+                   dynamicHeight
+                   [(selectedIndex)]="selectedTab">
         <mat-tab label="Public">
             <mat-accordion>
-                <mat-expansion-panel *ngFor="let game of gameService.values()" (opened)="showGame.emit(game)" (closed)="game == selectedGame && showGame.emit()" hideToggle>
-                    <mat-expansion-panel-header>
-                        <mat-panel-title>{{game.metadata.displayName}}</mat-panel-title>
-                        <mat-panel-description>{{game.metadata.controller.displayName}} ({{game.playerCount()}}/{{game.metadata.controller.colors.length}})</mat-panel-description>
-                    </mat-expansion-panel-header>
-                    <mat-chip-list>
-                        <mat-chip (click)="deleteGame.emit()">Delete</mat-chip>
-                    </mat-chip-list>
-                </mat-expansion-panel>
+                <ng-container *ngFor="let game of gameService.values()">
+                    <mat-expansion-panel *ngIf="!game.playerInGame(playerService.currentPlayer)"
+                                         (opened)="game == gameService.selectedGame || showGame.emit(game)"
+                                         (closed)="game == gameService.selectedGame && showGame.emit()"
+                                         [expanded]="game == gameService.selectedGame"
+                                         hideToggle>
+                        <mat-expansion-panel-header>
+                            <mat-panel-title>{{game.metadata.displayName}}</mat-panel-title>
+                            <mat-panel-description>{{game.metadata.controller.displayName}} ({{game.playerCount()}}/{{game.metadata.controller.colors.length}})</mat-panel-description>
+                        </mat-expansion-panel-header>
+                        <mat-chip-list>
+                            <mat-chip (click)="deleteGame.emit()">Delete</mat-chip>
+                        </mat-chip-list>
+                    </mat-expansion-panel>
+                </ng-container>
             </mat-accordion>
         </mat-tab>
         <mat-tab label="My Games">
-            <!-- TODO -->
+            <mat-accordion>
+                <ng-container *ngFor="let game of gameService.values()">
+                    <mat-expansion-panel *ngIf="game.playerInGame(playerService.currentPlayer)"
+                                         (opened)="game == gameService.selectedGame || showGame.emit(game)"
+                                         (closed)="game == gameService.selectedGame && showGame.emit()"
+                                         [expanded]="game == gameService.selectedGame"
+                                         hideToggle>
+                        <mat-expansion-panel-header>
+                            <mat-panel-title>{{game.metadata.displayName}}</mat-panel-title>
+                            <mat-panel-description>{{game.metadata.controller.displayName}} ({{game.playerCount()}}/{{game.metadata.controller.colors.length}})</mat-panel-description>
+                        </mat-expansion-panel-header>
+                        <mat-chip-list>
+                            <mat-chip (click)="deleteGame.emit()">Delete</mat-chip>
+                            <mat-chip (click)="leaveGame.emit(this.game)">Leave Game</mat-chip>
+                        </mat-chip-list>
+                    </mat-expansion-panel>
+                </ng-container>
+            </mat-accordion>
         </mat-tab>
     </mat-tab-group>
 </app-sidebar-card>

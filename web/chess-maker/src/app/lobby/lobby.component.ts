@@ -12,6 +12,7 @@ import {SidebarService} from "../services/sidebar/sidebar.service";
 import {MatSidenav} from "@angular/material/sidenav";
 import {PlayersListComponent} from "./players-list/players-list.component";
 import {SelectPlyDialog} from "./select-ply-dialog/select-ply-dialog.component";
+import {GamesListComponent} from "./games-list/games-list.component";
 
 export interface CreateGameDialogData {
     displayName: string,
@@ -34,13 +35,13 @@ export interface SelectPlyDialogData {
     styleUrls: ['./lobby.component.less'],
 })
 export class LobbyComponent implements OnInit {
-    @ViewChild('playersComponent') private playersComponent: PlayersListComponent;
+    @ViewChild('playersListComponent') private playersListComponent: PlayersListComponent;
+    @ViewChild('gamesListComponent') gamesListComponent: GamesListComponent;
     @ViewChild('gameComponent') gameComponent: GameComponent;
     @ViewChild('sidebar') sidebar: MatSidenav;
 
     availableColors: number[];
     players: Player[];
-    selectedGame?: Game;
 
     constructor(
         public createGameDialog: MatDialog,
@@ -48,6 +49,7 @@ export class LobbyComponent implements OnInit {
         public apiService: ApiService,
         public playerService: PlayerService,
         public colorService: ColorService,
+        public gameService: GameService,
         public sidebarService: SidebarService,
         private changeDetectorRef: ChangeDetectorRef,
         private router: Router,
@@ -67,12 +69,12 @@ export class LobbyComponent implements OnInit {
     }
 
     private updateAvailableColors(): void {
-        if (!this.selectedGame) {
+        if (!this.gameService.selectedGame) {
             return;
         }
 
-        this.availableColors = [...this.selectedGame.metadata.controller.colors];
-        for (const color of Object.keys(this.selectedGame.metadata.players)) {
+        this.availableColors = [...this.gameService.selectedGame.metadata.controller.colors];
+        for (const color of Object.keys(this.gameService.selectedGame.metadata.players)) {
             this.availableColors.splice(this.availableColors.indexOf(Number(color)), 1);
         }
     }
@@ -80,7 +82,7 @@ export class LobbyComponent implements OnInit {
     private offerPlies(from: Vector2, to: Vector2, plies: Ply[]): void {
         this.selectPlyDialog.open(SelectPlyDialog, {
             data: {
-                game: this.selectedGame,
+                game: this.gameService.selectedGame,
                 from: from,
                 to: to,
                 plies: plies,
@@ -107,16 +109,32 @@ export class LobbyComponent implements OnInit {
             this.apiService.showGame(game);
         }
 
-        this.selectedGame = game;
+        this.gameService.selectedGame = game;
         this.updateAvailableColors();
         this.changeDetectorRef.detectChanges();
 
         // Switch to the "Game" tab.
-        this.playersComponent.selectedTab = 1;
+        this.playersListComponent.selectedTab = 1;
     }
 
     joinGame(game: Game, color: Color): void {
         this.apiService.joinGame(game, color);
+        this.gamesListComponent.loading = true;
+        setTimeout(() => {
+            // Switch to the "My Games" tab.
+            this.gamesListComponent.loading = false;
+            this.gamesListComponent.selectedTab = 1;
+        }, 500);
+    }
+
+    leaveGame(game: Game): void {
+        this.apiService.leaveGame(game);
+        this.gamesListComponent.loading = true;
+        setTimeout(() => {
+            // Switch to the "Public" tab.
+            this.gamesListComponent.loading = false;
+            this.gamesListComponent.selectedTab = 0;
+        }, 500);
     }
 
     winnerString(colors: number[]): string {

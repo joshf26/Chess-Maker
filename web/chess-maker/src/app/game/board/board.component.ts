@@ -47,13 +47,13 @@ class Surface {
     styleUrls: ['./board.component.less']
 })
 export class BoardComponent implements OnInit, OnChanges {
-    @Input('pieces') private pieces: Piece[];
-    @Input('decorators') private decorators: Decorator[];
-    @Input('inventory') private inventory: InventoryItem[];
-    @Input('boardSize') private boardSize: Vector2;
-    @Input('renderData') private renderData: RenderData;
-    @Output('move') private move = new EventEmitter<Move>();
-    @Output('place') private place = new EventEmitter<Place>();
+    @Input() private pieces: Piece[];
+    @Input() private decorators: Decorator[];
+    @Input() private inventory: InventoryItem[];
+    @Input() private boardSize: Vector2;
+    @Input() private renderData: RenderData;
+    @Output() private move = new EventEmitter<Move>();
+    @Output() private place = new EventEmitter<Place>();
     @ViewChild('canvas') private canvasElement: ElementRef<HTMLElement>;
 
     private canvas: HTMLCanvasElement;

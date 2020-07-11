@@ -23,7 +23,6 @@
 
 <div class="bottom-buttons">
     <button mat-raised-button *ngIf="!sidebarService.isOpen()" (click)="sidebarService.open()">Show Sidebar</button>
-    <button mat-raised-button (click)="leaveGame()" *ngIf="game && game.playerInGame(playerService.currentPlayer)">Leave Game</button>
     <button mat-raised-button matTooltip="Center Board" class="small" (click)="centerBoard()"><mat-icon>gps_fixed</mat-icon></button>
     <button mat-raised-button matTooltip="Rotate Board Left" class="small" (click)="rotateBoardLeft()"><mat-icon>rotate_left</mat-icon></button>
     <button mat-raised-button matTooltip="Rotate Board Right" class="small" (click)="rotateBoardRight()"><mat-icon>rotate_right</mat-icon></button>

@@ -2,53 +2,55 @@
     <mat-sidenav #sidebar
                  mode="side"
                  opened
-                 (opened)="selectedGame && gameComponent.board.updateAndCenter()"
-                 (closed)="selectedGame && gameComponent.board.updateAndCenter()">
+                 (opened)="gameService.selectedGame && gameComponent.board.updateAndCenter()"
+                 (closed)="gameService.selectedGame && gameComponent.board.updateAndCenter()">
         <div class="padded">
-            <app-players-list #playersComponent
+            <h1 class="center header">Chess Maker</h1>
+            <app-players-list #playersListComponent
                               [serverPlayers]="playerService.values()"
-                              [gamePlayers]="selectedGame ? selectedGame.metadata.players : []"
-                              [disableGameTab]="!selectedGame"></app-players-list>
-            <app-games-list [selectedGame]="selectedGame"
+                              [gamePlayers]="gameService.selectedGame ? gameService.selectedGame.metadata.players : []"
+                              [disableGameTab]="!gameService.selectedGame"></app-players-list>
+            <app-games-list #gamesListComponent
                             (showGame)="showGame($event)"
                             (newGame)="createGame()"
-                            (deleteGame)="apiService.deleteGame(selectedGame)"></app-games-list>
+                            (leaveGame)="leaveGame($event)"
+                            (deleteGame)="apiService.deleteGame(gameService.selectedGame)"></app-games-list>
             <div class="sidenav-actions">
                 <button mat-raised-button
                         (click)="disconnect()"
                         color="warn">Disconnect</button>
                 <button mat-raised-button
                         color="accent"
-                        *ngIf="selectedGame"
+                        *ngIf="gameService.selectedGame"
                         (click)="sidebarService.close()">Hide Sidebar</button>
             </div>
         </div>
     </mat-sidenav>
     <mat-sidenav-content>
         <app-game #gameComponent
-                  [game]="selectedGame"
-                  [infoElements]="selectedGame.data.infoElements"
-                  *ngIf="selectedGame"></app-game>
-        <div *ngIf="!selectedGame" class="full-center center">
+                  [game]="gameService.selectedGame"
+                  [infoElements]="gameService.selectedGame.data.infoElements"
+                  *ngIf="gameService.selectedGame"></app-game>
+        <div *ngIf="!gameService.selectedGame" class="full-center center">
             <h1>Welcome to Chess Maker</h1>
             <p>Create or select a game on the left to get started.</p>
             <button mat-raised-button color="primary" *ngIf="!sidebarService.isOpen()" (click)="sidebarService.open()">Show Sidebar</button>
         </div>
-        <mat-card id="control-box" *ngIf="selectedGame && (!selectedGame.playerInGame(playerService.currentPlayer) || selectedGame.data.winnerData != null)">
+        <mat-card id="control-box" *ngIf="gameService.selectedGame && (!gameService.selectedGame.playerInGame(playerService.currentPlayer) || gameService.selectedGame.data.winnerData != null)">
             <mat-card-content>
-                <ng-template [ngIf]="selectedGame.data.winnerData == null">
-                    <h1>{{selectedGame.playerCount() == selectedGame.metadata.controller.colors.length ? 'Spectating' : 'Join As'}}</h1>
+                <ng-template [ngIf]="gameService.selectedGame.data.winnerData == null">
+                    <h1>{{gameService.selectedGame.playerCount() == gameService.selectedGame.metadata.controller.colors.length ? 'Spectating' : 'Join As'}}</h1>
                     <mat-chip-list>
                         <mat-chip *ngFor="let color of availableColors"
                                   [ngStyle]="{backgroundColor: colorService.names[color], color: [0, 3, 4].includes(color) ? 'black' : 'white'}"
-                                  (click)="joinGame(selectedGame, color)">
+                                  (click)="joinGame(gameService.selectedGame, color)">
                             {{colorService.names[color]}}
                         </mat-chip>
                     </mat-chip-list>
                 </ng-template>
-                <ng-template [ngIf]="selectedGame.data.winnerData != null">
-                    <h1>{{winnerString(selectedGame.data.winnerData.colors)}}</h1>
-                    <p>{{selectedGame.data.winnerData.reason}}</p>
+                <ng-template [ngIf]="gameService.selectedGame.data.winnerData != null">
+                    <h1>{{winnerString(gameService.selectedGame.data.winnerData.colors)}}</h1>
+                    <p>{{gameService.selectedGame.data.winnerData.reason}}</p>
                 </ng-template>
             </mat-card-content>
         </mat-card>

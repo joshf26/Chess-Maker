@@ -12,9 +12,9 @@ import {SidebarService} from "../services/sidebar/sidebar.service";
     styleUrls: ['./game.component.less'],
 })
 export class GameComponent {
-    @Input('game') game: Game;
-    @Input('infoElements') infoElements: InfoElement[];
-    @Output('toggleSidebar') toggleSidebar = new EventEmitter();
+    @Input() game: Game;
+    @Input() infoElements: InfoElement[];
+    @Output() toggleSidebar = new EventEmitter();
     @ViewChild('board') board: BoardComponent;
 
     direction: Direction = Direction.NORTH;
@@ -46,9 +46,5 @@ export class GameComponent {
 
     place(place: Place) {
         this.apiService.inventoryPlies(this.game, place.item, place.to);
-    }
-
-    leaveGame(): void {
-        this.apiService.leaveGame(this.game);
     }
 }

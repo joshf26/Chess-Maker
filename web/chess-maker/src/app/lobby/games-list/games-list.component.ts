@@ -1,6 +1,7 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import {Game, GameService} from "../../services/game/game.service";
 import {ApiService} from "../../services/api/api.service";
+import {PlayerService} from "../../services/player/player.service";
 
 @Component({
     selector: 'app-games-list',
@@ -8,14 +9,18 @@ import {ApiService} from "../../services/api/api.service";
     styleUrls: ['./games-list.component.less'],
 })
 export class GamesListComponent implements OnInit {
-    @Input('selectedGame') selectedGame: Game;
+    @Input() loading = false;
     @Output() newGame = new EventEmitter();
     @Output() showGame = new EventEmitter<Game | undefined>();
+    @Output() leaveGame = new EventEmitter<Game>();
     @Output() deleteGame = new EventEmitter<Game>();
+
+    selectedTab: number = 0;
 
     constructor(
         public gameService: GameService,
         public apiService: ApiService,
+        public playerService: PlayerService,
     ) {}
 
     ngOnInit(): void {}

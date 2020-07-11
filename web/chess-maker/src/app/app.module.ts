@@ -29,6 +29,7 @@ import {CreateGameDialog} from "./lobby/create-game-dialog/create-game-dialog.co
 import {SelectPlyDialog} from "./lobby/select-ply-dialog/select-ply-dialog.component";
 import {MatExpansionModule} from "@angular/material/expansion";
 import {SidebarCardComponent} from './lobby/sidebar-card/sidebar-card.component';
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 
 @NgModule({
     declarations: [
@@ -64,6 +65,7 @@ import {SidebarCardComponent} from './lobby/sidebar-card/sidebar-card.component'
         MatTooltipModule,
         MatCheckboxModule,
         MatExpansionModule,
+        MatProgressSpinnerModule,
     ],
     providers: [],
     bootstrap: [AppComponent],

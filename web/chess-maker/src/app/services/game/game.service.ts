@@ -136,9 +136,14 @@ export class Game implements Identifiable {
     providedIn: 'root',
 })
 export class GameService extends ItemService<Game> {
+    selectedGame?: Game;
+
     updateGameMetadata(games: {[id: string]: GameMetadata}) {
         for (const gameId in this.items) {
             if (!(gameId in games)) {
+                if (this.selectedGame.id == gameId) {
+                    this.selectedGame = undefined;
+                }
                 delete this.items[gameId];
             }
         }
