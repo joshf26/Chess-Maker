@@ -3,20 +3,39 @@
                    [selectedIndex]="disableGameTab ? 0 : selectedTab"
                    (selectedIndexChange)="selectedTab = $event">
         <mat-tab label="Server">
-            <mat-selection-list [multiple]="false">
-                <mat-list-option *ngFor="let serverPlayer of serverPlayers">{{serverPlayer.displayName}}</mat-list-option>
-            </mat-selection-list>
+            <mat-accordion>
+                <mat-expansion-panel *ngFor="let serverPlayer of serverPlayers"
+                                     hideToggle>
+                    <mat-expansion-panel-header>
+                        <mat-panel-title>{{serverPlayer.displayName}}</mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <mat-chip-list>
+                        <mat-chip disabled matTooltip="Not available yet...">Kick</mat-chip>
+                        <mat-chip disabled matTooltip="Not available yet...">Challenge</mat-chip>
+                    </mat-chip-list>
+                </mat-expansion-panel>
+            </mat-accordion>
         </mat-tab>
         <mat-tab [disabled]="disableGameTab">
             <ng-template mat-tab-label>
                 <span [matTooltip]="disableGameTab ? 'Select a game below to enable this tab.' : ''">Game</span>
             </ng-template>
             <p class="no-players" *ngIf="!hasPlayers()">No players are in this game yet.</p>
-            <mat-selection-list [multiple]="false" *ngIf="hasPlayers()">
-                <mat-list-option *ngFor="let gamePlayer of gamePlayers | keyvalue">
-                    {{gamePlayer.value.displayName}} (<span [ngStyle]="{color: colorService.names[gamePlayer.key], display: 'contents', fontWeight: 'bold'}">{{colorService.names[gamePlayer.key]}}</span>)
-                </mat-list-option>
-            </mat-selection-list>
+            <mat-accordion *ngIf="hasPlayers()">
+                <mat-expansion-panel *ngFor="let gamePlayer of gamePlayers | keyvalue"
+                                     hideToggle>
+                    <mat-expansion-panel-header>
+                        <mat-panel-title>{{gamePlayer.value.displayName}}</mat-panel-title>
+                        <mat-panel-description>
+                            <span [ngStyle]="{color: colorService.names[gamePlayer.key], display: 'contents', fontWeight: 'bold'}">{{colorService.names[gamePlayer.key]}}</span>
+                        </mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <mat-chip-list>
+                        <mat-chip disabled matTooltip="Not available yet...">Kick</mat-chip>
+                        <mat-chip disabled matTooltip="Not available yet...">Challenge</mat-chip>
+                    </mat-chip-list>
+                </mat-expansion-panel>
+            </mat-accordion>
         </mat-tab>
     </mat-tab-group>
 </app-sidebar-card>
