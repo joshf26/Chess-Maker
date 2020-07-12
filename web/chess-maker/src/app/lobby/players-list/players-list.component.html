@@ -20,7 +20,7 @@
             <ng-template mat-tab-label>
                 <span [matTooltip]="disableGameTab ? 'Select a game below to enable this tab.' : ''">Game</span>
             </ng-template>
-            <p class="no-players" *ngIf="!hasPlayers()">No players are in this game yet.</p>
+            <div class="no-players" *ngIf="!hasPlayers()">No players are in this game yet.</div>
             <mat-accordion *ngIf="hasPlayers()">
                 <mat-expansion-panel *ngFor="let gamePlayer of gamePlayers | keyvalue"
                                      hideToggle>

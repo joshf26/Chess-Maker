@@ -41,7 +41,7 @@
                 <ng-template [ngIf]="gameService.selectedGame.data.winnerData == null">
                     <h1>{{gameService.selectedGame.playerCount() == gameService.selectedGame.metadata.controller.colors.length ? 'Spectating' : 'Join As'}}</h1>
                     <mat-chip-list>
-                        <mat-chip *ngFor="let color of availableColors"
+                        <mat-chip *ngFor="let color of gameService.availableColors"
                                   [ngStyle]="{backgroundColor: colorService.names[color], color: [0, 3, 4].includes(color) ? 'black' : 'white'}"
                                   (click)="joinGame(gameService.selectedGame, color)">
                             {{colorService.names[color]}}

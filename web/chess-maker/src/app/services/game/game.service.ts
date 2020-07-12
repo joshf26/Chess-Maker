@@ -137,6 +137,23 @@ export class Game implements Identifiable {
 })
 export class GameService extends ItemService<Game> {
     selectedGame?: Game;
+    availableColors: number[];
+
+    private updateAvailableColors() {
+        if (!this.selectedGame) {
+            return;
+        }
+
+        this.availableColors = [...this.selectedGame.metadata.controller.colors];
+        for (const color of Object.keys(this.selectedGame.metadata.players)) {
+            this.availableColors.splice(this.availableColors.indexOf(Number(color)), 1);
+        }
+    }
+
+    setSelectedGame(selectedGame: Game): void {
+        this.selectedGame = selectedGame;
+        this.updateAvailableColors();
+    }
 
     updateGameMetadata(games: {[id: string]: GameMetadata}) {
         for (const gameId in this.items) {
@@ -160,6 +177,8 @@ export class GameService extends ItemService<Game> {
                 )
             }
         }
+
+        this.updateAvailableColors();
     }
 
     updateGameData(id: string, data: GameData) {

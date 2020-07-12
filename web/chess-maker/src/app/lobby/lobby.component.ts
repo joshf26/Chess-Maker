@@ -40,7 +40,6 @@ export class LobbyComponent implements OnInit {
     @ViewChild('gameComponent') gameComponent: GameComponent;
     @ViewChild('sidebar') sidebar: MatSidenav;
 
-    availableColors: number[];
     players: Player[];
 
     constructor(
@@ -58,27 +57,6 @@ export class LobbyComponent implements OnInit {
         apiService.handlers.focusGame = this.showGame.bind(this);
     }
 
-    ngOnInit() {
-        if (!this.apiService.isConnected()) {
-            this.router.navigate(['/']);
-        }
-    }
-
-    ngAfterViewInit() {
-        this.sidebarService.registerSidenav(this.sidebar);
-    }
-
-    private updateAvailableColors(): void {
-        if (!this.gameService.selectedGame) {
-            return;
-        }
-
-        this.availableColors = [...this.gameService.selectedGame.metadata.controller.colors];
-        for (const color of Object.keys(this.gameService.selectedGame.metadata.players)) {
-            this.availableColors.splice(this.availableColors.indexOf(Number(color)), 1);
-        }
-    }
-
     private offerPlies(from: Vector2, to: Vector2, plies: Ply[]): void {
         this.selectPlyDialog.open(SelectPlyDialog, {
             data: {
@@ -88,6 +66,16 @@ export class LobbyComponent implements OnInit {
                 plies: plies,
             },
         });
+    }
+
+    ngOnInit() {
+        if (!this.apiService.isConnected()) {
+            this.router.navigate(['/']);
+        }
+    }
+
+    ngAfterViewInit() {
+        this.sidebarService.registerSidenav(this.sidebar);
     }
 
     disconnect() {
@@ -109,8 +97,7 @@ export class LobbyComponent implements OnInit {
             this.apiService.showGame(game);
         }
 
-        this.gameService.selectedGame = game;
-        this.updateAvailableColors();
+        this.gameService.setSelectedGame(game);
         this.changeDetectorRef.detectChanges();
 
         // Switch to the "Game" tab.
@@ -124,6 +111,9 @@ export class LobbyComponent implements OnInit {
             // Switch to the "My Games" tab.
             this.gamesListComponent.loading = false;
             this.gamesListComponent.selectedTab = 1;
+
+            // Switch to the "Game" tab.
+            this.playersListComponent.selectedTab = 1;
         }, 500);
     }
 
@@ -154,7 +144,7 @@ export class LobbyComponent implements OnInit {
         for (const [index, color] of Object.entries(colors)) {
             result += parseInt(index) == colors.length - 1 ? `and ${this.colorService.names[color]}` : `${this.colorService.names[color]}, `;
         }
-        result += ' win!'
+        result += ' win!';
 
         return result;
     }
