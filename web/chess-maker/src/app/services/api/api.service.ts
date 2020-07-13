@@ -17,12 +17,19 @@ import {
     Vector2, WinnerData
 } from "../game/game.service";
 import {
-    RawFocusGameParameters, RawOfferPliesParameters, RawSetPlayerParameters, RawShowErrorParameters,
-    RawUpdateGameDataParameters, RawUpdateGameMetadataParameters,
-    RawUpdatePackDataParameters, RawUpdatePlayersParameters
+    RawFocusGameParameters,
+    RawOfferPliesParameters,
+    RawReceiveServerChatMessageParameters,
+    RawSetPlayerParameters,
+    RawShowErrorParameters,
+    RawUpdateGameDataParameters,
+    RawUpdateGameMetadataParameters,
+    RawUpdatePackDataParameters,
+    RawUpdatePlayersParameters
 } from "./parameter-types";
 import {Player, PlayerService} from "../player/player.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {ChatMessage, ChatService} from "../chat/chat.service";
 
 @Injectable({
     providedIn: 'root',
@@ -39,6 +46,7 @@ export class ApiService {
         updatePlayers: (players: {[key: string]: Player}) => void,
         updateGameData: (id: string, data: GameData) => void,
         offerPlies: (from: Vector2, to: Vector2, plies: Ply[]) => void,
+        receiveServerChatMessage: (player: Player, text: string) => void,
     } = {
         setPlayer: () => {},
         focusGame: () => {},
@@ -47,6 +55,7 @@ export class ApiService {
         updateGameMetadata: () => {},
         updateGameData: () => {},
         offerPlies: () => {},
+        receiveServerChatMessage: () => {},
     };
 
     constructor(
@@ -54,6 +63,7 @@ export class ApiService {
         private gameService: GameService,
         private packService: PackService,
         private playerService: PlayerService,
+        private chatService: ChatService,
         private snackBar: MatSnackBar,
     ) {
         this.handlers.updatePackData = packService.updatePackData.bind(packService);
@@ -61,6 +71,7 @@ export class ApiService {
         this.handlers.setPlayer = playerService.setPlayer.bind(playerService);
         this.handlers.updateGameMetadata = gameService.updateGameMetadata.bind(gameService);
         this.handlers.updateGameData = gameService.updateGameData.bind(gameService);
+        this.handlers.receiveServerChatMessage = chatService.receiveChatMessage.bind(chatService);
     }
 
     private run(command: string, parameters: {[key: string]: any}): void {
@@ -162,6 +173,7 @@ export class ApiService {
         const decorators: Decorator[] = [];
         const infoElements: InfoElement[] = [];
         const inventoryItems: InventoryItem[] = [];
+        const chatMessages: ChatMessage[] = [];
 
         for (const rawPiece of parameters.pieces) {
             pieces.push(new Piece(
@@ -197,6 +209,13 @@ export class ApiService {
             ));
         }
 
+        for (const rawChatMessage of parameters.chat_messages) {
+            chatMessages.push(new ChatMessage(
+                this.playerService.get(rawChatMessage.sender_id),
+                rawChatMessage.text,
+            ))
+        }
+
         const winnerData = parameters.winners ? new WinnerData(parameters.winners.colors, parameters.winners.reason) : null;
 
         this.handlers.updateGameData(parameters.id, new GameData(
@@ -204,6 +223,7 @@ export class ApiService {
             decorators,
             infoElements,
             inventoryItems,
+            chatMessages,
             winnerData,
         ));
     }
@@ -259,6 +279,12 @@ export class ApiService {
         this.handlers.offerPlies(from, to, plies);
     }
 
+    private receiveServerChatMessage(parameters: RawReceiveServerChatMessageParameters): void {
+        const player = this.playerService.get(parameters.sender_id);
+
+        this.handlers.receiveServerChatMessage(player, parameters.text);
+    }
+
     connect(address: string): void {
         this.socket = webSocket(`ws://${address}`);
 
@@ -290,6 +316,7 @@ export class ApiService {
         this.getCommand('update_game_data').subscribe(this.updateGameData.bind(this));
         this.getCommand('show_error').subscribe(this.showError.bind(this));
         this.getCommand('offer_plies').subscribe(this.offerPlies.bind(this));
+        this.getCommand('receive_server_chat_message').subscribe(this.receiveServerChatMessage.bind(this))
     }
 
     disconnect(): void {
@@ -390,5 +417,12 @@ export class ApiService {
             game_id: game.id,
             button_id: button.id,
         });
+    }
+
+    sendChatMessage(text: string, game?: Game): void {
+        this.run('send_chat_message', {
+            text: text,
+            game_id: game ? game.id : 'server',
+        })
     }
 }

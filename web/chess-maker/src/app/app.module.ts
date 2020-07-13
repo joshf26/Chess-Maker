@@ -30,6 +30,8 @@ import {SelectPlyDialog} from "./lobby/select-ply-dialog/select-ply-dialog.compo
 import {MatExpansionModule} from "@angular/material/expansion";
 import {SidebarCardComponent} from './lobby/sidebar-card/sidebar-card.component';
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {ChatComponent} from "./lobby/chat/chat.component";
+import { ChatBoxComponent } from './lobby/chat/chat-box/chat-box.component';
 
 @NgModule({
     declarations: [
@@ -44,6 +46,8 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
         BoardComponent,
         GamesListComponent,
         SidebarCardComponent,
+        ChatComponent,
+        ChatBoxComponent,
     ],
     imports: [
         BrowserModule,

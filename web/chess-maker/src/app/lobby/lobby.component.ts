@@ -13,6 +13,7 @@ import {MatSidenav} from "@angular/material/sidenav";
 import {PlayersListComponent} from "./players-list/players-list.component";
 import {SelectPlyDialog} from "./select-ply-dialog/select-ply-dialog.component";
 import {GamesListComponent} from "./games-list/games-list.component";
+import {ChatComponent} from "./chat/chat.component";
 
 export interface CreateGameDialogData {
     displayName: string,
@@ -36,6 +37,7 @@ export interface SelectPlyDialogData {
 })
 export class LobbyComponent implements OnInit {
     @ViewChild('playersListComponent') private playersListComponent: PlayersListComponent;
+    @ViewChild('chatComponent') private chatComponent: ChatComponent;
     @ViewChild('gamesListComponent') gamesListComponent: GamesListComponent;
     @ViewChild('gameComponent') gameComponent: GameComponent;
     @ViewChild('sidebar') sidebar: MatSidenav;
@@ -102,6 +104,7 @@ export class LobbyComponent implements OnInit {
 
         // Switch to the "Game" tab.
         this.playersListComponent.selectedTab = 1;
+        this.chatComponent.selectedTab = 1;
     }
 
     joinGame(game: Game, color: Color): void {
@@ -114,6 +117,7 @@ export class LobbyComponent implements OnInit {
 
             // Switch to the "Game" tab.
             this.playersListComponent.selectedTab = 1;
+            this.chatComponent.selectedTab = 1;
         }, 500);
     }
 

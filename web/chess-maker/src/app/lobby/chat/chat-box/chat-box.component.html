@@ -1,0 +1,23 @@
+<mat-card>
+    <mat-card-content>
+        <div #messagesContainer *ngIf="messages.length > 0">
+            <ng-container *ngFor="let message of messages">
+                <strong>{{message.sender.displayName}}</strong>: {{message.text}}<br>
+            </ng-container>
+        </div>
+        <div class="no-messages" *ngIf="messages.length == 0">
+            <div style="position: relative; top: 50%; transform: translateY(-50%);">
+                <mat-icon>chat</mat-icon><br>
+                No messages
+            </div>
+        </div>
+    </mat-card-content>
+</mat-card>
+
+<div class="compose-box">
+    <mat-form-field>
+        <mat-label>Message</mat-label>
+        <input matInput autocomplete="off" [(ngModel)]="inputMessage" (keyup.enter)="sendMessage()">
+    </mat-form-field>
+    <button mat-mini-fab color="primary" (click)="sendMessage()"><mat-icon>send</mat-icon></button>
+</div>

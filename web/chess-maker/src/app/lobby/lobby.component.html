@@ -15,6 +15,7 @@
                             (newGame)="createGame()"
                             (leaveGame)="leaveGame($event)"
                             (deleteGame)="apiService.deleteGame(gameService.selectedGame)"></app-games-list>
+            <app-chat #chatComponent></app-chat>
             <div class="sidenav-actions">
                 <button mat-raised-button
                         (click)="disconnect()"

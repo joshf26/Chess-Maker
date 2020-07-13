@@ -1,11 +1,10 @@
 from typing import Dict
 
 from color import Color
-from game import Game
+from game import Game, ChatMessage
 from game_subscribers import GameSubscribers
 from network import Connection, Network
 from pack import Pack
-from piece import Direction
 from vector2 import Vector2
 
 
@@ -30,9 +29,10 @@ class Server:
         self.network.register_command('inventory_plies', self.on_inventory_plies)
         self.network.register_command('submit_ply', self.on_submit_ply)
         self.network.register_command('click_button', self.on_click_button)
+        self.network.register_command('send_chat_message', self.on_send_chat_message)
 
     def _send_metadata_update_to_all(self) -> None:
-        for connection in self.network.connections:
+        for connection in self.network.active_connections:
             # TODO: These two calls should be split up.
             connection.update_players(self.network.connections)
             connection.update_game_metadata(self.games)
@@ -247,3 +247,16 @@ class Server:
 
         game = self.games[game_id]
         game.click_button(connection, button_id)
+
+    def on_send_chat_message(self, connection: Connection, text: str, game_id: str) -> None:
+        if game_id == 'server':
+            for other_connection in self.network.connections:
+                other_connection.receive_server_chat_message(text, connection)
+        else:
+            if game_id not in self.games:
+                connection.show_error('Game id does not exist.')
+                return
+
+            game = self.games[game_id]
+            game.chat_messages.append(ChatMessage(connection, text))
+            game.send_update_to_subscribers()

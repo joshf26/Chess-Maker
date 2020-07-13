@@ -25,6 +25,7 @@ class Connection(JsonSerializable):
         self.socket = socket
         self.id = str(uuid4())
         self.display_name = 'Player'
+        self.active = True
 
     def __str__(self):
         return f'Connection({self.id}, {self.display_name})'
@@ -80,6 +81,13 @@ class Connection(JsonSerializable):
             'plies': [ply.to_json() for ply in plies],
         })
 
+    def receive_server_chat_message(self, text: str, sender: Connection, game: Game = None) -> None:
+        self._run('receive_server_chat_message', {
+            'text': text,
+            'sender_id': sender.id,
+            'game_id': game.id if game else 'server',
+        })
+
     def to_json(self) -> Union[dict, list]:
         return {
             'displayName': self.display_name,
@@ -100,6 +108,10 @@ class Network:
         self.commands: Dict[str, Command] = {}
 
         self.connections: Set[Connection] = set()
+
+    @property
+    def active_connections(self) -> Iterable[Connection]:
+        return filter(lambda connection: connection.active, self.connections)
 
     def register_command(self, command: str, callback: Callable) -> None:
         signature = inspect.signature(callback)
@@ -164,5 +176,5 @@ class Network:
             pass
         finally:
             print('Client disconnected.')
-            self.connections.remove(connection)
+            connection.active = False
             self.on_disconnect(connection)

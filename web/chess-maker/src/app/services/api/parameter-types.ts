@@ -87,6 +87,10 @@ export type RawUpdateGameDataParameters = {
         direction: number,
         label: string,
     }[],
+    chat_messages: {
+        sender_id: string,
+        text: string,
+    }[],
     winners?: {
         colors: number[],
         reason: string,
@@ -107,4 +111,9 @@ export type RawOfferPliesParameters = {
     to_row: number,
     to_col: number,
     plies: RawPly[],
+}
+
+export type RawReceiveServerChatMessageParameters = {
+    sender_id: string,
+    text: string,
 }

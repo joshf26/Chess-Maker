@@ -1,0 +1,18 @@
+<app-sidebar-card header="Chat">
+    <mat-tab-group dynamicHeight
+                   [selectedIndex]="gameService.selectedGame ? selectedTab : 0"
+                   (selectedIndexChange)="selectedTab = $event">
+        <mat-tab label="Server">
+            <app-chat-box #serverChatBox
+                          [messages]="chatService.serverMessages"
+                          (send)="apiService.sendChatMessage($event)"></app-chat-box>
+        </mat-tab>
+        <mat-tab label="Game" [disabled]="!gameService.selectedGame">
+            <ng-template mat-tab-label>
+                <span [matTooltip]="gameService.selectedGame ? '' : 'Select a game above to enable this tab.'">Game</span>
+            </ng-template>
+            <app-chat-box [messages]="gameService.selectedGame ? gameService.selectedGame.data.chatMessages : []"
+                          (send)="apiService.sendChatMessage($event, gameService.selectedGame)"></app-chat-box>
+        </mat-tab>
+    </mat-tab-group>
+</app-sidebar-card>

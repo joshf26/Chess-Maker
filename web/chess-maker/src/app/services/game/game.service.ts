@@ -3,6 +3,7 @@ import {Controller, DecoratorType, PieceType} from "../pack/pack.service";
 import {Color} from "../color/color.service";
 import {Player} from "../player/player.service";
 import {Identifiable, ItemService} from "../item-service";
+import {ChatMessage} from "../chat/chat.service";
 
 export enum Direction {
     NORTH,
@@ -101,6 +102,7 @@ export class GameData {
         public decorators: Decorator[],
         public infoElements: InfoElement[],
         public inventoryItems: InventoryItem[],
+        public chatMessages: ChatMessage[],
         public winnerData?: WinnerData,
     ) {}
 }
@@ -158,7 +160,7 @@ export class GameService extends ItemService<Game> {
     updateGameMetadata(games: {[id: string]: GameMetadata}) {
         for (const gameId in this.items) {
             if (!(gameId in games)) {
-                if (this.selectedGame.id == gameId) {
+                if (this.selectedGame && this.selectedGame.id == gameId) {
                     this.selectedGame = undefined;
                 }
                 delete this.items[gameId];
@@ -172,7 +174,7 @@ export class GameService extends ItemService<Game> {
                 this.items[id] = new Game(
                     id,
                     metadata,
-                    new GameData([], [], [], []),
+                    new GameData([], [], [], [], []),
                     new RenderData(new Vector2(0, 0), Direction.NORTH, 40),
                 )
             }

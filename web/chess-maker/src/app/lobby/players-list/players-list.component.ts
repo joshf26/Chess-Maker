@@ -12,7 +12,7 @@ export class PlayersListComponent {
     @Input() gamePlayers: {[color in Color]?: Player};
     @Input() disableGameTab: boolean;
 
-    selectedTab: number = 0;
+    selectedTab = 0;
 
     constructor(
         public colorService: ColorService,

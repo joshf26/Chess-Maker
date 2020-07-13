@@ -82,6 +82,18 @@ class WinnerData(JsonSerializable):
         }
 
 
+@dataclass
+class ChatMessage(JsonSerializable):
+    sender: Connection
+    text: str
+
+    def to_json(self) -> Union[dict, list]:
+        return {
+            'sender_id': self.sender.id,
+            'text': self.text,
+        }
+
+
 class Game:
 
     def __init__(
@@ -102,6 +114,7 @@ class Game:
         self.players = ColorConnections()
         self.controller = controller_type(self, controller_options)
         self.game_data = GameData([], self.controller.board_size, self.controller.colors)
+        self.chat_messages: List[ChatMessage] = []
         self.winners: Optional[WinnerData] = None
 
         self._init_game()
@@ -144,6 +157,7 @@ class Game:
             'decorator_type_id': decorator.__class__.__name__,
         } for position, decorator in self.controller.get_decorators().items()]
         info = [info_element.to_json() for info_element in self.controller.get_info(color)]
+        chat_messages = [chat_message.to_json() for chat_message in self.chat_messages]
         inventory = [inventory_item.to_json() for inventory_item in inventory_items]
 
         return {
@@ -152,6 +166,7 @@ class Game:
             'decorators': decorators,
             'info_elements': info,
             'inventory_items': inventory,
+            'chat_messages': chat_messages,
             'winners': None if self.winners is None else self.winners.to_json(),
         }
 
