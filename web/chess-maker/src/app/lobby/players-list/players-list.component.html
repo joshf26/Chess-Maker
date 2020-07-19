@@ -7,7 +7,7 @@
                 <mat-expansion-panel *ngFor="let serverPlayer of serverPlayers"
                                      hideToggle>
                     <mat-expansion-panel-header>
-                        <mat-panel-title>{{serverPlayer.displayName}}</mat-panel-title>
+                        <mat-panel-title><mat-icon inline [ngStyle]="{color: serverPlayer.active ? 'green' : 'red'}">stop_circle</mat-icon>&nbsp;{{serverPlayer.displayName}}</mat-panel-title>
                     </mat-expansion-panel-header>
                     <mat-chip-list>
                         <mat-chip disabled matTooltip="Not available yet...">Kick</mat-chip>

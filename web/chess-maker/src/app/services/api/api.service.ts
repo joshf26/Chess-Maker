@@ -106,7 +106,7 @@ export class ApiService {
             for (const [controllerId, controller] of Object.entries(rawPack.controllers)) {
                 packs[packId].controllers[controllerId] = new Controller(
                     controllerId,
-                    controller.displayName,
+                    controller.display_name,
                     packs[packId],
                     new Vector2(controller.rows, controller.cols),
                     controller.colors,
@@ -140,7 +140,8 @@ export class ApiService {
         for (const [playerId, rawPlayer] of Object.entries(parameters.players)) {
             players[playerId] = new Player(
                 playerId,
-                rawPlayer.displayName,
+                rawPlayer.display_name,
+                rawPlayer.active,
             );
         }
 
@@ -158,7 +159,7 @@ export class ApiService {
             }
 
             games[id] = new GameMetadata(
-                rawGame.displayName,
+                rawGame.display_name,
                 this.playerService.get(rawGame.creator),
                 this.packService.getController(rawGame.controller_pack_id, rawGame.controller_id),
                 players,

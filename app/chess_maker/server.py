@@ -31,12 +31,6 @@ class Server:
         self.network.register_command('click_button', self.on_click_button)
         self.network.register_command('send_chat_message', self.on_send_chat_message)
 
-    def _send_metadata_update_to_all(self) -> None:
-        for connection in self.network.active_connections:
-            # TODO: These two calls should be split up.
-            connection.update_players(self.network.connections)
-            connection.update_game_metadata(self.games)
-
     def start(self, port: int) -> None:
         self.network.serve(port)
 
@@ -53,27 +47,52 @@ class Server:
                 change_made = True
 
         if change_made:
-            self._send_metadata_update_to_all()
+            self.network.all_update_game_metadata(self.games)
 
-    def on_login(self, connection: Connection, display_name: str) -> None:
-        # Ensure there are no duplicate display names.
-        display_names = {connection.display_name for connection in self.network.connections}
-        while display_name in display_names:
+        self.network.all_update_players()
+
+    def on_login(self, player: Connection, display_name: str) -> None:
+        while True:
+            similar_player = next(filter(
+                lambda other_player: other_player.display_name == display_name,
+                self.network.connection,
+            ), None)
+
+            if similar_player is None:
+                break
+
+            if not similar_player.active:
+                # The user has logged in before. Reuse their old player.
+                similar_player.socket = player.socket
+                self.network.connection.remove(player)
+                player = similar_player
+                player.active = True
+                break
+
+            # Ensure there are no duplicate display names.
             display_name += ' (2)'
 
-        print(f'{display_name} logged in!')
-        connection.display_name = display_name
+        player.display_name = display_name
+        player.update_pack_data(self.packs)
+        self.network.all_update_players()
+        player.set_player()
 
-        connection.update_pack_data(self.packs)
-        self._send_metadata_update_to_all()
-        connection.set_player()
-
-    def on_create_game(self, connection: Connection, name: str, controller_pack_id: str, controller_id: str, options: dict) -> None:
+    def on_create_game(
+        self,
+        connection: Connection,
+        name: str,
+        controller_pack_id: str,
+        controller_id: str,
+        options: dict,
+    ) -> None:
         if controller_pack_id not in self.packs:
             connection.show_error('Package does not exist.')
             return
 
-        controller_class = next(filter(lambda b: b.name == controller_id, self.packs[controller_pack_id].controllers), None)
+        controller_class = next(filter(
+            lambda b: b.name == controller_id,
+            self.packs[controller_pack_id].controllers,
+        ), None)
 
         if controller_class is None:
             connection.show_error('Controller does not exist.')
@@ -86,7 +105,7 @@ class Server:
         game = Game(name, connection, controller_class, options, self.network, self.subscribers)
         self.games[game.id] = game
 
-        self._send_metadata_update_to_all()
+        self.network.all_update_game_metadata(self.games)
         connection.focus_game(game)
 
     def on_delete_game(self, connection: Connection, game_id: str) -> None:
@@ -99,7 +118,7 @@ class Server:
             return
 
         del self.games[game_id]
-        self._send_metadata_update_to_all()
+        self.network.all_update_game_metadata(self.games)
 
     def on_show_game(self, connection: Connection, game_id: str) -> None:
         if game_id not in self.games:
@@ -133,7 +152,7 @@ class Server:
 
         game.add_player(connection, color_object)
 
-        self._send_metadata_update_to_all()
+        self.network.all_update_game_metadata(self.games)
         game.send_update_to_subscribers()
 
     def on_leave_game(self, connection: Connection, game_id: str) -> None:
@@ -150,7 +169,7 @@ class Server:
         if connection in game.players:
             game.players.remove_connection(connection)
 
-        self._send_metadata_update_to_all()
+        self.network.all_update_game_metadata(self.games)
         game.send_update_to_subscribers()
 
     def on_plies(
@@ -250,7 +269,7 @@ class Server:
 
     def on_send_chat_message(self, connection: Connection, text: str, game_id: str) -> None:
         if game_id == 'server':
-            for other_connection in self.network.connections:
+            for other_connection in self.network.connection:
                 other_connection.receive_server_chat_message(text, connection)
         else:
             if game_id not in self.games:

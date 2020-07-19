@@ -5,6 +5,7 @@ export class Player implements Identifiable {
     constructor(
         public id: string,
         public displayName: string,
+        public active: boolean,
     ) {}
 }
 

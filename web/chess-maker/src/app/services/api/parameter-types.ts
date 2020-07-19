@@ -27,7 +27,7 @@ export type RawUpdatePackDataParameters = {
     packs: {[id: string]: {
         display_name: string,
         controllers: {[id: string]: {
-            displayName: string,
+            display_name: string,
             rows: number,
             cols: number,
             colors: number[],
@@ -44,13 +44,14 @@ export type RawUpdatePackDataParameters = {
 
 export type RawUpdatePlayersParameters = {
     players: {[id: string]: {
-        displayName: string,
+        display_name: string,
+        active: boolean,
     }},
 }
 
 export type RawUpdateGameMetadataParameters = {
     game_metadata: {[id: string]: {
-        displayName: string,
+        display_name: string,
         creator: string,
         controller_pack_id: string,
         controller_id: string,

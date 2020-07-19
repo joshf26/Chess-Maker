@@ -129,7 +129,7 @@ class Game:
 
     def get_metadata(self) -> dict:
         return {
-            'displayName': self.name,
+            'display_name': self.name,
             'creator': self.owner.id,
             'controller_pack_id': get_pack(self.controller),
             'controller_id': self.controller.name,
@@ -260,7 +260,6 @@ class Game:
                 break
 
     def winner(self, colors: List[Color], reason: str = None) -> None:
-        print('WINNER ANNOUNCED!')
         self.winners = WinnerData(colors, reason)
 
     @property

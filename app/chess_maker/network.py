@@ -90,7 +90,8 @@ class Connection(JsonSerializable):
 
     def to_json(self) -> Union[dict, list]:
         return {
-            'displayName': self.display_name,
+            'display_name': self.display_name,
+            'active': self.active,
         }
 
 
@@ -107,11 +108,11 @@ class Network:
 
         self.commands: Dict[str, Command] = {}
 
-        self.connections: Set[Connection] = set()
+        self.connection: Set[Connection] = set()
 
     @property
     def active_connections(self) -> Iterable[Connection]:
-        return filter(lambda connection: connection.active, self.connections)
+        return filter(lambda connection: connection.active, self.connection)
 
     def register_command(self, command: str, callback: Callable) -> None:
         signature = inspect.signature(callback)
@@ -120,6 +121,14 @@ class Network:
         }
 
         self.commands[command] = Command(callback, parameters)
+
+    def all_update_players(self) -> None:
+        for connection in self.active_connections:
+            connection.update_players(self.connection)
+
+    def all_update_game_metadata(self, games: Dict[str, Game]) -> None:
+        for connection in self.active_connections:
+            connection.update_game_metadata(games)
 
     def serve(self, port: int):
         print(f'Serving on port {port}...')
@@ -159,7 +168,7 @@ class Network:
 
     async def server(self, websocket: websockets.WebSocketServerProtocol, path: str):
         connection = Connection(websocket)
-        self.connections.add(connection)
+        self.connection.add(connection)
 
         try:
             async for raw_data in websocket:
