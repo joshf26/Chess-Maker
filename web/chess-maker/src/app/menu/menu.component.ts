@@ -19,8 +19,7 @@ export class MenuComponent implements OnInit {
     ngOnInit(): void {}
 
     connect() {
-        this.apiService.connect(this.address);
-        this.apiService.login(this.displayName);
+        this.apiService.connect(this.address, this.displayName);
         this.router.navigate(['/lobby']);
     }
 }

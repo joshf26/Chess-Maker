@@ -15,11 +15,10 @@ class Server:
 
         self.games: Dict[str, Game] = {}
         self.subscribers = GameSubscribers()
-        self.network = Network(self.on_disconnect)
+        self.network = Network(self.on_connect, self.on_disconnect)
         self._register_commands()
 
     def _register_commands(self) -> None:
-        self.network.register_command('login', self.on_login)
         self.network.register_command('create_game', self.on_create_game)
         self.network.register_command('delete_game', self.on_delete_game)
         self.network.register_command('show_game', self.on_show_game)
@@ -33,6 +32,11 @@ class Server:
 
     def start(self, port: int) -> None:
         self.network.serve(port)
+
+    def on_connect(self, connection: Connection) -> None:
+        self.network.all_update_players()
+        connection.set_player()
+        connection.update_pack_data(self.packs)
 
     def on_disconnect(self, connection: Connection) -> None:
         change_made = False
@@ -50,32 +54,6 @@ class Server:
             self.network.all_update_game_metadata(self.games)
 
         self.network.all_update_players()
-
-    def on_login(self, player: Connection, display_name: str) -> None:
-        while True:
-            similar_player = next(filter(
-                lambda other_player: other_player.display_name == display_name,
-                self.network.connection,
-            ), None)
-
-            if similar_player is None:
-                break
-
-            if not similar_player.active:
-                # The user has logged in before. Reuse their old player.
-                similar_player.socket = player.socket
-                self.network.connection.remove(player)
-                player = similar_player
-                player.active = True
-                break
-
-            # Ensure there are no duplicate display names.
-            display_name += ' (2)'
-
-        player.display_name = display_name
-        player.update_pack_data(self.packs)
-        self.network.all_update_players()
-        player.set_player()
 
     def on_create_game(
         self,
@@ -269,7 +247,7 @@ class Server:
 
     def on_send_chat_message(self, connection: Connection, text: str, game_id: str) -> None:
         if game_id == 'server':
-            for other_connection in self.network.connection:
+            for other_connection in self.network.connections:
                 other_connection.receive_server_chat_message(text, connection)
         else:
             if game_id not in self.games:

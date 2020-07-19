@@ -286,8 +286,8 @@ export class ApiService {
         this.handlers.receiveServerChatMessage(player, parameters.text);
     }
 
-    connect(address: string): void {
-        this.socket = webSocket(`ws://${address}`);
+    connect(address: string, nickname: string): void {
+        this.socket = webSocket(`ws://${address}/display_name=${nickname}`);
 
         this.socket.pipe(
             filter(message => message.hasOwnProperty('error'))
@@ -341,12 +341,6 @@ export class ApiService {
             filter(message => message['command'] == command),
             map(message => message['parameters']),
         );
-    }
-
-    login(displayName: string): void {
-        this.run('login', {
-            display_name: displayName,
-        });
     }
 
     createGame(name: string, controller: Controller, options: {[key: string]: any}): void {

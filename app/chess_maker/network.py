@@ -3,12 +3,14 @@ from __future__ import annotations
 import asyncio
 import inspect
 import json
+from urllib.parse import parse_qs
+
 import websockets
 
 from uuid import uuid4
 from dataclasses import dataclass
 from itertools import islice
-from typing import TYPE_CHECKING, Dict, Callable, Set, Iterable, Union
+from typing import TYPE_CHECKING, Dict, Callable, Set, Iterable, Union, Tuple
 
 from json_serializable import JsonSerializable
 from ply import Ply
@@ -17,6 +19,14 @@ from vector2 import Vector2
 if TYPE_CHECKING:
     from game import Game
     from pack import Pack
+
+
+def parse_path(path: str) -> Tuple[str]:
+    # Remove the leading slash.
+    path = path[1:]
+
+    query = parse_qs(path)
+    return query['display_name'][0],
 
 
 class Connection(JsonSerializable):
@@ -103,16 +113,17 @@ class Command:
 
 class Network:
 
-    def __init__(self, on_disconnect: Callable[[Connection], None]):
+    def __init__(self, on_connect: Callable[[Connection], None], on_disconnect: Callable[[Connection], None]):
+        self.on_connect = on_connect
         self.on_disconnect = on_disconnect
 
         self.commands: Dict[str, Command] = {}
 
-        self.connection: Set[Connection] = set()
+        self.connections: Set[Connection] = set()
 
     @property
     def active_connections(self) -> Iterable[Connection]:
-        return filter(lambda connection: connection.active, self.connection)
+        return filter(lambda connection: connection.active, self.connections)
 
     def register_command(self, command: str, callback: Callable) -> None:
         signature = inspect.signature(callback)
@@ -124,7 +135,7 @@ class Network:
 
     def all_update_players(self) -> None:
         for connection in self.active_connections:
-            connection.update_players(self.connection)
+            connection.update_players(self.connections)
 
     def all_update_game_metadata(self, games: Dict[str, Game]) -> None:
         for connection in self.active_connections:
@@ -167,8 +178,32 @@ class Network:
         self.commands[data['command']].function(connection, **payload)
 
     async def server(self, websocket: websockets.WebSocketServerProtocol, path: str):
-        connection = Connection(websocket)
-        self.connection.add(connection)
+        display_name, = parse_path(path)
+
+        while True:
+            similar_player = next(filter(
+                lambda other_player: other_player.display_name == display_name,
+                self.connections,
+            ), None)
+
+            if similar_player is None:
+                # This is a new user.
+                connection = Connection(websocket)
+                connection.display_name = display_name
+                self.connections.add(connection)
+                break
+
+            if not similar_player.active:
+                # The user has logged in before. Reuse their old player.
+                similar_player.socket = websocket
+                similar_player.active = True
+                connection = similar_player
+                break
+
+            # Ensure there are no duplicate display names.
+            display_name += ' (2)'
+
+        self.on_connect(connection)
 
         try:
             async for raw_data in websocket:
@@ -184,6 +219,6 @@ class Network:
         except websockets.ConnectionClosedError:
             pass
         finally:
-            print('Client disconnected.')
+            print(f'{connection.display_name} disconnected.')
             connection.active = False
             self.on_disconnect(connection)
