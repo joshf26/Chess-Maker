@@ -1,6 +1,6 @@
 import {Component, ViewChild} from '@angular/core';
 import {ChatService} from "../../services/chat/chat.service";
-import {GameService} from "../../services/game/game.service";
+import {Game, GameService} from "../../services/game/game.service";
 import {ApiService} from "../../services/api/api.service";
 import {ChatBoxComponent} from "./chat-box/chat-box.component";
 
@@ -11,6 +11,7 @@ import {ChatBoxComponent} from "./chat-box/chat-box.component";
 })
 export class ChatComponent {
     @ViewChild('serverChatBox') serverChatBox: ChatBoxComponent;
+    @ViewChild('gameChatBox') gameChatBox: ChatBoxComponent;
 
     selectedTab = 0;
 
@@ -21,6 +22,12 @@ export class ChatComponent {
     ) {
         chatService.scrollToBottom.subscribe(() => {
             this.serverChatBox.scrollToBottom();
+        });
+
+        gameService.scrollToBottom.subscribe((game: Game) => {
+            if (game == gameService.selectedGame) {
+                this.gameChatBox.scrollToBottom();
+            }
         });
     }
 }

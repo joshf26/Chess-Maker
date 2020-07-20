@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {EventEmitter, Injectable} from '@angular/core';
 import {Controller, DecoratorType, PieceType} from "../pack/pack.service";
 import {Color} from "../color/color.service";
 import {Player} from "../player/player.service";
@@ -141,6 +141,9 @@ export class GameService extends ItemService<Game> {
     selectedGame?: Game;
     availableColors: number[];
 
+    // Temp until next refactor is done.
+    scrollToBottom = new EventEmitter<Game>();
+
     private updateAvailableColors() {
         if (!this.selectedGame) {
             return;
@@ -184,6 +187,13 @@ export class GameService extends ItemService<Game> {
     }
 
     updateGameData(id: string, data: GameData) {
-        this.items[id].data = data;
+        const game = this.items[id];
+
+        game.data = data;
+
+        // Temp until next refactor is done.
+        setTimeout(() => {
+            this.scrollToBottom.emit(game);
+        }, 10);
     }
 }
