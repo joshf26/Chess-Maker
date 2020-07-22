@@ -37,6 +37,7 @@ class Server:
         self.network.all_update_players()
         connection.set_player()
         connection.update_pack_data(self.packs)
+        connection.update_game_metadata(self.games)
 
     def on_disconnect(self, connection: Connection) -> None:
         change_made = False

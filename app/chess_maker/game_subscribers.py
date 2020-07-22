@@ -29,6 +29,8 @@ class GameSubscribers:
         else:
             self.game_to_connections[game] = {connection}
 
+        self.connection_to_game[connection] = game
+
     def get_connections(self, game: Game) -> Set[Connection]:
         if game in self.game_to_connections:
             return self.game_to_connections[game]

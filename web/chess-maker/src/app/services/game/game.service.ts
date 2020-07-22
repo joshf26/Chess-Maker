@@ -130,7 +130,7 @@ export class Game implements Identifiable {
     }
 
     playerInGame(player: Player): boolean {
-        return Object.values(this.metadata.players).includes(player);
+        return !!Object.values(this.metadata.players).find(other_player => other_player.id == player.id);
     }
 }
 
