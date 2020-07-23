@@ -8,12 +8,12 @@
         <mat-card-content>
             <mat-form-field>
                 <mat-label>Address</mat-label>
-                <input matInput [(ngModel)]="address">
+                <input matInput [(ngModel)]="preferencesService.address">
             </mat-form-field>
             <br>
             <mat-form-field>
                 <mat-label>Nickname</mat-label>
-                <input matInput [(ngModel)]="displayName">
+                <input matInput [(ngModel)]="preferencesService.displayName">
             </mat-form-field>
             <br>
             <button mat-raised-button color="primary" (click)="connect()">Connect</button>

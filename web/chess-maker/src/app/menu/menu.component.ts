@@ -1,6 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {ApiService} from '../services/api/api.service';
 import {Router} from '@angular/router';
+import {PreferencesService} from "../services/preferences/preferences.service";
 
 @Component({
     selector: 'app-menu',
@@ -8,10 +9,8 @@ import {Router} from '@angular/router';
     styleUrls: ['./menu.component.less'],
 })
 export class MenuComponent implements OnInit {
-    address: string = 'localhost:8000';
-    displayName: string = 'Josh';
-
     constructor(
+        public preferencesService: PreferencesService,
         private apiService: ApiService,
         private router: Router,
     ) {}
@@ -19,7 +18,7 @@ export class MenuComponent implements OnInit {
     ngOnInit(): void {}
 
     connect() {
-        this.apiService.connect(this.address, this.displayName);
+        this.apiService.connect(this.preferencesService.address, this.preferencesService.displayName);
         this.router.navigate(['/lobby']);
     }
 }
