@@ -83,7 +83,7 @@ class Connection(JsonSerializable):
         })
 
     def offer_plies(self, from_pos: Vector2, to_pos: Vector2, plies: Iterable[Ply]) -> None:
-        self._run('plies', {
+        self._run('offer_plies', {
             'from_row': from_pos.row,
             'from_col': from_pos.col,
             'to_row': to_pos.row,

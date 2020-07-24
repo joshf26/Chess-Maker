@@ -14,8 +14,10 @@ class MoveAction(JsonSerializable):
     def to_json(self) -> Union[dict, list]:
         return {
             'type': 'move',
-            'from_pos': list(self.from_pos),
-            'to_pos': list(self.to_pos),
+            'from_pos_row': self.from_pos.row,
+            'from_pos_col': self.from_pos.col,
+            'to_pos_row': self.to_pos.row,
+            'to_pos_col': self.to_pos.col,
         }
 
 
@@ -26,7 +28,8 @@ class DestroyAction(JsonSerializable):
     def to_json(self) -> Union[dict, list]:
         return {
             'type': 'destroy',
-            'to_pos': list(self.pos),
+            'to_pos_row': self.pos.row,
+            'to_pos_col': self.pos.col,
         }
 
 
@@ -38,7 +41,8 @@ class CreateAction(JsonSerializable):
     def to_json(self) -> Union[dict, list]:
         return {
             'type': 'create',
-            'to_pos': list(self.pos),
+            'to_pos_row': self.pos.row,
+            'to_pos_col': self.pos.col,
             'piece': self.piece.to_json(),
         }
 

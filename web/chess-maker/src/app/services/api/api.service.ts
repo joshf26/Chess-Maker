@@ -252,12 +252,12 @@ export class ApiService {
                 let actionColor: Color | null = null;
                 let actionDirection: Direction | null = null;
 
-                if (rawAction.type == 'Create') {
+                if (rawAction.type == 'create') {
                     actionPieceType = this.packService.getPieceType(rawAction.piece.pack_id, rawAction.piece.piece_type_id);
                     actionColor = rawAction.piece.color;
                     actionDirection = rawAction.piece.direction;
                 }
-                else if (rawAction.type == 'Move') {
+                else if (rawAction.type == 'move') {
                     actionFrom = new Vector2(rawAction.from_pos_row, rawAction.from_pos_col);
                 }
 
@@ -403,7 +403,32 @@ export class ApiService {
             from_col: from.col,
             to_row: to.row,
             to_col: to.col,
-            ply: ply,
+            ply: {
+                name: ply.name,
+                actions: ply.actions.map(action => {
+                    const result = {
+                        type: action.type,
+                        to_pos_row: action.toPos.row,
+                        to_pos_col: action.toPos.col,
+                    };
+
+                    if (action.fromPos) {
+                        result['from_pos_row'] = action.fromPos.row;
+                        result['from_pos_col'] = action.fromPos.col;
+                    }
+
+                    if (action.pieceType) {
+                        result['piece'] = {
+                            pack_id: action.pieceType.pack.id,
+                            piece_type_id: action.pieceType.id,
+                            color: action.color,
+                            direction: action.direction,
+                        };
+                    }
+
+                    return result;
+                })
+            },
         });
     }
 
