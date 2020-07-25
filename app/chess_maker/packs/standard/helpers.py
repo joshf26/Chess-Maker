@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING, Optional, Tuple, Dict, Generator, Type, Iterator
+from typing import List, TYPE_CHECKING, Optional, Tuple, Dict, Generator, Type
 
 from color import Color
-from info_elements import InfoText, InfoElement
 from piece import Direction, Piece
 from ply import Ply, DestroyAction, MoveAction, Action, CreateAction
 from vector2 import Vector2
@@ -33,6 +32,23 @@ def bidirectional_exclusive_range(start: int, end: int, step: int = 1) -> range:
 
     return range(start - 1, end, -step)
 
+
+def board_range(start: Vector2, end: Vector2, include_start=True, include_end=False) -> Generator[Vector2]:
+    if (direction := axis_direction(start, end)) is None:
+        raise ValueError('Start and end positions are not aligned.')
+
+    if include_start:
+        yield start
+
+    current = start.copy()
+    while current + OFFSETS[direction] != end:
+        current += OFFSETS[direction]
+        yield current
+
+    if include_end:
+        yield end
+
+
 def rotate_direction(direction: Direction) -> Direction:
     return Direction((direction.value + 1) % 8)
 
@@ -41,7 +57,9 @@ def axis_direction(from_pos: Vector2, to_pos: Vector2) -> Optional[Direction]:
     row_diff = to_pos.row - from_pos.row
     col_diff = to_pos.col - from_pos.col
 
-    if row_diff and not col_diff:
+    if not row_diff and not col_diff:
+        return None
+    elif row_diff and not col_diff:
         return Direction.SOUTH if row_diff > 0 else Direction.NORTH
     elif col_diff and not row_diff:
         return Direction.EAST if col_diff > 0 else Direction.WEST

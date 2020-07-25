@@ -6,7 +6,7 @@ from packs.standard.helpers import axis_direction, closest_piece_along_direction
 from packs.standard.pieces.rook import Rook
 from piece import Piece
 from pack_util import load_image
-from ply import Ply, DestroyAction, MoveAction
+from ply import Ply, MoveAction
 
 if TYPE_CHECKING:
     from game import GameData

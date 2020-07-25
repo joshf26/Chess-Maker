@@ -178,7 +178,7 @@ export class GameService extends ItemService<Game> {
                     id,
                     metadata,
                     new GameData([], [], [], [], []),
-                    new RenderData(new Vector2(0, 0), Direction.NORTH, 40),
+                    new RenderData(new Vector2(0, 0), Direction.NORTH, 80),
                 )
             }
         }

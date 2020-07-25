@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from typing import List, Dict, Generator, TYPE_CHECKING, Optional
+from itertools import filterfalse
 
 from color import Color
 from controller import Controller
 from info_elements import InfoText
-from packs.standard.helpers import next_color, threatened, find_pieces, print_color, OFFSETS, opposite, empty_along_axis
+from packs.standard.helpers import next_color, threatened, find_pieces, print_color, OFFSETS, opposite, \
+    empty_along_axis, board_range
 from packs.standard.pieces.bishop import Bishop
 from packs.standard.pieces.king import King
 from packs.standard.pieces.knight import Knight
@@ -118,6 +120,14 @@ class Chess(Controller):
                 self.game.send_error(color, 'That piece cannot move like that.')
                 return
 
+        # Check for castling over check.
+        castling_over_check = False
+        if isinstance(piece, King):
+            plies_len = len(plies)
+            plies = list(filterfalse(self._castling_over_check, plies))
+            if len(plies) != plies_len:
+                castling_over_check = True
+
         # Make sure they are not in check after each ply is complete.
         in_check = True
         for ply in plies:
@@ -130,7 +140,10 @@ class Chess(Controller):
                 in_check = False
 
         if in_check:
-            self.game.send_error(color, 'That move leaves you in check.')
+            if castling_over_check:
+                self.game.send_error(color, 'You cannot castle out of or over check.')
+            else:
+                self.game.send_error(color, 'That move leaves you in check.')
 
     def after_ply(self) -> None:
         # You cannot put yourself in checkmate, so we only need to check for the opposite color.
@@ -143,6 +156,33 @@ class Chess(Controller):
                 self.game.winner(opposite_color, 'Checkmate')
             else:
                 self.game.winner([], 'Stalemate')
+
+    def _castling_over_check(self, ply: Ply) -> bool:
+        if ply.name != 'Castle':
+            return False
+
+        from_pos = ply.actions[0].from_pos
+        to_pos = ply.actions[0].to_pos
+        color = self.game.board[from_pos].color
+
+        opponents = [opposite(color)]
+
+        # Check the square the king is currently on.
+        if threatened(self.game, from_pos, opponents):
+            return True
+
+        # If the castle is queen side, check the square the king passes.
+        if abs(from_pos.col - to_pos.col) == 2:
+            pos = Vector2(from_pos.row, (from_pos.col + to_pos.col) // 2)
+            state = self.game.next_state(
+                color,
+                Ply('Move', [MoveAction(from_pos, pos)])
+            )
+
+            if threatened(self.game, pos, opponents, state):
+                return True
+
+        return False
 
     def _is_legal(self, from_pos: Vector2, to_pos: Vector2) -> bool:
         if to_pos.row >= self.board_size.row or to_pos.row < 0 or to_pos.col >= self.board_size.col or to_pos.col < 0:
