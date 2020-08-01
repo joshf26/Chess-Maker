@@ -12,7 +12,6 @@ from vector2 import Vector2
 
 if TYPE_CHECKING:
     from ply import Ply
-    from game import Game
 
 
 class Jousting(Controller):

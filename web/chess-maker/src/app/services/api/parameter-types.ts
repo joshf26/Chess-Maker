@@ -1,3 +1,25 @@
+export type RawDecorators = {[layer: number]: {
+    row: number,
+    col: number,
+    pack_id: string,
+    decorator_type_id: string,
+}[]}
+
+type RawInfoElements = {
+    type: string,
+    text: string,
+    id?: string,
+}[]
+
+type RawInventoryItems = {
+    id: string,
+    pack_id: string,
+    piece_type_id: string,
+    color: number,
+    direction: number,
+    label: string,
+}[]
+
 type RawPly = {
     name: string,
     actions: {
@@ -59,8 +81,11 @@ export type RawUpdateGameMetadataParameters = {
     }},
 }
 
-export type RawUpdateGameDataParameters = {
+export type RawFullGameDataParameters = {
     id: string,
+    decorators: RawDecorators,
+    info_elements: RawInfoElements,
+    inventory_items: RawInventoryItems,
     pieces: {
         row: number,
         col: number,
@@ -68,25 +93,6 @@ export type RawUpdateGameDataParameters = {
         piece_type_id: string,
         color: number,
         direction: number,
-    }[],
-    decorators: {
-        row: number,
-        col: number,
-        pack_id: string,
-        decorator_type_id: string,
-    }[],
-    info_elements: {
-        type: string,
-        text: string,
-        id?: string,
-    }[],
-    inventory_items: {
-        id: string,
-        pack_id: string,
-        piece_type_id: string,
-        color: number,
-        direction: number,
-        label: string,
     }[],
     chat_messages: {
         sender_id: string,
@@ -98,8 +104,36 @@ export type RawUpdateGameDataParameters = {
     },
 }
 
-export type RawDoPly = {
+export type RawUpdateDecoratorsParameters = {
+    game_id: string,
+    decorators: RawDecorators,
+}
+
+export type RawUpdateInfoElementsParameters = {
+    game_id: string,
+    info_elements: RawInfoElements,
+}
+
+export type RawUpdateInventoryItemsParameters = {
+    game_id: string,
+    inventory_items: RawInventoryItems,
+}
+
+export type RawApplyPlyParameters = {
+    game_id: string,
     ply: RawPly,
+}
+
+export type RawReceiveChatMessageParameters = {
+    game_id: string,
+    sender_id: string,
+    text: string,
+}
+
+export type RawUpdateWinnersParameters = {
+    game_id: string,
+    colors: number[],
+    reason: string,
 }
 
 export type RawShowErrorParameters = {

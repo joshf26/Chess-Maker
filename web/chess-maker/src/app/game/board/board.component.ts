@@ -48,13 +48,13 @@ class Surface {
 })
 export class BoardComponent implements OnInit, OnChanges {
     @Input() private pieces: Piece[];
-    @Input() private decorators: Decorator[];
+    @Input() private decoratorLayers: {[layer: number]: Decorator[]};
     @Input() private inventory: InventoryItem[];
     @Input() private boardSize: Vector2;
     @Input() private renderData: RenderData;
     @Output() private move = new EventEmitter<Move>();
     @Output() private place = new EventEmitter<Place>();
-    @ViewChild('canvas') private canvasElement: ElementRef<HTMLElement>;
+    @ViewChild('canvas') private canvasElement: ElementRef<HTMLCanvasElement>;
 
     private canvas: HTMLCanvasElement;
     private context: CanvasRenderingContext2D;
@@ -116,7 +116,10 @@ export class BoardComponent implements OnInit, OnChanges {
         this.piecesSurface.canvas.width = this.renderData.scale * this.boardSize.col;
         this.piecesSurface.canvas.height = this.renderData.scale * this.boardSize.row;
         this.inventorySurface.canvas.width = PIECE_SIZE;
-        this.inventorySurface.canvas.height = this.canvas.offsetHeight;
+
+        // TODO: Ideally this should simply be set to this.canvas.offsetHeight. However, offsetHeight sometimes returns
+        //       0 for no good reason. This should be investigated later.
+        this.inventorySurface.canvas.height = Object.keys(this.inventory).length * PIECE_SIZE + 10;
 
         // Pieces
         this.piecesSurface.context.clearRect(0, 0, this.piecesSurface.canvas.width, this.piecesSurface.canvas.height);
@@ -139,15 +142,18 @@ export class BoardComponent implements OnInit, OnChanges {
             }
         }
 
-        for (const decorator of this.decorators) {
-            if (decorator.type.rawImage != 'NO DRAW') { // TODO: Work on this.
-                this.drawImage(
-                    this.boardSurface.context,
-                    decorator.type.image,
-                    (decorator.pos.col + 0.5) * this.renderData.scale,
-                    (decorator.pos.row + 0.5) * this.renderData.scale,
-                    0,
-                )
+        for (const [layer, decorators] of Object.entries(this.decoratorLayers)) {
+            // TODO: Sort by layer.
+            for (const decorator of decorators) {
+                if (decorator.type.rawImage != 'NO DRAW') { // TODO: Work on this.
+                    this.drawImage(
+                        this.boardSurface.context,
+                        decorator.type.image,
+                        (decorator.pos.col + 0.5) * this.renderData.scale,
+                        (decorator.pos.row + 0.5) * this.renderData.scale,
+                        0,
+                    )
+                }
             }
         }
 
@@ -181,7 +187,7 @@ export class BoardComponent implements OnInit, OnChanges {
     ngOnInit(): void {}
 
     ngAfterViewInit(): void {
-        this.canvas = <HTMLCanvasElement>this.canvasElement.nativeElement;
+        this.canvas = this.canvasElement.nativeElement;
         this.context = this.canvas.getContext('2d');
         this.boardSurface = new Surface();
         this.piecesSurface = new Surface();
@@ -209,7 +215,7 @@ export class BoardComponent implements OnInit, OnChanges {
         const [x, y] = this.rotateVector(
             (this.canvas.width) / 2,
             (this.canvas.height) / 2,
-        )
+        );
 
         this.renderData.position.col = x - this.boardSize.col * this.renderData.scale / 2;
         this.renderData.position.row = y - this.boardSize.row * this.renderData.scale / 2;

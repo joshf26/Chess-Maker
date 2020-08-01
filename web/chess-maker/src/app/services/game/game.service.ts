@@ -1,4 +1,4 @@
-import {EventEmitter, Injectable} from '@angular/core';
+import {ChangeDetectorRef, EventEmitter, Injectable} from '@angular/core';
 import {Controller, DecoratorType, PieceType} from "../pack/pack.service";
 import {Color} from "../color/color.service";
 import {Player} from "../player/player.service";
@@ -99,7 +99,7 @@ export class GameMetadata {
 export class GameData {
     constructor(
         public pieces: Piece[],
-        public decorators: Decorator[],
+        public decoratorLayers: {[layer: number]: Decorator[]},
         public infoElements: InfoElement[],
         public inventoryItems: InventoryItem[],
         public chatMessages: ChatMessage[],
@@ -140,11 +140,12 @@ export class Game implements Identifiable {
 export class GameService extends ItemService<Game> {
     selectedGame?: Game;
     availableColors: number[];
+    updateBoard = new EventEmitter();
 
     // Temp until next refactor is done.
     scrollToBottom = new EventEmitter<Game>();
 
-    private updateAvailableColors() {
+    private updateAvailableColors(): void {
         if (!this.selectedGame) {
             return;
         }
@@ -160,7 +161,7 @@ export class GameService extends ItemService<Game> {
         this.updateAvailableColors();
     }
 
-    updateGameMetadata(games: {[id: string]: GameMetadata}) {
+    updateGameMetadata(games: {[id: string]: GameMetadata}): void {
         for (const gameId in this.items) {
             if (!(gameId in games)) {
                 if (this.selectedGame && this.selectedGame.id == gameId) {
@@ -186,7 +187,7 @@ export class GameService extends ItemService<Game> {
         this.updateAvailableColors();
     }
 
-    updateGameData(id: string, data: GameData) {
+    updateGameData(id: string, data: GameData): void {
         const game = this.items[id];
 
         game.data = data;
@@ -195,5 +196,13 @@ export class GameService extends ItemService<Game> {
         setTimeout(() => {
             this.scrollToBottom.emit(game);
         }, 10);
+    }
+
+    updateDecorators(gameId: string, decoratorLayers: {[layer: number]: Decorator[]}): void {
+        for (const [layer, decorators] of Object.entries(decoratorLayers)) {
+            this.items[gameId].data.decoratorLayers[layer] = decorators;
+        }
+
+        this.updateBoard.emit();
     }
 }

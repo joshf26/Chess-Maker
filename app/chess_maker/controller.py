@@ -31,9 +31,6 @@ class Controller(ABC):
     def get_info(self, color: Optional[Color]) -> List[InfoElement]:
         return []
 
-    def get_decorators(self) -> Dict[Vector2, Decorator]:
-        return {}
-
     def get_inventory(self, color: Color) -> List[InventoryItem]:
         return []
 

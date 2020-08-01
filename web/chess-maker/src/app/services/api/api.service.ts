@@ -22,10 +22,10 @@ import {
     RawReceiveServerChatMessageParameters,
     RawSetPlayerParameters,
     RawShowErrorParameters,
-    RawUpdateGameDataParameters,
+    RawFullGameDataParameters,
     RawUpdateGameMetadataParameters,
     RawUpdatePackDataParameters,
-    RawUpdatePlayersParameters
+    RawUpdatePlayersParameters, RawUpdateDecoratorsParameters, RawDecorators
 } from "./parameter-types";
 import {Player, PlayerService} from "../player/player.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
@@ -45,6 +45,7 @@ export class ApiService {
         updateGameMetadata: (games: {[key: string]: GameMetadata}) => void,
         updatePlayers: (players: {[key: string]: Player}) => void,
         updateGameData: (id: string, data: GameData) => void,
+        updateDecorators: (gameId: string, decoratorLayers: {[layer: number]: Decorator[]}) => void,
         offerPlies: (from: Vector2, to: Vector2, plies: Ply[]) => void,
         receiveServerChatMessage: (player: Player, text: string) => void,
     } = {
@@ -54,6 +55,7 @@ export class ApiService {
         updatePlayers: () => {},
         updateGameMetadata: () => {},
         updateGameData: () => {},
+        updateDecorators: () => {},
         offerPlies: () => {},
         receiveServerChatMessage: () => {},
     };
@@ -71,6 +73,7 @@ export class ApiService {
         this.handlers.setPlayer = playerService.setPlayer.bind(playerService);
         this.handlers.updateGameMetadata = gameService.updateGameMetadata.bind(gameService);
         this.handlers.updateGameData = gameService.updateGameData.bind(gameService);
+        this.handlers.updateDecorators = gameService.updateDecorators.bind(gameService);
         this.handlers.receiveServerChatMessage = chatService.receiveChatMessage.bind(chatService);
     }
 
@@ -79,6 +82,21 @@ export class ApiService {
             command: command,
             parameters: parameters,
         });
+    }
+
+    private fillDecoratorLayers(rawDecoratorLayers: RawDecorators, decorators: {[layer: number]: Decorator[]}): void {
+        for (const [layer, rawDecorators] of Object.entries(rawDecoratorLayers)) {
+            for (const rawDecorator of rawDecorators) {
+                if (!(layer in decorators)) {
+                    decorators[layer] = [];
+                }
+
+                decorators[layer].push(new Decorator(
+                    new Vector2(rawDecorator.row, rawDecorator.col),
+                    this.packService.getDecoratorType(rawDecorator.pack_id, rawDecorator.decorator_type_id),
+                ));
+            }
+        }
     }
 
     private setPlayer(parameters: RawSetPlayerParameters): void {
@@ -169,9 +187,9 @@ export class ApiService {
         this.handlers.updateGameMetadata(games);
     }
 
-    private updateGameData(parameters: RawUpdateGameDataParameters): void {
+    private updateGameData(parameters: RawFullGameDataParameters): void {
         const pieces: Piece[] = [];
-        const decorators: Decorator[] = [];
+        const decorators: {[layer: number]: Decorator[]} = [];
         const infoElements: InfoElement[] = [];
         const inventoryItems: InventoryItem[] = [];
         const chatMessages: ChatMessage[] = [];
@@ -185,12 +203,7 @@ export class ApiService {
             ));
         }
 
-        for (const rawDecorator of parameters.decorators) {
-            decorators.push(new Decorator(
-                new Vector2(rawDecorator.row, rawDecorator.col),
-                this.packService.getDecoratorType(rawDecorator.pack_id, rawDecorator.decorator_type_id),
-            ));
-        }
+        this.fillDecoratorLayers(parameters.decorators, decorators);
 
         for (const rawInfoElement of parameters.info_elements) {
             infoElements.push(new InfoElement(
@@ -227,6 +240,12 @@ export class ApiService {
             chatMessages,
             winnerData,
         ));
+    }
+
+    private updateDecorators(parameters: RawUpdateDecoratorsParameters): void {
+        const decoratorLayers: {[layer: number]: Decorator[]} = {};
+        this.fillDecoratorLayers(parameters.decorators, decoratorLayers);
+        this.handlers.updateDecorators(parameters.game_id, decoratorLayers);
     }
 
     private showError(parameters: RawShowErrorParameters): void {
@@ -315,6 +334,7 @@ export class ApiService {
         this.getCommand('update_players').subscribe(this.updatePlayers.bind(this));
         this.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
         this.getCommand('update_game_data').subscribe(this.updateGameData.bind(this));
+        this.getCommand('update_decorators').subscribe(this.updateDecorators.bind(this));
         this.getCommand('show_error').subscribe(this.showError.bind(this));
         this.getCommand('offer_plies').subscribe(this.offerPlies.bind(this));
         this.getCommand('receive_server_chat_message').subscribe(this.receiveServerChatMessage.bind(this))

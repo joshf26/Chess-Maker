@@ -10,9 +10,11 @@ import websockets
 from uuid import uuid4
 from dataclasses import dataclass
 from itertools import islice
-from typing import TYPE_CHECKING, Dict, Callable, Set, Iterable, Union, Tuple
+from typing import TYPE_CHECKING, Dict, Callable, Set, Iterable, Union, Tuple, List
 
+from decorator import Decorator
 from json_serializable import JsonSerializable
+from pack_util import get_pack
 from ply import Ply
 from vector2 import Vector2
 
@@ -76,6 +78,19 @@ class Connection(JsonSerializable):
 
     def update_game_data(self, game: Game) -> None:
         self._run('update_game_data', game.get_full_data(self))
+
+    def update_decorators(self, game: Game) -> None:
+        self._run('update_decorators', {
+            'game_id': game.id,
+            'decorators': {
+                layer: [{
+                    'row': pos.row,
+                    'col': pos.col,
+                    'pack_id': get_pack(decorator),
+                    'decorator_type_id': decorator.__class__.__name__,
+                } for pos, decorator in decorators.items()] for layer, decorators in game.decoratorLayers.items()
+            },
+        })
 
     def show_error(self, message: str) -> None:
         self._run('show_error', {

@@ -7,6 +7,7 @@ from uuid import uuid4
 
 from color import Color
 from controller import Controller
+from decorator import Decorator
 from game_subscribers import GameSubscribers
 from info_elements import InfoButton
 from inventory_item import InventoryItem
@@ -117,6 +118,8 @@ class Game:
         self.chat_messages: List[ChatMessage] = []
         self.winners: Optional[WinnerData] = None
 
+        self.decoratorLayers: Dict[int, Dict[Vector2, Decorator]] = {}
+
         self._init_game()
 
     def __hash__(self):
@@ -150,12 +153,12 @@ class Game:
             'color': piece.color.value,
             'direction': piece.direction.value,
         } for position, piece in self.board.items()]
-        decorators = [{
+        decorators = {layer: [{
             'row': position.row,
             'col': position.col,
             'pack_id': get_pack(decorator),
             'decorator_type_id': decorator.__class__.__name__,
-        } for position, decorator in self.controller.get_decorators().items()]
+        } for position, decorator in decorators.items()] for layer, decorators in self.decoratorLayers.items()}
         info = [info_element.to_json() for info_element in self.controller.get_info(color)]
         chat_messages = [chat_message.to_json() for chat_message in self.chat_messages]
         inventory = [inventory_item.to_json() for inventory_item in inventory_items]
@@ -179,6 +182,12 @@ class Game:
     def send_update_to_subscribers(self) -> None:
         for connection in self.subscribers.get_connections(self):
             connection.update_game_data(self)
+
+    def update_decorator_layers(self, decoratorLayers: Dict[int, Dict[Vector2, Decorator]]):
+        self.decoratorLayers.update(decoratorLayers)
+
+        for connection in self.subscribers.get_connections(self):
+            connection.update_decorators(self)
 
     def send_error(self, color: Color, message: str) -> None:
         connection = self.players.get_connection(color)

@@ -1,5 +1,5 @@
-import {Component, EventEmitter, Input, Output, ViewChild} from '@angular/core';
-import {Direction, Game, InfoElement} from "../services/game/game.service";
+import {ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild} from '@angular/core';
+import {Direction, Game, GameService, InfoElement} from "../services/game/game.service";
 import {PlayerService} from "../services/player/player.service";
 import {ApiService} from "../services/api/api.service";
 import {DomSanitizer} from "@angular/platform-browser";
@@ -20,11 +20,14 @@ export class GameComponent {
     direction: Direction = Direction.NORTH;
 
     constructor(
+        private gameService: GameService,
         public playerService: PlayerService,
         public apiService: ApiService,
         public sanitizer: DomSanitizer,
         public sidebarService: SidebarService,
-    ) {}
+    ) {
+        this.gameService.updateBoard.subscribe(() => this.board.ngOnChanges({}));
+    }
 
     rotateBoardLeft() {
         this.game.renderData.direction = (this.game.renderData.direction + 7) % 8;
