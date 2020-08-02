@@ -8,10 +8,12 @@
            (place)="place($event)"></app-board>
 
 <div class="info-box-container">
-    <app-info-box (buttonClick)="apiService.clickButton(game, $event)"
+    <app-info-box [isPublic]="true"
+                  (buttonClick)="apiService.clickButton(game, $event)"
                   [infoElements]="publicInfoElements"
                   [disableButtons]="!game.playerInGame(playerService.currentPlayer)"></app-info-box>
-    <app-info-box (buttonClick)="apiService.clickButton(game, $event)"
+    <app-info-box [isPublic]="false"
+                  (buttonClick)="apiService.clickButton(game, $event)"
                   [infoElements]="privateInfoElements"
                   [disableButtons]="!game.playerInGame(playerService.currentPlayer)"
                   *ngIf="privateInfoElements"></app-info-box>

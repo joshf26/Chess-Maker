@@ -10,6 +10,7 @@ import {DomSanitizer} from "@angular/platform-browser";
 export class InfoBoxComponent implements OnInit {
     @Input() infoElements: InfoElement[];
     @Input() disableButtons: boolean;
+    @Input() isPublic: boolean;
     @Output() buttonClick = new EventEmitter<InfoElement>();
 
     constructor(public sanitizer: DomSanitizer) {}

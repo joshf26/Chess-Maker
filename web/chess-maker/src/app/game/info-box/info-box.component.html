@@ -1,5 +1,7 @@
 <mat-card id="info-box" *ngIf="infoElements.length">
     <mat-card-content>
+        <mat-icon class="visibility-icon" *ngIf="isPublic" inline matTooltip="Everyone can see">visibility</mat-icon>
+        <mat-icon class="visibility-icon" *ngIf="!isPublic" inline matTooltip="Only you can see">visibility_off</mat-icon>
         <ng-template ngFor let-infoElement [ngForOf]="infoElements">
             <button mat-raised-button
                     class="info-button"
