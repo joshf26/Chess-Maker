@@ -7,19 +7,15 @@
            (move)="move($event)"
            (place)="place($event)"></app-board>
 
-<mat-card id="info-box" *ngIf="infoElements.length">
-    <mat-card-content>
-        <ng-template ngFor let-infoElement [ngForOf]="infoElements">
-            <button mat-raised-button
-                    class="info-button"
-                    color="primary"
-                    [disabled]="!game.playerInGame(playerService.currentPlayer)"
-                    *ngIf="infoElement.type == 'button'"
-                    (click)="apiService.clickButton(game, infoElement)">{{infoElement.text}}</button>
-            <div *ngIf="infoElement.type == 'text'" [innerHTML]="sanitizer.bypassSecurityTrustHtml(infoElement.text)"></div>
-        </ng-template>
-    </mat-card-content>
-</mat-card>
+<div class="info-box-container">
+    <app-info-box (buttonClick)="apiService.clickButton(game, $event)"
+                  [infoElements]="publicInfoElements"
+                  [disableButtons]="!game.playerInGame(playerService.currentPlayer)"></app-info-box>
+    <app-info-box (buttonClick)="apiService.clickButton(game, $event)"
+                  [infoElements]="privateInfoElements"
+                  [disableButtons]="!game.playerInGame(playerService.currentPlayer)"
+                  *ngIf="privateInfoElements"></app-info-box>
+</div>
 
 <div class="bottom-buttons">
     <button mat-raised-button *ngIf="!sidebarService.isOpen()" (click)="sidebarService.open()">Show Sidebar</button>

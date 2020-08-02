@@ -1,16 +1,10 @@
-#info-box {
+.info-box-container {
     position: absolute;
     top: 5px;
     left: 5px;
-}
 
-.info-button {
-    &:not(:first-child) {
-        margin-top: 10px;
-    }
-
-    &:not(:last-child) {
-        margin-bottom: 10px;
+    & > * {
+        margin-bottom: 5px;
     }
 }
 

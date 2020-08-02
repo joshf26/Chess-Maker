@@ -1,0 +1,13 @@
+<mat-card id="info-box" *ngIf="infoElements.length">
+    <mat-card-content>
+        <ng-template ngFor let-infoElement [ngForOf]="infoElements">
+            <button mat-raised-button
+                    class="info-button"
+                    color="primary"
+                    *ngIf="infoElement.type == 'button'"
+                    [disabled]="disableButtons"
+                    (click)="buttonClick.emit(infoElement)">{{infoElement.text}}</button>
+            <div *ngIf="infoElement.type == 'text'" [innerHTML]="sanitizer.bypassSecurityTrustHtml(infoElement.text)"></div>
+        </ng-template>
+    </mat-card-content>
+</mat-card>

@@ -30,7 +30,8 @@
     <mat-sidenav-content>
         <app-game #gameComponent
                   [game]="gameService.selectedGame"
-                  [infoElements]="gameService.selectedGame.data.infoElements"
+                  [publicInfoElements]="gameService.selectedGame.data.publicInfoElements"
+                  [privateInfoElements]="gameService.selectedGame.data.privateInfoElements"
                   *ngIf="gameService.selectedGame"></app-game>
         <div *ngIf="!gameService.selectedGame" class="full-center center">
             <h1>Welcome to Chess Maker</h1>

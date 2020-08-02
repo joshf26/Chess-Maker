@@ -100,7 +100,8 @@ export class GameData {
     constructor(
         public pieces: Piece[],
         public decoratorLayers: {[layer: number]: Decorator[]},
-        public infoElements: InfoElement[],
+        public publicInfoElements: InfoElement[],
+        public privateInfoElements: InfoElement[],
         public inventoryItems: InventoryItem[],
         public chatMessages: ChatMessage[],
         public winnerData?: WinnerData,
@@ -178,7 +179,7 @@ export class GameService extends ItemService<Game> {
                 this.items[id] = new Game(
                     id,
                     metadata,
-                    new GameData([], [], [], [], []),
+                    new GameData([], [], [], [], [], []),
                     new RenderData(new Vector2(0, 0), Direction.NORTH, 80),
                 )
             }
@@ -198,11 +199,33 @@ export class GameService extends ItemService<Game> {
         }, 10);
     }
 
-    updateDecorators(gameId: string, decoratorLayers: {[layer: number]: Decorator[]}): void {
+    updateDecorators(game: Game, decoratorLayers: {[layer: number]: Decorator[]}): void {
         for (const [layer, decorators] of Object.entries(decoratorLayers)) {
-            this.items[gameId].data.decoratorLayers[layer] = decorators;
+            game.data.decoratorLayers[layer] = decorators;
         }
 
         this.updateBoard.emit();
+    }
+
+    updateInfoElements(game: Game, infoElements: InfoElement[], isPublic: boolean): void {
+        if (isPublic) {
+            game.data.publicInfoElements = infoElements;
+        } else {
+            game.data.privateInfoElements = infoElements;
+        }
+    }
+
+    updateInventoryItems(game: Game, inventoryItems: InventoryItem[]): void {
+        game.data.inventoryItems = inventoryItems;
+
+        this.updateBoard.emit();
+    }
+
+    updateWinners(game: Game, winnerData: WinnerData): void {
+        game.data.winnerData = winnerData;
+    }
+
+    receiveGameChatMessage(game: Game, chatMessage: ChatMessage): void {
+        game.data.chatMessages.push(chatMessage);
     }
 }

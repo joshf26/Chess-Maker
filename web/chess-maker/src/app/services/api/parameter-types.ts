@@ -84,7 +84,8 @@ export type RawUpdateGameMetadataParameters = {
 export type RawFullGameDataParameters = {
     id: string,
     decorators: RawDecorators,
-    info_elements: RawInfoElements,
+    public_info_elements: RawInfoElements,
+    private_info_elements?: RawInfoElements,
     inventory_items: RawInventoryItems,
     pieces: {
         row: number,
@@ -112,6 +113,7 @@ export type RawUpdateDecoratorsParameters = {
 export type RawUpdateInfoElementsParameters = {
     game_id: string,
     info_elements: RawInfoElements,
+    is_public: boolean,
 }
 
 export type RawUpdateInventoryItemsParameters = {
@@ -124,16 +126,16 @@ export type RawApplyPlyParameters = {
     ply: RawPly,
 }
 
-export type RawReceiveChatMessageParameters = {
-    game_id: string,
-    sender_id: string,
-    text: string,
-}
-
 export type RawUpdateWinnersParameters = {
     game_id: string,
     colors: number[],
     reason: string,
+}
+
+export type RawReceiveGameChatMessageParameters = {
+    game_id: string,
+    sender_id: string,
+    text: string,
 }
 
 export type RawShowErrorParameters = {

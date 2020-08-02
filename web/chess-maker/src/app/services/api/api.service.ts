@@ -25,7 +25,13 @@ import {
     RawFullGameDataParameters,
     RawUpdateGameMetadataParameters,
     RawUpdatePackDataParameters,
-    RawUpdatePlayersParameters, RawUpdateDecoratorsParameters, RawDecorators
+    RawUpdatePlayersParameters,
+    RawUpdateDecoratorsParameters,
+    RawDecorators,
+    RawUpdateInfoElementsParameters,
+    RawUpdateInventoryItemsParameters,
+    RawReceiveGameChatMessageParameters,
+    RawUpdateWinnersParameters,
 } from "./parameter-types";
 import {Player, PlayerService} from "../player/player.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
@@ -45,7 +51,11 @@ export class ApiService {
         updateGameMetadata: (games: {[key: string]: GameMetadata}) => void,
         updatePlayers: (players: {[key: string]: Player}) => void,
         updateGameData: (id: string, data: GameData) => void,
-        updateDecorators: (gameId: string, decoratorLayers: {[layer: number]: Decorator[]}) => void,
+        updateDecorators: (game: Game, decoratorLayers: {[layer: number]: Decorator[]}) => void,
+        updateInfoElements: (game: Game, infoElements: InfoElement[], isPublic: boolean) => void,
+        updateInventoryItems: (game: Game, inventoryItems: InventoryItem[]) => void,
+        updateWinners: (game: Game, winnerData: WinnerData) => void,
+        receiveGameChatMessage: (game: Game, chatMessage: ChatMessage) => void,
         offerPlies: (from: Vector2, to: Vector2, plies: Ply[]) => void,
         receiveServerChatMessage: (player: Player, text: string) => void,
     } = {
@@ -56,8 +66,12 @@ export class ApiService {
         updateGameMetadata: () => {},
         updateGameData: () => {},
         updateDecorators: () => {},
-        offerPlies: () => {},
+        updateInfoElements: () => {},
+        updateInventoryItems: () => {},
+        updateWinners: () => {},
+        receiveGameChatMessage: () => {},
         receiveServerChatMessage: () => {},
+        offerPlies: () => {},
     };
 
     constructor(
@@ -74,6 +88,10 @@ export class ApiService {
         this.handlers.updateGameMetadata = gameService.updateGameMetadata.bind(gameService);
         this.handlers.updateGameData = gameService.updateGameData.bind(gameService);
         this.handlers.updateDecorators = gameService.updateDecorators.bind(gameService);
+        this.handlers.updateInfoElements = gameService.updateInfoElements.bind(gameService);
+        this.handlers.updateInventoryItems = gameService.updateInventoryItems.bind(gameService);
+        this.handlers.updateWinners = gameService.updateWinners.bind(gameService);
+        this.handlers.receiveGameChatMessage = gameService.receiveGameChatMessage.bind(gameService);
         this.handlers.receiveServerChatMessage = chatService.receiveChatMessage.bind(chatService);
     }
 
@@ -190,9 +208,10 @@ export class ApiService {
     private updateGameData(parameters: RawFullGameDataParameters): void {
         const pieces: Piece[] = [];
         const decorators: {[layer: number]: Decorator[]} = [];
-        const infoElements: InfoElement[] = [];
+        const publicInfoElements: InfoElement[] = [];
         const inventoryItems: InventoryItem[] = [];
         const chatMessages: ChatMessage[] = [];
+        let privateInfoElements: InfoElement[] | undefined = undefined;
 
         for (const rawPiece of parameters.pieces) {
             pieces.push(new Piece(
@@ -205,12 +224,25 @@ export class ApiService {
 
         this.fillDecoratorLayers(parameters.decorators, decorators);
 
-        for (const rawInfoElement of parameters.info_elements) {
-            infoElements.push(new InfoElement(
+        // TODO: Change these to map calls.
+        for (const rawInfoElement of parameters.public_info_elements) {
+            publicInfoElements.push(new InfoElement(
                 rawInfoElement.type,
                 rawInfoElement.text,
                 rawInfoElement.id,
             ));
+        }
+
+        if (parameters.private_info_elements) {
+            privateInfoElements = [];
+
+            for (const rawInfoElement of parameters.private_info_elements) {
+                privateInfoElements.push(new InfoElement(
+                    rawInfoElement.type,
+                    rawInfoElement.text,
+                    rawInfoElement.id,
+                ));
+            }
         }
 
         for (const rawInventoryItem of parameters.inventory_items) {
@@ -235,7 +267,8 @@ export class ApiService {
         this.handlers.updateGameData(parameters.id, new GameData(
             pieces,
             decorators,
-            infoElements,
+            publicInfoElements,
+            privateInfoElements,
             inventoryItems,
             chatMessages,
             winnerData,
@@ -243,9 +276,56 @@ export class ApiService {
     }
 
     private updateDecorators(parameters: RawUpdateDecoratorsParameters): void {
+        const game = this.gameService.get(parameters.game_id);
         const decoratorLayers: {[layer: number]: Decorator[]} = {};
         this.fillDecoratorLayers(parameters.decorators, decoratorLayers);
-        this.handlers.updateDecorators(parameters.game_id, decoratorLayers);
+
+        this.handlers.updateDecorators(game, decoratorLayers);
+    }
+
+    private updateInfoElements(parameters: RawUpdateInfoElementsParameters): void {
+        const game = this.gameService.get(parameters.game_id);
+        const infoElements = parameters.info_elements.map(rawInfoElement => new InfoElement(
+            rawInfoElement.type,
+            rawInfoElement.text,
+            rawInfoElement.id,
+        ));
+
+        this.handlers.updateInfoElements(game, infoElements, parameters.is_public);
+    }
+
+    private updateInventoryItems(parameters: RawUpdateInventoryItemsParameters): void {
+        const game = this.gameService.get(parameters.game_id);
+        const inventoryItems = parameters.inventory_items.map(rawInventoryItem => new InventoryItem(
+            rawInventoryItem.id,
+            this.packService.getPieceType(rawInventoryItem.pack_id, rawInventoryItem.piece_type_id),
+            rawInventoryItem.color,
+            rawInventoryItem.direction,
+            rawInventoryItem.label,
+        ));
+
+        this.handlers.updateInventoryItems(game, inventoryItems);
+    }
+
+    private updateWinners(parameters: RawUpdateWinnersParameters): void {
+        const game = this.gameService.get(parameters.game_id);
+        const winnerData = new WinnerData(parameters.colors, parameters.reason);
+
+        this.handlers.updateWinners(game, winnerData);
+    }
+
+    private receiveGameChatMessage(parameters: RawReceiveGameChatMessageParameters): void {
+        const game = this.gameService.get(parameters.game_id);
+        const sender = this.playerService.get(parameters.sender_id);
+        const chatMessage = new ChatMessage(sender, parameters.text);
+
+        this.handlers.receiveGameChatMessage(game, chatMessage);
+    }
+
+    private receiveServerChatMessage(parameters: RawReceiveServerChatMessageParameters): void {
+        const player = this.playerService.get(parameters.sender_id);
+
+        this.handlers.receiveServerChatMessage(player, parameters.text);
     }
 
     private showError(parameters: RawShowErrorParameters): void {
@@ -299,12 +379,6 @@ export class ApiService {
         this.handlers.offerPlies(from, to, plies);
     }
 
-    private receiveServerChatMessage(parameters: RawReceiveServerChatMessageParameters): void {
-        const player = this.playerService.get(parameters.sender_id);
-
-        this.handlers.receiveServerChatMessage(player, parameters.text);
-    }
-
     connect(address: string, nickname: string): void {
         this.socket = webSocket(`ws://${address}/display_name=${nickname}`);
 
@@ -335,9 +409,13 @@ export class ApiService {
         this.getCommand('update_game_metadata').subscribe(this.updateGameMetadata.bind(this));
         this.getCommand('update_game_data').subscribe(this.updateGameData.bind(this));
         this.getCommand('update_decorators').subscribe(this.updateDecorators.bind(this));
+        this.getCommand('update_info_elements').subscribe(this.updateInfoElements.bind(this));
+        this.getCommand('update_inventory_items').subscribe(this.updateInventoryItems.bind(this));
+        this.getCommand('update_winners').subscribe(this.updateWinners.bind(this));
+        this.getCommand('receive_game_chat_message').subscribe(this.receiveGameChatMessage.bind(this));
+        this.getCommand('receive_server_chat_message').subscribe(this.receiveServerChatMessage.bind(this))
         this.getCommand('show_error').subscribe(this.showError.bind(this));
         this.getCommand('offer_plies').subscribe(this.offerPlies.bind(this));
-        this.getCommand('receive_server_chat_message').subscribe(this.receiveServerChatMessage.bind(this))
     }
 
     disconnect(): void {

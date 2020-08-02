@@ -32,6 +32,7 @@ import {SidebarCardComponent} from './lobby/sidebar-card/sidebar-card.component'
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {ChatComponent} from "./lobby/chat/chat.component";
 import { ChatBoxComponent } from './lobby/chat/chat-box/chat-box.component';
+import { InfoBoxComponent } from './game/info-box/info-box.component';
 
 @NgModule({
     declarations: [
@@ -48,6 +49,7 @@ import { ChatBoxComponent } from './lobby/chat/chat-box/chat-box.component';
         SidebarCardComponent,
         ChatComponent,
         ChatBoxComponent,
+        InfoBoxComponent,
     ],
     imports: [
         BrowserModule,

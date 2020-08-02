@@ -2,16 +2,17 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Set, Dict, Type, Generator, Union
+from typing import TYPE_CHECKING, List, Optional, Set, Dict, Type, Generator, Union, Callable
 from uuid import uuid4
 
 from color import Color
 from controller import Controller
 from decorator import Decorator
 from game_subscribers import GameSubscribers
-from info_elements import InfoButton
+from info_elements import InfoButton, InfoElement
 from inventory_item import InventoryItem
 from json_serializable import JsonSerializable
+from network_list import NetworkList
 from pack_util import get_pack
 from piece import Piece
 from ply import Ply, MoveAction, DestroyAction, CreateAction
@@ -46,10 +47,10 @@ class ColorConnections:
         del self.connection_to_color[connection]
         del self.color_to_connection[color]
 
-    def get_color(self, connection: Connection):
+    def get_color(self, connection: Connection) -> Optional[Color]:
         return self.connection_to_color.get(connection, None)
 
-    def get_connection(self, color: Color):
+    def get_connection(self, color: Color) -> Optional[Connection]:
         return self.color_to_connection.get(color, None)
 
 
@@ -115,10 +116,17 @@ class Game:
         self.players = ColorConnections()
         self.controller = controller_type(self, controller_options)
         self.game_data = GameData([], self.controller.board_size, self.controller.colors)
-        self.chat_messages: List[ChatMessage] = []
-        self.winners: Optional[WinnerData] = None
 
-        self.decoratorLayers: Dict[int, Dict[Vector2, Decorator]] = {}
+        self.decorator_layers: Dict[int, Dict[Vector2, Decorator]] = {}
+        self.private_info_elements: Dict[Color, NetworkList[InfoElement]] = {
+            color: NetworkList(self._make_private_info_updater(color)) for color in self.controller.colors
+        }
+        self.public_info_elements: NetworkList[InfoElement] = NetworkList(self.update_public_info)
+        self.inventories: Dict[Color, NetworkList[InventoryItem]] = {
+            color: NetworkList(self._make_inventory_updater(color)) for color in self.controller.colors
+        }
+        self.winners: Optional[WinnerData] = None
+        self.chat_messages: List[ChatMessage] = []
 
         self._init_game()
 
@@ -129,6 +137,13 @@ class Game:
         board: Dict[Vector2, Piece] = {}
         self.game_data.history.append(GameState(board, None, None))
         self.controller.init_board(board)
+
+    # https://stackoverflow.com/questions/36805071/dictionary-comprehension-with-lambda-functions-gives-wrong-results
+    def _make_inventory_updater(self, color: Color) -> Callable[[], None]:
+        return lambda: self.update_inventory(color)
+
+    def _make_private_info_updater(self, color: Color) -> Callable[[], None]:
+        return lambda: self.update_private_info(color)
 
     def get_metadata(self) -> dict:
         return {
@@ -143,7 +158,7 @@ class Game:
 
     def get_full_data(self, connection: Connection) -> dict:
         color = self.players.get_color(connection)
-        inventory_items: List[InventoryItem] = [] if color is None else self.controller.get_inventory(color)
+        inventory_items: List[InventoryItem] = [] if color is None else self.inventories[color].items
 
         pieces = [{
             'row': position.row,
@@ -158,20 +173,27 @@ class Game:
             'col': position.col,
             'pack_id': get_pack(decorator),
             'decorator_type_id': decorator.__class__.__name__,
-        } for position, decorator in decorators.items()] for layer, decorators in self.decoratorLayers.items()}
-        info = [info_element.to_json() for info_element in self.controller.get_info(color)]
+        } for position, decorator in decorators.items()] for layer, decorators in self.decorator_layers.items()}
+        public_info_elements = [info_element.to_json() for info_element in self.public_info_elements.items]
         chat_messages = [chat_message.to_json() for chat_message in self.chat_messages]
         inventory = [inventory_item.to_json() for inventory_item in inventory_items]
 
-        return {
+        result = {
             'id': self.id,
             'pieces': pieces,
             'decorators': decorators,
-            'info_elements': info,
+            'public_info_elements': public_info_elements,
             'inventory_items': inventory,
             'chat_messages': chat_messages,
             'winners': None if self.winners is None else self.winners.to_json(),
         }
+
+        if color is not None:
+            result['private_info_elements'] = [
+                info_element.to_json() for info_element in self.private_info_elements[color].items
+            ]
+
+        return result
 
     def get_available_colors(self) -> Set[Color]:
         colors = set(self.controller.colors.copy())
@@ -183,11 +205,27 @@ class Game:
         for connection in self.subscribers.get_connections(self):
             connection.update_game_data(self)
 
-    def update_decorator_layers(self, decoratorLayers: Dict[int, Dict[Vector2, Decorator]]):
-        self.decoratorLayers.update(decoratorLayers)
+    def update_decorator_layers(self, decorator_layers: Dict[int, Dict[Vector2, Decorator]]) -> None:
+        self.decorator_layers.update(decorator_layers)
 
         for connection in self.subscribers.get_connections(self):
             connection.update_decorators(self)
+
+    def update_inventory(self, color: Color) -> None:
+        connection = self.players.get_connection(color)
+
+        if connection is not None:
+            connection.update_inventory_items(self)
+
+    def update_public_info(self) -> None:
+        for connection in self.subscribers.get_connections(self):
+            connection.update_info_elements(self, True)
+
+    def update_private_info(self, color: Color) -> None:
+        connection = self.players.get_connection(color)
+
+        if connection is not None:
+            connection.update_info_elements(self, False)
 
     def send_error(self, color: Color, message: str) -> None:
         connection = self.players.get_connection(color)
@@ -262,7 +300,7 @@ class Game:
         if color is None:
             return
 
-        info_elements = self.controller.get_info(color)
+        info_elements = self.public_info_elements.items + self.private_info_elements[color].items
         for info_element in info_elements:
             if isinstance(info_element, InfoButton) and info_element.id == button_id:
                 info_element.callback(color)
@@ -270,6 +308,9 @@ class Game:
 
     def winner(self, colors: List[Color], reason: str = None) -> None:
         self.winners = WinnerData(colors, reason)
+
+        for connection in self.subscribers.get_connections(self):
+            connection.update_winners(self)
 
     @property
     def board(self) -> Dict[Vector2, Piece]:

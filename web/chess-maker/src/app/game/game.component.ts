@@ -1,8 +1,7 @@
-import {ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild} from '@angular/core';
+import {Component, EventEmitter, Input, Output, ViewChild} from '@angular/core';
 import {Direction, Game, GameService, InfoElement} from "../services/game/game.service";
 import {PlayerService} from "../services/player/player.service";
 import {ApiService} from "../services/api/api.service";
-import {DomSanitizer} from "@angular/platform-browser";
 import {BoardComponent, Move, Place} from "./board/board.component";
 import {SidebarService} from "../services/sidebar/sidebar.service";
 
@@ -13,7 +12,8 @@ import {SidebarService} from "../services/sidebar/sidebar.service";
 })
 export class GameComponent {
     @Input() game: Game;
-    @Input() infoElements: InfoElement[];
+    @Input() publicInfoElements: InfoElement[];
+    @Input() privateInfoElements: InfoElement[];
     @Output() toggleSidebar = new EventEmitter();
     @ViewChild('board') board: BoardComponent;
 
@@ -23,7 +23,6 @@ export class GameComponent {
         private gameService: GameService,
         public playerService: PlayerService,
         public apiService: ApiService,
-        public sanitizer: DomSanitizer,
         public sidebarService: SidebarService,
     ) {
         this.gameService.updateBoard.subscribe(() => this.board.ngOnChanges({}));

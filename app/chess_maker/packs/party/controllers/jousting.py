@@ -1,11 +1,12 @@
 from __future__ import annotations
+from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, List, Dict, Generator, Optional
+from typing import TYPE_CHECKING, Dict, Generator
 
 from color import Color
 from controller import Controller
-from info_elements import InfoButton, InfoText, InfoElement
+from info_elements import InfoButton, InfoText
 from packs.standard.pieces.knight import Knight
 from piece import Direction, Piece
 from vector2 import Vector2
@@ -32,9 +33,6 @@ class Jousting(Controller):
         super().__init__(*args, **kwargs)
 
         self.game_started = False
-        self.countdown_started = False
-        self.start_timer = 3
-
         self.start_button = InfoButton('Start Game', self._start_game)
 
     def init_board(self, board: Dict[Vector2, Piece]) -> None:
@@ -47,11 +45,8 @@ class Jousting(Controller):
         board[Vector2(5, 0)] = Knight(Color.BLUE, Direction.NORTH)
         board[Vector2(2, 0)] = Knight(Color.PURPLE, Direction.NORTH)
 
-    def get_info(self, color: Optional[Color]) -> List[InfoElement]:
-        if self.countdown_started and not self.game_started:
-            return [InfoText(f'<br>Game starting in {self.start_timer}')]
-
-        return [] if self.game_started else [self.start_button]
+        with self.game.public_info_elements as info:
+            info.append(self.start_button)
 
     def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
         if self.game_started:
@@ -66,17 +61,24 @@ class Jousting(Controller):
     def _start_game(self, color: Color):
         async def countdown():
             self._clear_unused()
-            self.countdown_started = True
-            self.game.send_update_to_subscribers()
-            await asyncio.sleep(1)
-            self.start_timer -= 1
-            self.game.send_update_to_subscribers()
-            await asyncio.sleep(1)
-            self.start_timer -= 1
-            self.game.send_update_to_subscribers()
-            await asyncio.sleep(1)
+
+            # Remove the start game button and add the countdown timer element.
+            with self.game.public_info_elements as info:
+                info.remove(self.start_button)
+                info.append(InfoText(''))
+
+            # Tick the countdown 3 times.
+            for timer in range(3, 0, -1):
+                with self.game.public_info_elements as info:
+                    info[0].text = f'Game starting in {timer}'
+
+                await asyncio.sleep(1)
+
+            # Remove the countdown.
+            with self.game.public_info_elements as info:
+                del info[0]
+
             self.game_started = True
-            self.game.send_update_to_subscribers()
 
         asyncio.create_task(countdown())
 

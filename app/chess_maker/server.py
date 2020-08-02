@@ -190,7 +190,7 @@ class Server:
             return
 
         game = self.games[game_id]
-        inventory = game.controller.get_inventory(game.players.get_color(connection))
+        inventory = game.inventories[game.players.get_color(connection)].items
         inventory_item = next(filter(lambda item: item.id == inventory_item_id, inventory), None)
 
         if not inventory_item:

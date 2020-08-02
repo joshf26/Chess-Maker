@@ -7,7 +7,7 @@ from color import Color
 from controller import Controller
 from info_elements import InfoText
 from packs.standard.helpers import next_color, threatened, find_pieces, print_color, OFFSETS, opposite, \
-    empty_along_axis, board_range
+    empty_along_axis
 from packs.standard.pieces.bishop import Bishop
 from packs.standard.pieces.king import King
 from packs.standard.pieces.knight import Knight
@@ -68,18 +68,8 @@ class Chess(Controller):
             for col in range(8):
                 board[Vector2(row, col)] = Pawn(color, direction)
 
-    def get_info(self, color: Optional[Color]) -> List[InfoElement]:
-        result = []
-        ply_color = next_color(self.game)
-
-        # Check if their king is in check.
-        king_position, king = next(find_pieces(self.game.board, King, ply_color))
-        if threatened(self.game, king_position, [opposite(ply_color)]):
-            result.append(InfoText(f'{print_color(ply_color)} is in check!'))
-
-        result.append(InfoText(f'Current Turn: {print_color(ply_color)}'))
-
-        return result
+        with self.game.public_info_elements as info:
+            info.append(InfoText(f'Current Turn: {print_color(Color.WHITE)}'))
 
     def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
         board = self.game.board
@@ -156,6 +146,27 @@ class Chess(Controller):
                 self.game.winner(opposite_color, 'Checkmate')
             else:
                 self.game.winner([], 'Stalemate')
+
+        self._update_info()
+
+    def _update_info(self) -> None:
+        color = next_color(self.game)
+
+        with self.game.public_info_elements as info:
+            info[0].text = f'Current Turn: {print_color(color)}'
+
+            # Check if their king is in check.
+            king_position, king = next(find_pieces(self.game.board, King, color))
+            if threatened(self.game, king_position, [opposite(color)]):
+                text = f'{print_color(color)} is in check!'
+
+                if len(info) == 1:
+                    info.append(InfoText(''))
+
+                info[1].text = text
+            else:
+                if len(info) == 2:
+                    del info[1]
 
     def _castling_over_check(self, ply: Ply) -> bool:
         if ply.name != 'Castle':
