@@ -258,4 +258,5 @@ class Server:
 
             game = self.games[game_id]
             game.chat_messages.append(ChatMessage(connection, text))
-            game.send_update_to_subscribers()
+            for other_connection in self.subscribers.get_connections(game):
+                other_connection.receive_game_chat_message(game, connection, text)

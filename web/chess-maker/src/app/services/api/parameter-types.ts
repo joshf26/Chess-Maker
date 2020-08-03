@@ -138,6 +138,11 @@ export type RawReceiveGameChatMessageParameters = {
     text: string,
 }
 
+export type RawReceiveServerChatMessageParameters = {
+    sender_id: string,
+    text: string,
+}
+
 export type RawShowErrorParameters = {
     message: string,
 }
@@ -148,9 +153,4 @@ export type RawOfferPliesParameters = {
     to_row: number,
     to_col: number,
     plies: RawPly[],
-}
-
-export type RawReceiveServerChatMessageParameters = {
-    sender_id: string,
-    text: string,
 }

@@ -121,9 +121,18 @@ class Connection(JsonSerializable):
             **game.winners.to_json(),
         })
 
-    def receive_game_chat_message(self, game: Game) -> None:
+    def receive_game_chat_message(self, game: Game, sender: Connection, text: str) -> None:
         self._run('receive_game_chat_message', {
             'game_id': game.id,
+            'sender_id': sender.id,
+            'text': text,
+        })
+
+    def receive_server_chat_message(self, text: str, sender: Connection, game: Game = None) -> None:
+        self._run('receive_server_chat_message', {
+            'text': text,
+            'sender_id': sender.id,
+            'game_id': game.id if game else 'server',
         })
 
     def show_error(self, message: str) -> None:
@@ -138,13 +147,6 @@ class Connection(JsonSerializable):
             'to_row': to_pos.row,
             'to_col': to_pos.col,
             'plies': [ply.to_json() for ply in plies],
-        })
-
-    def receive_server_chat_message(self, text: str, sender: Connection, game: Game = None) -> None:
-        self._run('receive_server_chat_message', {
-            'text': text,
-            'sender_id': sender.id,
-            'game_id': game.id if game else 'server',
         })
 
     def to_json(self) -> Union[dict, list]:

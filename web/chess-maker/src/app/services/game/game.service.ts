@@ -171,8 +171,6 @@ export class GameService extends ItemService<Game> {
     selectedGame?: Game;
     availableColors: number[];
     updateBoard = new EventEmitter();
-
-    // Temp until next refactor is done.
     scrollToBottom = new EventEmitter<Game>();
 
     private updateAvailableColors(): void {
@@ -221,11 +219,6 @@ export class GameService extends ItemService<Game> {
         const game = this.items[id];
 
         game.data = data;
-
-        // Temp until next refactor is done.
-        setTimeout(() => {
-            this.scrollToBottom.emit(game);
-        }, 10);
     }
 
     updateDecorators(game: Game, decoratorLayers: {[layer: number]: Decorator[]}): void {
@@ -275,5 +268,7 @@ export class GameService extends ItemService<Game> {
 
     receiveGameChatMessage(game: Game, chatMessage: ChatMessage): void {
         game.data.chatMessages.push(chatMessage);
+
+        this.scrollToBottom.emit(game);
     }
 }
