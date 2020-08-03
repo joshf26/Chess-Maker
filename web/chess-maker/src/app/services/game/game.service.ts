@@ -1,4 +1,4 @@
-import {ChangeDetectorRef, EventEmitter, Injectable} from '@angular/core';
+import {EventEmitter, Injectable} from '@angular/core';
 import {Controller, DecoratorType, PieceType} from "../pack/pack.service";
 import {Color} from "../color/color.service";
 import {Player} from "../player/player.service";
@@ -29,11 +29,40 @@ export class Vector2 {
 
 export class Piece {
     constructor(
-        public pos: Vector2,
         public type: PieceType,
         public color: Color,
         public direction: Direction,
     ) {}
+}
+
+export class PieceMap {
+    private map: {[row: number]: {[col: number]: Piece}} = {};
+
+    set(pos: Vector2, piece: Piece): void {
+        if (!(pos.row in this.map)) {
+            this.map[pos.row] = {};
+        }
+
+        this.map[pos.row][pos.col] = piece;
+    }
+
+    get(pos: Vector2): Piece {
+        return this.map[pos.row][pos.col];
+    }
+
+    delete(pos: Vector2): void {
+        delete this.map[pos.row][pos.col];
+    }
+
+    *entries(): Generator<[Vector2, Piece]> {
+        for (const rawRow of Object.keys(this.map)) {
+            const row = parseInt(rawRow);
+            for (const [rawCol, piece] of Object.entries(this.map[row])) {
+                const col = parseInt(rawCol);
+                yield [new Vector2(row, col), piece];
+            }
+        }
+    }
 }
 
 export class Decorator {
@@ -98,7 +127,7 @@ export class GameMetadata {
 
 export class GameData {
     constructor(
-        public pieces: Piece[],
+        public pieces: PieceMap,
         public decoratorLayers: {[layer: number]: Decorator[]},
         public publicInfoElements: InfoElement[],
         public privateInfoElements: InfoElement[],
@@ -179,7 +208,7 @@ export class GameService extends ItemService<Game> {
                 this.items[id] = new Game(
                     id,
                     metadata,
-                    new GameData([], [], [], [], [], []),
+                    new GameData(new PieceMap(), [], [], [], [], []),
                     new RenderData(new Vector2(0, 0), Direction.NORTH, 80),
                 )
             }
@@ -217,6 +246,25 @@ export class GameService extends ItemService<Game> {
 
     updateInventoryItems(game: Game, inventoryItems: InventoryItem[]): void {
         game.data.inventoryItems = inventoryItems;
+
+        this.updateBoard.emit();
+    }
+
+    applyPly(game: Game, ply: Ply): void {
+        for (const action of ply.actions) {
+            switch (action.type) {
+                case 'move':
+                    game.data.pieces.set(action.toPos, game.data.pieces.get(action.fromPos));
+                    game.data.pieces.delete(action.fromPos);
+                    break;
+                case 'create':
+                    game.data.pieces.set(action.toPos, new Piece(action.pieceType, action.color, action.direction));
+                    break;
+                case 'destroy':
+                    game.data.pieces.delete(action.toPos);
+                    break;
+            }
+        }
 
         this.updateBoard.emit();
     }

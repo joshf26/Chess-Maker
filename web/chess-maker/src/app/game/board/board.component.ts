@@ -12,7 +12,15 @@ import {
 import {fromEvent} from "rxjs";
 import {debounceTime} from "rxjs/operators";
 import {MatSnackBar} from "@angular/material/snack-bar";
-import {Direction, Vector2, Decorator, InventoryItem, Piece, RenderData} from "../../services/game/game.service";
+import {
+    Direction,
+    Vector2,
+    Decorator,
+    InventoryItem,
+    Piece,
+    RenderData,
+    PieceMap
+} from "../../services/game/game.service";
 
 const EVEN_TILE_COLOR = '#A85738';
 const ODD_TILE_COLOR = '#F3C1A9';
@@ -47,7 +55,7 @@ class Surface {
     styleUrls: ['./board.component.less']
 })
 export class BoardComponent implements OnInit, OnChanges {
-    @Input() private pieces: Piece[];
+    @Input() private pieces: PieceMap;
     @Input() private decoratorLayers: {[layer: number]: Decorator[]};
     @Input() private inventory: InventoryItem[];
     @Input() private boardSize: Vector2;
@@ -68,6 +76,7 @@ export class BoardComponent implements OnInit, OnChanges {
     panning = false;
     dragging = false;
     draggingPiece?: Piece | InventoryItem;
+    draggingPiecePos?: Vector2;
     panX: number;
     panY: number;
 
@@ -123,12 +132,12 @@ export class BoardComponent implements OnInit, OnChanges {
 
         // Pieces
         this.piecesSurface.context.clearRect(0, 0, this.piecesSurface.canvas.width, this.piecesSurface.canvas.height);
-        for (const piece of this.pieces) {
+        for (const [pos, piece] of this.pieces.entries()) {
             this.drawImage(
                 this.piecesSurface.context,
                 piece.type.images[piece.color],
-                (piece.pos.col + 0.5) * this.renderData.scale,
-                (piece.pos.row + 0.5) * this.renderData.scale,
+                (pos.col + 0.5) * this.renderData.scale,
+                (pos.row + 0.5) * this.renderData.scale,
                 piece.direction * Math.PI / 4,
             );
         }
@@ -251,10 +260,11 @@ export class BoardComponent implements OnInit, OnChanges {
                 const mouseTileX = Math.floor(this.mousePositionX);
                 const mouseTileY = Math.floor(this.mousePositionY);
 
-                for (const piece of this.pieces) {
-                    if (piece.pos.row == mouseTileY && piece.pos.col == mouseTileX) {
+                for (const [pos, piece] of this.pieces.entries()) {
+                    if (pos.row == mouseTileY && pos.col == mouseTileX) {
                         this.dragging = true;
                         this.draggingPiece = piece;
+                        this.draggingPiecePos = pos;
 
                         break;
                     }
@@ -292,9 +302,9 @@ export class BoardComponent implements OnInit, OnChanges {
                         to: new Vector2(mouseTileY, mouseTileX),
                     });
                 }
-                else if (this.draggingPiece.pos.row != mouseTileY || this.draggingPiece.pos.col != mouseTileX) {
+                else if (this.draggingPiecePos.row != mouseTileY || this.draggingPiecePos.col != mouseTileX) {
                     this.move.emit({
-                        from: this.draggingPiece.pos,
+                        from: this.draggingPiecePos,
                         to: new Vector2(mouseTileY, mouseTileX),
                     });
                 }

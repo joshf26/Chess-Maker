@@ -266,7 +266,11 @@ class Game:
     def apply_ply(self, color: Optional[Color], ply: Optional[Ply]) -> None:
         self.game_data.history.append(self.next_state(color, ply))
         self.controller.after_ply()
-        self.send_update_to_subscribers()
+
+        # TODO: Investigate why ply is optional.
+        if ply:
+            for connection in self.subscribers.get_connections(self):
+                connection.apply_ply(self, ply)
 
     def undo_ply(self) -> None:
         self.game_data.history.pop()

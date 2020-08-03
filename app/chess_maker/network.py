@@ -109,6 +109,12 @@ class Connection(JsonSerializable):
             'inventory_items': [inventory_item.to_json() for inventory_item in game.inventories[color].items]
         })
 
+    def apply_ply(self, game: Game, ply: Ply) -> None:
+        self._run('apply_ply', {
+            'game_id': game.id,
+            'ply': ply.to_json(),
+        })
+
     def update_winners(self, game: Game) -> None:
         self._run('update_winners', {
             'game_id': game.id,
