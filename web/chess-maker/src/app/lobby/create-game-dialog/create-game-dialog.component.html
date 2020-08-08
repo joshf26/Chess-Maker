@@ -43,6 +43,7 @@
         <ng-template ngFor let-option
                      [ngForOf]="data.controller.options | keyvalue">
             <mat-checkbox required *ngIf="option.value.type == 'bool'" [(ngModel)]="options[option.key]">{{option.key}}</mat-checkbox>
+
             <mat-form-field *ngIf="option.value.type == 'int'">
                 <mat-label>{{option.key}}</mat-label>
                 <input required
@@ -53,6 +54,13 @@
                        [min]="option.value.min"
                        [max]="option.value.max"
                        step="1">
+            </mat-form-field>
+
+            <mat-form-field *ngIf="option.value.type == 'select'">
+                <mat-label>{{option.key}}</mat-label>
+                <mat-select [(value)]="options[option.key]">
+                    <mat-option *ngFor="let choice of option.value.choices" [value]="choice">{{choice}}</mat-option>
+                </mat-select>
             </mat-form-field>
         </ng-template>
     </div>

@@ -1,6 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, List
 
 from json_serializable import JsonSerializable
 
@@ -34,4 +34,17 @@ class BoolOption(Option):
         return {
             'type': 'bool',
             'default': self.default,
+        }
+
+
+@dataclass
+class SelectOption(Option):
+    default: str
+    choices: List[str]
+
+    def to_json(self) -> Union[dict, list]:
+        return {
+            'type': 'select',
+            'default': self.default,
+            'choices': self.choices,
         }

@@ -13,7 +13,6 @@ import {fromEvent} from "rxjs";
 import {debounceTime} from "rxjs/operators";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {
-    Direction,
     Vector2,
     Decorator,
     InventoryItem,

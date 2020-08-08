@@ -19,8 +19,8 @@ export class CreateGameDialog {
     ) {}
 
     updateOptions(): void {
-        for (const [option, defaultValue] of Object.entries(this.data.controller.options)) {
-            this.options[option] = defaultValue.default;
+        for (const [option, optionProperties] of Object.entries(this.data.controller.options)) {
+            this.options[option] = optionProperties.default;
         }
     }
 
