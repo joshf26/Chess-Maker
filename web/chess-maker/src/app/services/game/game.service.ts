@@ -5,6 +5,8 @@ import {Player} from "../player/player.service";
 import {Identifiable, ItemService} from "../item-service";
 import {ChatMessage} from "../chat/chat.service";
 
+export type NoDrawData = {[p: number]: {[p: number]: boolean}};
+
 export enum Direction {
     NORTH,
     NORTH_EAST,
@@ -139,6 +141,7 @@ export class GameData {
 
 export class RenderData {
     firstDraw = true;
+    noDrawData: NoDrawData = {};
 
     constructor(
         public position: Vector2,
@@ -184,6 +187,22 @@ export class GameService extends ItemService<Game> {
         }
     }
 
+    private updateNoDraw(game: Game, decoratorLayers: {[layer: number]: Decorator[]}): void {
+        if (1 in decoratorLayers) {
+            game.renderData.noDrawData = {};
+
+            for (const decorator of decoratorLayers[1]) {
+                if (decorator.type.rawImage == 'NO DRAW') {
+                    if (!(decorator.pos.row in game.renderData.noDrawData)) {
+                        game.renderData.noDrawData[decorator.pos.row] = {};
+                    }
+
+                    game.renderData.noDrawData[decorator.pos.row][decorator.pos.col] = true;
+                }
+            }
+        }
+    }
+
     setSelectedGame(selectedGame: Game): void {
         this.selectedGame = selectedGame;
         this.updateAvailableColors();
@@ -218,6 +237,8 @@ export class GameService extends ItemService<Game> {
     updateGameData(id: string, data: GameData): void {
         const game = this.items[id];
 
+        this.updateNoDraw(game, data.decoratorLayers);
+
         game.data = data;
     }
 
@@ -225,6 +246,8 @@ export class GameService extends ItemService<Game> {
         for (const [layer, decorators] of Object.entries(decoratorLayers)) {
             game.data.decoratorLayers[layer] = decorators;
         }
+
+        this.updateNoDraw(game, decoratorLayers);
 
         this.updateBoard.emit();
     }

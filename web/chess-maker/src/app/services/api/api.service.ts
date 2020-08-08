@@ -107,10 +107,11 @@ export class ApiService {
 
     private fillDecoratorLayers(rawDecoratorLayers: RawDecorators, decorators: {[layer: number]: Decorator[]}): void {
         for (const [layer, rawDecorators] of Object.entries(rawDecoratorLayers)) {
+            if (!(layer in decorators)) {
+                decorators[layer] = [];
+            }
+
             for (const rawDecorator of rawDecorators) {
-                if (!(layer in decorators)) {
-                    decorators[layer] = [];
-                }
 
                 decorators[layer].push(new Decorator(
                     new Vector2(rawDecorator.row, rawDecorator.col),

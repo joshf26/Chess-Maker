@@ -97,6 +97,7 @@ class Server:
             return
 
         self.subscribers.remove_game(self.games[game_id])
+        self.games[game_id].shutdown()
         del self.games[game_id]
         self.network.all_update_game_metadata(self.games)
 

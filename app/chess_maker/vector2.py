@@ -15,12 +15,15 @@ class Vector2:
     def __sub__(self, other: Vector2) -> Vector2:
         return Vector2(self.row - other.row, self.col - other.col)
 
+    def __eq__(self, other: Vector2):
+        return self.row == other.row and self.col == other.col
+
     def __iter__(self) -> Generator[int]:
         yield self.row
         yield self.col
 
     def __hash__(self) -> int:
-        return hash(self.row) + hash(self.col)
+        return hash((self.row, self.col))
 
     def copy(self) -> Vector2:
         return Vector2(self.row, self.col)

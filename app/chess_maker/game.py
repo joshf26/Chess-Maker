@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import asyncio
+import sys
+import traceback
+from asyncio import Task
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Set, Dict, Type, Generator, Union, Callable
+from typing import TYPE_CHECKING, List, Optional, Set, Dict, Type, Generator, Union, Callable, Awaitable
 from uuid import uuid4
 
 from color import Color
@@ -116,6 +120,7 @@ class Game:
         self.players = ColorConnections()
         self.controller = controller_type(self, controller_options)
         self.game_data = GameData([], self.controller.board_size, self.controller.colors)
+        self.tasks: List[Task] = []
 
         self.decorator_layers: Dict[int, Dict[Vector2, Decorator]] = {}
         self.private_info_elements: Dict[Color, NetworkList[InfoElement]] = {
@@ -144,6 +149,11 @@ class Game:
 
     def _make_private_info_updater(self, color: Color) -> Callable[[], None]:
         return lambda: self.update_private_info(color)
+
+    def shutdown(self) -> None:
+        del self.controller
+        for task in self.tasks:
+            task.cancel()
 
     def get_metadata(self) -> dict:
         return {
@@ -315,6 +325,17 @@ class Game:
 
         for connection in self.subscribers.get_connections(self):
             connection.update_winners(self)
+
+        self.shutdown()
+
+    def run_async(self, function: Callable[[], Awaitable]):
+        async def do_function():
+            try:
+                await function()
+            except Exception:
+                print(traceback.format_exc(), file=sys.stderr)
+
+        self.tasks.append(asyncio.create_task(do_function()))
 
     @property
     def board(self) -> Dict[Vector2, Piece]:

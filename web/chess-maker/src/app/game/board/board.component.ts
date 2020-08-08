@@ -146,6 +146,8 @@ export class BoardComponent implements OnInit, OnChanges {
         this.boardSurface.context.clearRect(0, 0, this.boardSurface.canvas.width, this.boardSurface.canvas.height);
         for (let row = 0; row < this.boardSize.row; ++row) {
             for (let col = 0; col < this.boardSize.col; ++col) {
+                if (row in this.renderData.noDrawData && col in this.renderData.noDrawData[row]) continue;
+
                 this.boardSurface.context.fillStyle = (col % 2 == row % 2) ? ODD_TILE_COLOR : EVEN_TILE_COLOR;
                 this.boardSurface.context.fillRect(col * this.renderData.scale, row * this.renderData.scale, this.renderData.scale, this.renderData.scale);
             }
@@ -153,8 +155,9 @@ export class BoardComponent implements OnInit, OnChanges {
 
         for (const [layer, decorators] of Object.entries(this.decoratorLayers)) {
             // TODO: Sort by layer.
+            this.boardSurface.context.fillStyle = '#323232';
             for (const decorator of decorators) {
-                if (decorator.type.rawImage != 'NO DRAW') { // TODO: Work on this.
+                if (decorator.type.rawImage != 'NO DRAW') {
                     this.drawImage(
                         this.boardSurface.context,
                         decorator.type.image,
