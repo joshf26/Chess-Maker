@@ -14,6 +14,7 @@ import {PlayersListComponent} from "./players-list/players-list.component";
 import {SelectPlyDialog} from "./select-ply-dialog/select-ply-dialog.component";
 import {GamesListComponent} from "./games-list/games-list.component";
 import {ChatComponent} from "./chat/chat.component";
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 export interface CreateGameDialogData {
     displayName: string,
@@ -54,9 +55,20 @@ export class LobbyComponent implements OnInit {
         public sidebarService: SidebarService,
         private changeDetectorRef: ChangeDetectorRef,
         private router: Router,
+        private snackBar: MatSnackBar,
     ) {
         apiService.handlers.offerPlies = this.offerPlies.bind(this);
         apiService.handlers.focusGame = this.showGame.bind(this);
+
+        apiService.onForceDisconnect.subscribe(reason => {
+            this.selectPlyDialog.closeAll();
+            this.createGameDialog.closeAll();
+            this.snackBar.open(reason, 'Ok', {
+                duration: undefined,
+                horizontalPosition: 'end',
+                panelClass: 'error',
+            })
+        });
     }
 
     private offerPlies(from: Vector2, to: Vector2, plies: Ply[]): void {

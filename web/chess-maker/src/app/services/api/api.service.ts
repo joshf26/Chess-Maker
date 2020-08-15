@@ -1,4 +1,4 @@
-import {Injectable} from '@angular/core';
+import {EventEmitter, Injectable} from '@angular/core';
 import {webSocket, WebSocketSubject} from 'rxjs/webSocket';
 import {Observable} from 'rxjs';
 import {Router} from '@angular/router';
@@ -41,6 +41,8 @@ import {ChatMessage, ChatService} from "../chat/chat.service";
     providedIn: 'root',
 })
 export class ApiService {
+    onForceDisconnect = new EventEmitter<string>();
+
     private socket?: WebSocketSubject<unknown>;
     private commands: Observable<unknown>;
 
@@ -412,9 +414,9 @@ export class ApiService {
             console.log,
             error => {
                 if (error instanceof CloseEvent) {
-                    alert('The server has closed.');
+                    this.onForceDisconnect.emit('The server has closed.');
                 } else {
-                    alert('Cannot reach the server.');
+                    this.onForceDisconnect.emit('Cannot reach the server.');
                 }
                 this.router.navigate(['/']);
             },
