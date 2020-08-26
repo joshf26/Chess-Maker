@@ -1,14 +1,28 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import Union, List
+from typing import Union, List, Any
 
 from json_serializable import JsonSerializable
+from user_error import user_error
 
 
 class Option(JsonSerializable, ABC):
 
     def __init__(self):
-        self.value = None
+        self._value = None
+
+    def set_value(self, value: Any) -> None:
+        self._value = value
+
+    @property
+    def value(self) -> Any:
+        if not hasattr(self, '_value') or self._value is None:
+            user_error(
+                "Option value accessed before initialization. Make sure you call super().__init__(*args, **kwargs) as "
+                "the first line in your game's constructor."
+            )
+
+        return self._value
 
 
 @dataclass

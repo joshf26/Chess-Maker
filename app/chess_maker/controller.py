@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import List, Generator, TYPE_CHECKING, Dict
+from typing import List, Generator, TYPE_CHECKING, Dict, Any
 
 from color import Color
+from option import Option
 from vector2 import Vector2
 
 if TYPE_CHECKING:
@@ -16,11 +17,13 @@ class Controller(ABC):
     name = ''
     board_size = Vector2(0, 0)
     colors: List[Color] = []
-    options: Dict[str, any] = {}
+    options: Dict[str, Option] = {}
 
-    def __init__(self, game: Game, options: dict):
+    def __init__(self, game: Game, options: Dict[str, Any]):
         self.game = game
-        self.options = options
+
+        for option, value in options.items():
+            self.options[option].set_value(value)
 
     def init_board(self, board: Dict[Vector2, Piece]) -> None:
         pass

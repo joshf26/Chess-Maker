@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Dict, Generator
 from color import Color
 from controller import Controller
 from info_elements import InfoButton, InfoText
+from option import IntOption
 from packs.standard.pieces.knight import Knight
 from piece import Direction, Piece
 from vector2 import Vector2
@@ -28,6 +29,9 @@ class Jousting(Controller):
         Color.BLUE,
         Color.PURPLE,
     ]
+    options = {
+        'Game Start Timer': IntOption(3, 0)
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -53,6 +57,8 @@ class Jousting(Controller):
             piece = self.game.board[from_pos]
             if color == piece.color:
                 yield from piece.get_plies(from_pos, to_pos, self.game.game_data)
+        else:
+            self.game.send_error(color, 'The game has not started yet.')
 
     def after_ply(self) -> None:
         if len(self.game.board) == 1:
@@ -67,8 +73,8 @@ class Jousting(Controller):
                 info.remove(self.start_button)
                 info.append(InfoText(''))
 
-            # Tick the countdown 3 times.
-            for timer in range(3, 0, -1):
+            # Tick the countdown the set number of times.
+            for timer in range(self.options['Game Start Timer'].value, 0, -1):
                 with self.game.public_info_elements as info:
                     info[0].text = f'Game starting in {timer}'
 

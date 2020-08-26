@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Tuple, Dict, Union
+from typing import TYPE_CHECKING, Tuple, Dict, Union, Optional
 
 from PIL import Image
 
@@ -24,14 +24,14 @@ def load_image(pack_path: str, image_path: str) -> str:
 def decorators_from_image(
     pack_path: str,
     image_path: str,
-    color_mapping: Union[Dict[int, Decorator], Dict[tuple, Decorator]],
+    color_mapping: Union[Dict[int, Optional[Decorator]], Dict[tuple, Optional[Decorator]]],
 ) -> Tuple[Vector2, Dict[Vector2, Decorator]]:
     result: Dict[Vector2, Decorator] = {}
     image = Image.open(f'chess_maker/packs/{pack_path}/{image_path}')
     data = image.getdata()
 
-    for row in image.height:
-        for col in image.width:
+    for row in range(image.height):
+        for col in range(image.width):
             pixel = data[row * image.width + col]
             if pixel in color_mapping:
                 result[Vector2(row, col)] = color_mapping[pixel]

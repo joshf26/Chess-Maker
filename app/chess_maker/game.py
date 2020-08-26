@@ -133,6 +133,8 @@ class Game:
         self.winners: Optional[WinnerData] = None
         self.chat_messages: List[ChatMessage] = []
 
+        self.active = True
+
         self._init_game()
 
     def __hash__(self):
@@ -151,9 +153,12 @@ class Game:
         return lambda: self.update_private_info(color)
 
     def shutdown(self) -> None:
-        del self.controller
-        for task in self.tasks:
-            task.cancel()
+        if self.active:
+            del self.controller
+            for task in self.tasks:
+                task.cancel()
+
+        self.active = False
 
     def get_metadata(self) -> dict:
         return {

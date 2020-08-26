@@ -99,7 +99,7 @@ class Checkers(Controller):
         # Check for force capture.
         elif color == piece.color and color == next_color(self.game):
             for ply in plies:
-                if self._color_can_jump(color) and self.options['Force Capture']:
+                if self._color_can_jump(color) and self.options['Force Capture'].value:
                     if any(isinstance(action, DestroyAction) for action in ply.actions):
                         result.append(ply)
                 else:
