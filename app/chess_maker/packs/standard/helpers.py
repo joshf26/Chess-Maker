@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import List, TYPE_CHECKING, Optional, Tuple, Dict, Generator, Type
+from dataclasses import dataclass
+from typing import List, TYPE_CHECKING, Optional, Tuple, Dict, Generator, Type, Any, Union, Hashable
+
+from PIL import Image
 
 from color import Color
 from piece import Direction, Piece
@@ -212,3 +215,36 @@ def in_bounds(board_size: Vector2, pos: Vector2) -> bool:
 
 def move_to_promotion(action: MoveAction, piece: Piece) -> List[Action]:
     return [DestroyAction(action.from_pos), CreateAction(piece, action.to_pos)]
+
+
+@dataclass
+class ImageMapData:
+    size: Vector2
+    data: Dict[Hashable, List[Vector2]]
+
+
+def image_to_map(
+    pack_path: str,
+    image_path: str,
+    color_mapping: Union[Dict[int, Hashable], Dict[tuple, Hashable]],
+) -> ImageMapData:
+    image = Image.open(f'chess_maker/packs/{pack_path}/{image_path}')
+    data = image.getdata()
+    result: Dict[Hashable, List[Vector2]] = {}
+
+    for row in range(image.height):
+        for col in range(image.width):
+            pixel = data[row * image.width + col]
+            if pixel in color_mapping:
+                mapping = color_mapping[pixel]
+                if mapping not in result:
+                    result[mapping] = []
+
+                result[mapping].append(Vector2(row, col))
+            else:
+                print(f'WARNING: No mapping for color {pixel} found. Ignoring pixel at row {row}, col {col} with color.')
+
+    return ImageMapData(
+        Vector2(image.height, image.width),
+        result,
+    )
