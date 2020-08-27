@@ -15,7 +15,7 @@ class Vector2:
     def __sub__(self, other: Vector2) -> Vector2:
         return Vector2(self.row - other.row, self.col - other.col)
 
-    def __eq__(self, other: Vector2):
+    def __eq__(self, other: Vector2) -> bool:
         return self.row == other.row and self.col == other.col
 
     def __iter__(self) -> Generator[int]:
@@ -24,6 +24,9 @@ class Vector2:
 
     def __hash__(self) -> int:
         return hash((self.row, self.col))
+
+    def __abs__(self) -> Vector2:
+        return Vector2(abs(self.row), abs(self.col))
 
     def copy(self) -> Vector2:
         return Vector2(self.row, self.col)
