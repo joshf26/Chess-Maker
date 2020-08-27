@@ -10,8 +10,11 @@ import websockets
 from uuid import uuid4
 from dataclasses import dataclass
 from itertools import islice
-from typing import TYPE_CHECKING, Dict, Callable, Set, Iterable, Union, Tuple
+from typing import TYPE_CHECKING, Dict, Callable, Set, Iterable, Union, Tuple, List
 
+from decorator import Decorator
+from info_elements import InfoElement
+from inventory_item import InventoryItem
 from json_serializable import JsonSerializable
 from pack_util import get_pack
 from ply import Ply
@@ -78,7 +81,7 @@ class Connection(JsonSerializable):
     def update_game_data(self, game: Game) -> None:
         self._run('update_game_data', game.get_full_data(self))
 
-    def update_decorators(self, game: Game) -> None:
+    def update_decorators(self, game: Game, decorator_layers: Dict[int, Dict[Vector2, Decorator]]) -> None:
         self._run('update_decorators', {
             'game_id': game.id,
             'decorators': {
@@ -87,26 +90,21 @@ class Connection(JsonSerializable):
                     'col': pos.col,
                     'pack_id': get_pack(decorator),
                     'decorator_type_id': decorator.__class__.__name__,
-                } for pos, decorator in decorators.items()] for layer, decorators in game.decorator_layers.items()
+                } for pos, decorator in decorators.items()] for layer, decorators in decorator_layers.items()
             },
         })
 
-    def update_info_elements(self, game: Game, is_public: bool) -> None:
-        color = game.players.get_color(self)
-        info_elements = game.public_info_elements.items if is_public else game.private_info_elements[color].items
-
+    def update_info_elements(self, game: Game, info_elements: List[InfoElement], is_public: bool) -> None:
         self._run('update_info_elements', {
             'game_id': game.id,
             'info_elements': [info_element.to_json() for info_element in info_elements],
             'is_public': is_public,
         })
 
-    def update_inventory_items(self, game: Game) -> None:
-        color = game.players.get_color(self)
-
+    def update_inventory_items(self, game: Game, inventory_items: List[InventoryItem]) -> None:
         self._run('update_inventory_items', {
             'game_id': game.id,
-            'inventory_items': [inventory_item.to_json() for inventory_item in game.inventories[color].items]
+            'inventory_items': [inventory_item.to_json() for inventory_item in inventory_items]
         })
 
     def apply_ply(self, game: Game, ply: Ply) -> None:
