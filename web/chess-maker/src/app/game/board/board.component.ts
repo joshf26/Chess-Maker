@@ -12,21 +12,12 @@ import {
 import {fromEvent} from "rxjs";
 import {debounceTime} from "rxjs/operators";
 import {MatSnackBar} from "@angular/material/snack-bar";
-import {
-    Vector2,
-    Decorator,
-    InventoryItem,
-    Piece,
-    RenderData,
-    PieceMap
-} from "../../services/game/game.service";
-
-const EVEN_TILE_COLOR = '#A85738';
-const ODD_TILE_COLOR = '#F3C1A9';
-const MIN_ZOOM = 10;
-const MAX_ZOOM = 300;
-const ZOOM_FACTOR = 0.8;
-const PIECE_SIZE = 45;
+import {Decorator, InventoryItem, Piece, PieceMap, RenderData, Vector2} from "../../services/game/game.service";
+import {MAX_ZOOM, MIN_ZOOM, PIECE_SIZE, ZOOM_FACTOR} from "../../constants";
+import {InventorySurface} from "./surfaces/inventory-surface";
+import {BoardSurface} from "./surfaces/board-surface";
+import {PiecesSurface} from "./surfaces/pieces-surface";
+import {MainSurface} from "./surfaces/main-surface";
 
 export type Move = {
     from: Vector2,
@@ -38,14 +29,10 @@ export type Place = {
     to: Vector2,
 }
 
-class Surface {
-    public canvas: OffscreenCanvas;
-    public context: OffscreenCanvasRenderingContext2D;
-
-    constructor() {
-        this.canvas = new OffscreenCanvas(0, 0);
-        this.context = this.canvas.getContext('2d');
-    }
+export type DraggingData = {
+    dragging: boolean,
+    object?: Piece | InventoryItem,
+    position?: Vector2,
 }
 
 @Component({
@@ -63,21 +50,22 @@ export class BoardComponent implements OnInit, OnChanges {
     @Output() private place = new EventEmitter<Place>();
     @ViewChild('canvas') private canvasElement: ElementRef<HTMLCanvasElement>;
 
-    private canvas: HTMLCanvasElement;
-    private context: CanvasRenderingContext2D;
-    private boardSurface: Surface;
-    private piecesSurface: Surface;
-    private inventorySurface: Surface;
+    private mainSurface: MainSurface;
+    private boardSurface: BoardSurface;
+    private piecesSurface: PiecesSurface;
+    private inventorySurface: InventorySurface;
 
     mousePositionX = 0;
     mousePositionY = 0;
 
     panning = false;
-    dragging = false;
-    draggingPiece?: Piece | InventoryItem;
-    draggingPiecePos?: Vector2;
     panX: number;
     panY: number;
+    draggingData: DraggingData = {
+        dragging: false,
+        object: undefined,
+        position: undefined,
+    };
 
     constructor(private snackBar: MatSnackBar) {}
 
@@ -95,30 +83,9 @@ export class BoardComponent implements OnInit, OnChanges {
         this.panY = offsetY;
     }
 
-    private drawImage(
-        context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-        image: HTMLImageElement,
-        x: number,
-        y: number,
-        rotationAmount: number,
-        fixed: boolean = false,
-    ) {
-        context.translate(x, y);
-        context.rotate(rotationAmount);
-
-        if (fixed) {
-            context.drawImage(image, -image.width / 2, -image.height / 2, image.width, image.height);
-        } else {
-            context.drawImage(image, -this.renderData.scale / 2, -this.renderData.scale / 2, this.renderData.scale, this.renderData.scale);
-        }
-
-        context.rotate(-rotationAmount);
-        context.translate(-x, -y);
-    }
-
     private updateBackgroundCanvases(): void {
-        this.canvas.width = this.canvas.offsetWidth;
-        this.canvas.height = this.canvas.offsetHeight;
+        this.mainSurface.canvas.width = this.mainSurface.canvas.offsetWidth;
+        this.mainSurface.canvas.height = this.mainSurface.canvas.offsetHeight;
         this.boardSurface.canvas.width = this.renderData.scale * this.boardSize.col;
         this.boardSurface.canvas.height = this.renderData.scale * this.boardSize.row;
         this.piecesSurface.canvas.width = this.renderData.scale * this.boardSize.col;
@@ -129,55 +96,9 @@ export class BoardComponent implements OnInit, OnChanges {
         //       0 for no good reason. This should be investigated later.
         this.inventorySurface.canvas.height = Object.keys(this.inventory).length * PIECE_SIZE + 10;
 
-        // Pieces
-        this.piecesSurface.context.clearRect(0, 0, this.piecesSurface.canvas.width, this.piecesSurface.canvas.height);
-        for (const [pos, piece] of this.pieces.entries()) {
-            this.drawImage(
-                this.piecesSurface.context,
-                piece.type.images[piece.color],
-                (pos.col + 0.5) * this.renderData.scale,
-                (pos.row + 0.5) * this.renderData.scale,
-                piece.direction * Math.PI / 4,
-            );
-        }
-
-        // Board
-        this.boardSurface.context.clearRect(0, 0, this.boardSurface.canvas.width, this.boardSurface.canvas.height);
-        for (let row = 0; row < this.boardSize.row; ++row) {
-            for (let col = 0; col < this.boardSize.col; ++col) {
-                if (row in this.renderData.noDrawData && col in this.renderData.noDrawData[row]) continue;
-
-                this.boardSurface.context.fillStyle = (col % 2 == row % 2) ? ODD_TILE_COLOR : EVEN_TILE_COLOR;
-                this.boardSurface.context.fillRect(col * this.renderData.scale, row * this.renderData.scale, this.renderData.scale, this.renderData.scale);
-            }
-        }
-
-        for (const [layer, decorators] of Object.entries(this.decoratorLayers)) {
-            // TODO: Sort by layer.
-            this.boardSurface.context.fillStyle = '#323232';
-            for (const decorator of decorators) {
-                if (decorator.type.rawImage != 'NO DRAW') {
-                    this.drawImage(
-                        this.boardSurface.context,
-                        decorator.type.image,
-                        (decorator.pos.col + 0.5) * this.renderData.scale,
-                        (decorator.pos.row + 0.5) * this.renderData.scale,
-                        0,
-                    )
-                }
-            }
-        }
-
-        // Inventory
-        this.inventorySurface.context.clearRect(0, 0, this.inventorySurface.canvas.width, this.inventorySurface.canvas.height);
-        this.inventorySurface.context.font = '15px Arial';
-        this.inventorySurface.context.fillStyle = 'white';
-        for (const [index, piece] of this.inventory.entries()) {
-            const image = piece.type.images[piece.color];
-            const rotation = ((piece.direction + this.renderData.direction) % 8) * Math.PI / 4;
-            this.drawImage(this.inventorySurface.context, image, PIECE_SIZE / 2, index * PIECE_SIZE + PIECE_SIZE / 2, rotation, true);
-            this.inventorySurface.context.fillText(piece.label, 0, (index + 1) * PIECE_SIZE);
-        }
+        this.piecesSurface.draw(this.pieces, this.renderData);
+        this.boardSurface.draw(this.decoratorLayers, this.boardSize, this.renderData);
+        this.inventorySurface.draw(this.inventory, this.renderData.direction);
     }
 
     private zoom(delta: number, centerX: number, centerY: number): void {
@@ -198,11 +119,10 @@ export class BoardComponent implements OnInit, OnChanges {
     ngOnInit(): void {}
 
     ngAfterViewInit(): void {
-        this.canvas = this.canvasElement.nativeElement;
-        this.context = this.canvas.getContext('2d');
-        this.boardSurface = new Surface();
-        this.piecesSurface = new Surface();
-        this.inventorySurface = new Surface();
+        this.mainSurface = new MainSurface(this.canvasElement.nativeElement);
+        this.boardSurface = new BoardSurface();
+        this.piecesSurface = new PiecesSurface();
+        this.inventorySurface = new InventorySurface();
 
         this.updateAndCenter();
 
@@ -210,7 +130,7 @@ export class BoardComponent implements OnInit, OnChanges {
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (this.canvas) {
+        if (this.mainSurface) {
             this.updateBackgroundCanvases();
 
             if (this.renderData.firstDraw) {
@@ -224,8 +144,8 @@ export class BoardComponent implements OnInit, OnChanges {
 
     centerBoard(): void {
         const [x, y] = this.rotateVector(
-            (this.canvas.width) / 2,
-            (this.canvas.height) / 2,
+            (this.mainSurface.canvas.width) / 2,
+            (this.mainSurface.canvas.height) / 2,
         );
 
         this.renderData.position.col = x - this.boardSize.col * this.renderData.scale / 2;
@@ -249,12 +169,12 @@ export class BoardComponent implements OnInit, OnChanges {
                 // Prevent the user from accidentally selecting the canvas.
                 event.preventDefault();
 
-                if (event.offsetX > this.canvas.width - PIECE_SIZE && event.offsetY < this.inventory.length * PIECE_SIZE) {
+                if (event.offsetX > this.mainSurface.canvas.width - PIECE_SIZE && event.offsetY < this.inventory.length * PIECE_SIZE) {
                     // User clicked on an inventory item.
                     const inventoryItem = this.inventory[Math.floor(event.offsetY / PIECE_SIZE)];
 
-                    this.dragging = true;
-                    this.draggingPiece = inventoryItem;
+                    this.draggingData.dragging = true;
+                    this.draggingData.object = inventoryItem;
 
                     break;
                 }
@@ -264,9 +184,11 @@ export class BoardComponent implements OnInit, OnChanges {
 
                 for (const [pos, piece] of this.pieces.entries()) {
                     if (pos.row == mouseTileY && pos.col == mouseTileX) {
-                        this.dragging = true;
-                        this.draggingPiece = piece;
-                        this.draggingPiecePos = pos;
+                        this.draggingData = {
+                            dragging: true,
+                            object: piece,
+                            position: pos,
+                        };
 
                         break;
                     }
@@ -284,13 +206,13 @@ export class BoardComponent implements OnInit, OnChanges {
     }
 
     mouseUp(): void {
-        if (this.dragging) {
+        if (this.draggingData.dragging) {
             this.snackBar.dismiss();
 
             const mouseTileX = Math.floor(this.mousePositionX);
             const mouseTileY = Math.floor(this.mousePositionY);
 
-            this.dragging = false;
+            this.draggingData.dragging = false;
 
             if (
                 mouseTileX >= 0
@@ -298,15 +220,15 @@ export class BoardComponent implements OnInit, OnChanges {
                 && mouseTileY < this.boardSize.row
                 && mouseTileX < this.boardSize.col
             ) {
-                if (this.draggingPiece instanceof InventoryItem) {
+                if (this.draggingData.object instanceof InventoryItem) {
                     this.place.emit({
-                        item: this.draggingPiece,
+                        item: this.draggingData.object,
                         to: new Vector2(mouseTileY, mouseTileX),
                     });
                 }
-                else if (this.draggingPiecePos.row != mouseTileY || this.draggingPiecePos.col != mouseTileX) {
+                else if (this.draggingData.position.row != mouseTileY || this.draggingData.position.col != mouseTileX) {
                     this.move.emit({
-                        from: this.draggingPiecePos,
+                        from: this.draggingData.position,
                         to: new Vector2(mouseTileY, mouseTileX),
                     });
                 }
@@ -334,7 +256,7 @@ export class BoardComponent implements OnInit, OnChanges {
             this.updatePan(offsetX, offsetY);
         }
 
-        if (this.panning || this.dragging) {
+        if (this.panning || this.draggingData.dragging) {
             this.draw();
         }
     }
@@ -347,7 +269,7 @@ export class BoardComponent implements OnInit, OnChanges {
     }
 
     zoomCenter(delta: number): void {
-        const [offsetX, offsetY] = this.rotateVector(this.canvas.width / 2, this.canvas.height / 2);
+        const [offsetX, offsetY] = this.rotateVector(this.mainSurface.canvas.width / 2, this.mainSurface.canvas.height / 2);
         this.zoom(
             delta,
             (offsetX - this.renderData.position.col) / this.renderData.scale,
@@ -357,26 +279,15 @@ export class BoardComponent implements OnInit, OnChanges {
 
     draw(): void {
         window.requestAnimationFrame(() => {
-            this.context.fillStyle = '#323232';
-            this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-            this.context.rotate(this.renderData.direction * Math.PI / 4);
-
-            this.context.drawImage(this.boardSurface.canvas, this.renderData.position.col, this.renderData.position.row);
-            this.context.drawImage(this.piecesSurface.canvas, this.renderData.position.col, this.renderData.position.row);
-
-            if (this.dragging) {
-                this.drawImage(
-                    this.context,
-                    this.draggingPiece.type.images[this.draggingPiece.color],
-                    this.renderData.position.col + this.mousePositionX * this.renderData.scale,
-                    this.renderData.position.row + this.mousePositionY * this.renderData.scale,
-                    this.draggingPiece.direction * Math.PI / 4,
-                );
-            }
-
-            this.context.rotate(-this.renderData.direction * Math.PI / 4);
-            this.context.drawImage(this.inventorySurface.canvas, this.canvas.width - PIECE_SIZE, 0);
+            this.mainSurface.draw(
+                this.boardSurface,
+                this.piecesSurface,
+                this.inventorySurface,
+                this.renderData,
+                this.draggingData,
+                this.mousePositionX,
+                this.mousePositionY,
+            );
         })
     }
 }

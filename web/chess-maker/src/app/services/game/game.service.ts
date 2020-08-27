@@ -24,6 +24,18 @@ export class Vector2 {
         public col: number,
     ) {}
 
+    plus(other: Vector2): Vector2 {
+        return new Vector2(this.row + other.row, this.col + other.col);
+    }
+
+    minus(other: Vector2): Vector2 {
+        return new Vector2(this.row - other.row, this.col - other.col);
+    }
+
+    dividedBy(amount: number): Vector2 {
+        return new Vector2(this.row / amount, this.col / amount);
+    }
+
     toString(): string {
         return `Vector(${this.row}, ${this.col})`;
     }
