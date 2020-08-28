@@ -4,6 +4,7 @@ import {Color} from "../color/color.service";
 import {Player} from "../player/player.service";
 import {Identifiable, ItemService} from "../item-service";
 import {ChatMessage} from "../chat/chat.service";
+import {AudioService} from "../audio/audio.service";
 
 export type NoDrawData = {[p: number]: {[p: number]: boolean}};
 
@@ -188,6 +189,12 @@ export class GameService extends ItemService<Game> {
     updateBoard = new EventEmitter();
     scrollToBottom = new EventEmitter<Game>();
 
+    constructor(
+        private audioService: AudioService,
+    ) {
+        super();
+    }
+
     private updateAvailableColors(): void {
         if (!this.selectedGame) {
             return;
@@ -294,6 +301,7 @@ export class GameService extends ItemService<Game> {
             }
         }
 
+        this.audioService.playPly();
         this.updateBoard.emit();
     }
 
