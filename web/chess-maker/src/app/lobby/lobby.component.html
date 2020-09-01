@@ -51,6 +51,7 @@
                     </mat-chip-list>
                 </ng-template>
                 <ng-template [ngIf]="gameService.selectedGame.data.winnerData != null">
+                    <img src="assets/trophy.png" width="50" alt="Trophy">
                     <h1>{{winnerString(gameService.selectedGame.data.winnerData.colors)}}</h1>
                     <p>{{gameService.selectedGame.data.winnerData.reason}}</p>
                 </ng-template>
