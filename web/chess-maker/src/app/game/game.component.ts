@@ -4,6 +4,9 @@ import {PlayerService} from "../services/player/player.service";
 import {ApiService} from "../services/api/api.service";
 import {BoardComponent, Move, Place} from "./board/board.component";
 import {SidebarService} from "../services/sidebar/sidebar.service";
+import {RawShowErrorParameters} from "../services/api/parameter-types";
+import {MatSnackBar} from "@angular/material/snack-bar";
+import {CommandService, Subjects} from "../services/api/command.service";
 
 @Component({
     selector: 'app-game',
@@ -24,9 +27,22 @@ export class GameComponent {
         public playerService: PlayerService,
         public apiService: ApiService,
         public sidebarService: SidebarService,
+        private snackBar: MatSnackBar,
+        commandService: CommandService,
     ) {
+        commandService.ready.subscribe((subjects: Subjects) => {
+            subjects.showError.subscribe(this.showError);
+        });
         this.gameService.updateBoard.subscribe(() => this.board.ngOnChanges({}));
     }
+
+    private showError = (parameters: RawShowErrorParameters): void => {
+        this.snackBar.open(parameters.message, 'Ok', {
+            duration: 5000,
+            horizontalPosition: 'end',
+            panelClass: 'error',
+        });
+    };
 
     rotateBoardLeft() {
         this.game.renderData.direction = (this.game.renderData.direction + 7) % 8;

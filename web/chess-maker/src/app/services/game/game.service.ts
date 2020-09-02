@@ -5,6 +5,15 @@ import {Player} from "../player/player.service";
 import {Identifiable, ItemService} from "../item-service";
 import {ChatMessage} from "../chat/chat.service";
 import {AudioService} from "../audio/audio.service";
+import {CommandService, Subjects} from "../api/command.service";
+import {UpdateGameMetadataParameters} from "../api/commands/update-game-metadata-command";
+import {UpdateGameDataParameters} from "../api/commands/update-game-data-command";
+import {UpdateDecoratorsParameters} from "../api/commands/update-decorators-command";
+import {UpdateInfoParameters} from "../api/commands/update-info-command";
+import {UpdateInventoryParameters} from "../api/commands/update-inventory-command";
+import {ApplyPlyParameters} from "../api/commands/apply-ply-command";
+import {SetWinnersParameters} from "../api/commands/set-winners-command";
+import {ReceiveGameChatParameters} from "../api/commands/receive-game-chat-command";
 
 export type NoDrawData = {[p: number]: {[p: number]: boolean}};
 
@@ -191,8 +200,20 @@ export class GameService extends ItemService<Game> {
 
     constructor(
         private audioService: AudioService,
+        commandService: CommandService
     ) {
         super();
+
+        commandService.ready.subscribe((subjects: Subjects) => {
+            subjects.updateGameMetadata.subscribe(this.updateGameMetadata);
+            subjects.updateGameData.subscribe(this.updateGameData);
+            subjects.updateDecorators.subscribe(this.updateDecorators);
+            subjects.updateInfo.subscribe(this.updateInfo);
+            subjects.updateInventory.subscribe(this.updateInventory);
+            subjects.applyPly.subscribe(this.applyPly);
+            subjects.setWinners.subscribe(this.setWinners);
+            subjects.receiveGameChat.subscribe(this.receiveGameChatMessage);
+        });
     }
 
     private updateAvailableColors(): void {
@@ -227,9 +248,9 @@ export class GameService extends ItemService<Game> {
         this.updateAvailableColors();
     }
 
-    updateGameMetadata(games: {[id: string]: GameMetadata}): void {
+    private updateGameMetadata = (parameters: UpdateGameMetadataParameters): void => {
         for (const gameId in this.items) {
-            if (!(gameId in games)) {
+            if (!(gameId in parameters.games)) {
                 if (this.selectedGame && this.selectedGame.id == gameId) {
                     this.selectedGame = undefined;
                 }
@@ -237,7 +258,7 @@ export class GameService extends ItemService<Game> {
             }
         }
 
-        for (const [id, metadata] of Object.entries(games)) {
+        for (const [id, metadata] of Object.entries(parameters.games)) {
             if (id in this.items) {
                 this.items[id].metadata = metadata;
             } else {
@@ -251,67 +272,67 @@ export class GameService extends ItemService<Game> {
         }
 
         this.updateAvailableColors();
-    }
+    };
 
-    updateGameData(id: string, data: GameData): void {
-        const game = this.items[id];
+    private updateGameData = (parameters: UpdateGameDataParameters): void => {
+        const game = this.items[parameters.id];
 
-        this.updateNoDraw(game, data.decoratorLayers);
+        this.updateNoDraw(game, parameters.data.decoratorLayers);
 
-        game.data = data;
-    }
+        game.data = parameters.data;
+    };
 
-    updateDecorators(game: Game, decoratorLayers: {[layer: number]: Decorator[]}): void {
-        for (const [layer, decorators] of Object.entries(decoratorLayers)) {
-            game.data.decoratorLayers[layer] = decorators;
+    private updateDecorators = (parameters: UpdateDecoratorsParameters): void => {
+        for (const [layer, decorators] of Object.entries(parameters.decoratorLayers)) {
+            parameters.game.data.decoratorLayers[layer] = decorators;
         }
 
-        this.updateNoDraw(game, decoratorLayers);
+        this.updateNoDraw(parameters.game, parameters.decoratorLayers);
 
         this.updateBoard.emit();
-    }
+    };
 
-    updateInfoElements(game: Game, infoElements: InfoElement[], isPublic: boolean): void {
-        if (isPublic) {
-            game.data.publicInfoElements = infoElements;
+    private updateInfo = (parameters: UpdateInfoParameters): void => {
+        if (parameters.isPublic) {
+            parameters.game.data.publicInfoElements = parameters.infoElements;
         } else {
-            game.data.privateInfoElements = infoElements;
+            parameters.game.data.privateInfoElements = parameters.infoElements;
         }
-    }
+    };
 
-    updateInventoryItems(game: Game, inventoryItems: InventoryItem[]): void {
-        game.data.inventoryItems = inventoryItems;
+    private updateInventory = (parameters: UpdateInventoryParameters): void => {
+        parameters.game.data.inventoryItems = parameters.inventoryItems;
 
         this.updateBoard.emit();
-    }
+    };
 
-    applyPly(game: Game, ply: Ply): void {
-        for (const action of ply.actions) {
+    private applyPly = (parameters: ApplyPlyParameters): void => {
+        for (const action of parameters.ply.actions) {
             switch (action.type) {
                 case 'move':
-                    game.data.pieces.set(action.toPos, game.data.pieces.get(action.fromPos));
-                    game.data.pieces.delete(action.fromPos);
+                    parameters.game.data.pieces.set(action.toPos, parameters.game.data.pieces.get(action.fromPos));
+                    parameters.game.data.pieces.delete(action.fromPos);
                     break;
                 case 'create':
-                    game.data.pieces.set(action.toPos, new Piece(action.pieceType, action.color, action.direction));
+                    parameters.game.data.pieces.set(action.toPos, new Piece(action.pieceType, action.color, action.direction));
                     break;
                 case 'destroy':
-                    game.data.pieces.delete(action.toPos);
+                    parameters.game.data.pieces.delete(action.toPos);
                     break;
             }
         }
 
         this.audioService.playPly();
         this.updateBoard.emit();
-    }
+    };
 
-    updateWinners(game: Game, winnerData: WinnerData): void {
-        game.data.winnerData = winnerData;
-    }
+    private setWinners = (parameters: SetWinnersParameters): void => {
+        parameters.game.data.winnerData = parameters.winnerData;
+    };
 
-    receiveGameChatMessage(game: Game, chatMessage: ChatMessage): void {
-        game.data.chatMessages.push(chatMessage);
+    private receiveGameChatMessage = (parameters: ReceiveGameChatParameters): void => {
+        parameters.game.data.chatMessages.push(parameters.chatMessage);
 
-        this.scrollToBottom.emit(game);
-    }
+        this.scrollToBottom.emit(parameters.game);
+    };
 }

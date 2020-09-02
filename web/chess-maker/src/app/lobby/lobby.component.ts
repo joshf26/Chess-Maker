@@ -15,6 +15,10 @@ import {SelectPlyDialog} from "./select-ply-dialog/select-ply-dialog.component";
 import {GamesListComponent} from "./games-list/games-list.component";
 import {ChatComponent} from "./chat/chat.component";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {UrlService} from "../services/url/url.service";
+import {FocusGameParameters} from "../services/api/commands/focus-game-command";
+import {CommandService, Subjects} from "../services/api/command.service";
+import {OfferPliesParameters} from "../services/api/commands/offer-plies-command";
 
 export interface CreateGameDialogData {
     displayName: string,
@@ -56,9 +60,13 @@ export class LobbyComponent implements OnInit {
         private changeDetectorRef: ChangeDetectorRef,
         private router: Router,
         private snackBar: MatSnackBar,
+        private urlService: UrlService,
+        commandService: CommandService,
     ) {
-        apiService.handlers.offerPlies = this.offerPlies.bind(this);
-        apiService.handlers.focusGame = this.showGame.bind(this);
+        commandService.ready.subscribe((subjects: Subjects) => {
+            subjects.focusGame.subscribe(this.focusGame);
+            subjects.offerPlies.subscribe(this.offerPlies);
+        });
 
         apiService.onForceDisconnect.subscribe(reason => {
             this.selectPlyDialog.closeAll();
@@ -69,18 +77,24 @@ export class LobbyComponent implements OnInit {
                 panelClass: 'error',
             })
         });
+
+        urlService.joinFromUrl.subscribe(this.showGame.bind(this));
     }
 
-    private offerPlies(from: Vector2, to: Vector2, plies: Ply[]): void {
+    private offerPlies = (parameters: OfferPliesParameters): void => {
         this.selectPlyDialog.open(SelectPlyDialog, {
             data: {
                 game: this.gameService.selectedGame,
-                from: from,
-                to: to,
-                plies: plies,
+                from: parameters.from,
+                to: parameters.to,
+                plies: parameters.plies,
             },
         });
-    }
+    };
+
+    private focusGame = (parameters: FocusGameParameters): void => {
+        this.showGame(parameters.game);
+    };
 
     ngOnInit() {
         if (!this.apiService.isConnected()) {

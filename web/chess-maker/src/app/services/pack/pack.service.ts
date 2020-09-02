@@ -1,7 +1,10 @@
 import {Injectable} from '@angular/core';
-import {Vector2} from "../game/game.service";
+import {Decorator, Vector2} from "../game/game.service";
 import {Color, SVG_COLORS} from "../color/color.service";
 import {Identifiable, ItemService} from "../item-service";
+import {Subjects, CommandService} from "../api/command.service";
+import {UpdatePackDataParameters} from "../api/commands/update-pack-data-command";
+import {RawDecorators} from "../api/parameter-types";
 
 function getImage(rawImage: string, color: Color = Color.White): HTMLImageElement {
     const image = new Image();
@@ -56,12 +59,33 @@ export class Controller implements Identifiable {
     ) {}
 }
 
-@Injectable({
-    providedIn: 'root',
-})
+@Injectable({providedIn: 'root'})
 export class PackService extends ItemService<Pack> {
-    updatePackData(packs: {[key: string]: Pack}): void {
-        this.items = packs;
+    constructor(commandService: CommandService) {
+        super();
+
+        commandService.ready.subscribe((subjects: Subjects) => {
+            subjects.updatePackData.subscribe(this.updatePackData);
+        });
+    }
+
+    private updatePackData = (parameters: UpdatePackDataParameters): void => {
+        this.items = parameters.packs;
+    };
+
+    fillDecoratorLayers(rawDecoratorLayers: RawDecorators, decorators: {[layer: number]: Decorator[]}): void {
+        for (const [layer, rawDecorators] of Object.entries(rawDecoratorLayers)) {
+            if (!(layer in decorators)) {
+                decorators[layer] = [];
+            }
+
+            for (const rawDecorator of rawDecorators) {
+                decorators[layer].push(new Decorator(
+                    new Vector2(rawDecorator.row, rawDecorator.col),
+                    this.getDecoratorType(rawDecorator.pack_id, rawDecorator.decorator_type_id),
+                ));
+            }
+        }
     }
 
     getController(packId: string, controllerId: string): Controller {

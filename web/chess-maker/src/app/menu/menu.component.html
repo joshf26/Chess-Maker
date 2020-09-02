@@ -18,6 +18,10 @@
                 <input matInput [(ngModel)]="preferencesService.displayName">
             </mat-form-field>
             <br>
+            <ng-template [ngIf]="gameIdToJoin">
+                <mat-checkbox [(ngModel)]="joinGameFromLink">Join game from link</mat-checkbox>
+                <br><br>
+            </ng-template>
             <button mat-raised-button color="primary" (click)="connect()">Connect</button>
         </mat-card-content>
     </mat-card>
