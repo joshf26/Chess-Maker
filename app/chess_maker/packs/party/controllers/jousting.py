@@ -78,4 +78,4 @@ class Jousting(Controller):
 
             self.game_started = True
 
-        asyncio.create_task(countdown())
+        self.game.run_async(countdown)

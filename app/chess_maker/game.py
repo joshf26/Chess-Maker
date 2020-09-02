@@ -142,11 +142,10 @@ class Game:
 
     def shutdown(self) -> None:
         if self.active:
-            del self.controller
             for task in self.tasks:
                 task.cancel()
 
-        self.active = False
+            self.active = False
 
     def get_metadata(self) -> dict:
         return {
