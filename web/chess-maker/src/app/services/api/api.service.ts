@@ -228,7 +228,7 @@ export class ApiService {
                     }
 
                     return result;
-                })
+                }),
             },
         });
     }
@@ -244,6 +244,6 @@ export class ApiService {
         this.run('send_chat_message', {
             text: text,
             game_id: game ? game.id : 'server',
-        })
+        });
     }
 }

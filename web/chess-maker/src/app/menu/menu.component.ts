@@ -4,7 +4,6 @@ import {ActivatedRoute, Router} from '@angular/router';
 import {PreferencesService} from "../services/preferences/preferences.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {UrlService} from "../services/url/url.service";
-import {GameService} from "../services/game/game.service";
 
 @Component({
     selector: 'app-menu',
@@ -21,7 +20,6 @@ export class MenuComponent implements OnInit {
         private router: Router,
         private snackBar: MatSnackBar,
         private activatedRoute: ActivatedRoute,
-        private gameService: GameService,
         private urlService: UrlService,
     ) {}
 
@@ -34,8 +32,7 @@ export class MenuComponent implements OnInit {
         this.apiService.connect(this.preferencesService.address, this.preferencesService.displayName);
         this.router.navigate(['/lobby']).then(() => {
             if (this.gameIdToJoin && this.joinGameFromLink) {
-                const game = this.gameService.get(this.gameIdToJoin);
-                this.urlService.joinFromUrl.emit(game);
+                this.urlService.joinWhenReady(this.gameIdToJoin);
             }
         });
     }

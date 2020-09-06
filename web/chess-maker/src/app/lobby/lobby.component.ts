@@ -77,8 +77,6 @@ export class LobbyComponent implements OnInit {
                 panelClass: 'error',
             })
         });
-
-        urlService.joinFromUrl.subscribe(this.showGame.bind(this));
     }
 
     private offerPlies = (parameters: OfferPliesParameters): void => {

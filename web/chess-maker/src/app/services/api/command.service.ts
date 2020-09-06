@@ -4,7 +4,7 @@ import {UpdatePlayersParameters} from "./commands/update-players-command";
 import {UpdatePackDataParameters} from "./commands/update-pack-data-command";
 import {UpdateGameMetadataParameters} from "./commands/update-game-metadata-command";
 import {FocusGameParameters} from "./commands/focus-game-command";
-import {Subject} from "rxjs";
+import {ReplaySubject, Subject} from "rxjs";
 import {UpdateGameDataParameters} from "./commands/update-game-data-command";
 import {UpdateDecoratorsParameters} from "./commands/update-decorators-command";
 import {UpdateInfoParameters} from "./commands/update-info-command";
@@ -46,9 +46,9 @@ export abstract class Command<R, P> {
 
 @Injectable({providedIn: 'root'})
 export class CommandService {
-    private subjects?: Subjects;
+    subjects?: Subjects;
 
-    ready = new Subject<Subjects>();
+    ready = new ReplaySubject<Subjects>(1);
 
     setSubjects(subjects: Subjects): void {
         this.subjects = subjects;
