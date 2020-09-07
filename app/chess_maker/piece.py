@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Union, Generator
+from typing import TYPE_CHECKING, Union, Iterable
 
 from json_serializable import JsonSerializable
 from pack_util import get_pack
@@ -48,5 +48,5 @@ class Piece(JsonSerializable):
     def copy(self):
         return self.__class__(self.color, self.direction)
 
-    def get_plies(self, from_pos: Vector2, to_pos: Vector2, game_data: GameData) -> Generator[Ply]:
-        yield from ()
+    def get_plies(self, from_pos: Vector2, to_pos: Vector2, game_data: GameData) -> Iterable[Ply]:
+        return []

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Iterable
 
-from packs.standard.helpers import capture_or_move_if_empty
-from piece import Piece
+from packs.standard.helpers import capture_or_move_if_empty, axis_direction, CARDINALS
+from piece import Piece, Direction
 from pack_util import load_image
 from ply import Ply
 
@@ -16,12 +16,11 @@ class Rook(Piece):
     name = 'Rook'
     image = load_image('standard', 'images/rook.svg')
 
-    def get_plies(self, from_pos: Vector2, to_pos: Vector2, game_data: GameData) -> Generator[Ply]:
-        # Make sure the rook is moving along the same axis.
-        if to_pos == from_pos or (to_pos.row != from_pos.row and to_pos.col != from_pos.col):
-            return
+    def get_plies(self, from_pos: Vector2, to_pos: Vector2, game_data: GameData) -> Iterable[Ply]:
+        if axis_direction(from_pos, to_pos) not in CARDINALS:
+            return ()
 
-        yield from capture_or_move_if_empty(game_data.board, self.color, from_pos, to_pos)
+        return capture_or_move_if_empty(game_data.board, self.color, from_pos, to_pos)
 
 
 # TODO: Add unit tests.

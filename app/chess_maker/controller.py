@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import List, Generator, TYPE_CHECKING, Dict, Any
+from typing import List, TYPE_CHECKING, Dict, Any, Iterable
 
 from color import Color
 from option import Option
@@ -28,11 +28,11 @@ class Controller(ABC):
     def init_board(self, board: Dict[Vector2, Piece]) -> None:
         pass
 
-    def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
-        yield from ()
+    def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Iterable[Ply]:
+        return self.game.board[from_pos].get_plies(from_pos, to_pos, self.game.game_data)
 
-    def get_inventory_plies(self, color: Color, piece: Piece, pos: Vector2) -> Generator[Ply]:
-        yield from ()
+    def get_inventory_plies(self, color: Color, piece: Piece, pos: Vector2) -> Iterable[Ply]:
+        return []
 
     def after_ply(self) -> None:
         pass

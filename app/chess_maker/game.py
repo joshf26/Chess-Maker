@@ -6,7 +6,7 @@ import traceback
 from asyncio import Task
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Set, Dict, Type, Generator, Union, Callable, Awaitable
+from typing import TYPE_CHECKING, List, Optional, Set, Dict, Type, Union, Callable, Awaitable, Iterable
 from uuid import uuid4
 
 from color import Color
@@ -237,7 +237,7 @@ class Game:
         connection = self.players.get_connection(color)
         connection.show_error(message)
 
-    def get_plies(self, connection: Connection, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
+    def get_plies(self, connection: Connection, from_pos: Vector2, to_pos: Vector2) -> Iterable[Ply]:
         if (
             self.winners is not None
             or from_pos not in self.board
@@ -247,10 +247,10 @@ class Game:
             or to_pos.col >= self.controller.board_size.col
         ):
             # Client must have sent stale data.
-            return
+            return ()
 
         color = self.players.get_color(connection)
-        yield from self.controller.get_plies(color, from_pos, to_pos)
+        return self.controller.get_plies(color, from_pos, to_pos)
 
     def next_state(self, color: Optional[Color], ply: Optional[Ply]) -> GameState:
         board = deepcopy(self.board)

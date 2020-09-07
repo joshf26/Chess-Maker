@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, List, Dict, Generator
+from typing import TYPE_CHECKING, Dict, Iterable, List
 
 from color import Color
 from controller import Controller
-from info_elements import InfoButton, InfoElement
+from info_elements import InfoButton
 from inventory_item import InventoryItem
 from packs.standard.helpers import rotate_direction
 from packs.standard.pieces.bishop import Bishop
@@ -36,33 +36,32 @@ class Creative(Controller):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.rotate_pieces_button = InfoButton('Rotate Pieces', self.rotate_pieces)
+        self.inventories: Dict[Color, List[InventoryItem]] = {color: [
+            InventoryItem(Pawn(color, Direction.NORTH), '∞'),
+            InventoryItem(Knight(color, Direction.NORTH), '∞'),
+            InventoryItem(Bishop(color, Direction.NORTH), '∞'),
+            InventoryItem(Rook(color, Direction.NORTH), '∞'),
+            InventoryItem(Queen(color, Direction.NORTH), '∞'),
+            InventoryItem(King(color, Direction.NORTH), '∞'),
+        ] for color in self.colors}
 
     def init_board(self, board: Dict[Vector2, Piece]) -> None:
         for color in self.colors:
-            with self.game.inventories[color] as inventory:
-                inventory.extend([
-                    InventoryItem(Pawn(color, Direction.NORTH), '∞'),
-                    InventoryItem(Knight(color, Direction.NORTH), '∞'),
-                    InventoryItem(Bishop(color, Direction.NORTH), '∞'),
-                    InventoryItem(Rook(color, Direction.NORTH), '∞'),
-                    InventoryItem(Queen(color, Direction.NORTH), '∞'),
-                    InventoryItem(King(color, Direction.NORTH), '∞'),
-                ])
+            self.game.update_inventory(color, self.inventories[color])
 
-        with self.game.public_info_elements as info:
-            info.append(self.rotate_pieces_button)
+        self.game.update_public_info([InfoButton('Rotate Pieces', self._rotate_pieces)])
 
-    def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
-        yield Ply('Move', [MoveAction(from_pos, to_pos)])
+    def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Iterable[Ply]:
+        return Ply('Move', [MoveAction(from_pos, to_pos)]),
 
-    def get_inventory_plies(self, color: Color, piece: Piece, pos: Vector2) -> Generator[Ply]:
-        yield Ply('Create', [CreateAction(piece, pos)])
+    def get_inventory_plies(self, color: Color, piece: Piece, pos: Vector2) -> Iterable[Ply]:
+        return Ply('Create', [CreateAction(piece, pos)]),
 
-    def rotate_pieces(self, color: Color) -> None:
-        with self.game.inventories[color] as inventory:
-            for item in inventory:
-                item.piece.direction = rotate_direction(item.piece.direction)
+    def _rotate_pieces(self, color: Color) -> None:
+        for item in self.inventories[color]:
+            item.piece.direction = rotate_direction(item.piece.direction)
+
+        self.game.update_inventory(color, self.inventories[color])
 
 
 class Creative8x8(Creative, Controller):

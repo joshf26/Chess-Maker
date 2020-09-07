@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Dict, Generator
+from typing import Dict, Iterable
 from color import Color
 from controller import Controller
 from info_elements import InfoButton, InfoText
@@ -35,18 +35,20 @@ class Jousting(Controller):
         self.game_started = False
 
     def init_board(self, board: Dict[Vector2, Piece]) -> None:
-        board[Vector2(0, 2)] = Knight(Color.WHITE, Direction.NORTH)
-        board[Vector2(0, 5)] = Knight(Color.BLACK, Direction.NORTH)
-        board[Vector2(2, 7)] = Knight(Color.RED, Direction.NORTH)
-        board[Vector2(5, 7)] = Knight(Color.ORANGE, Direction.NORTH)
-        board[Vector2(7, 5)] = Knight(Color.YELLOW, Direction.NORTH)
-        board[Vector2(7, 2)] = Knight(Color.GREEN, Direction.NORTH)
-        board[Vector2(5, 0)] = Knight(Color.BLUE, Direction.NORTH)
-        board[Vector2(2, 0)] = Knight(Color.PURPLE, Direction.NORTH)
+        board.update({
+            Vector2(0, 2): Knight(Color.WHITE, Direction.NORTH),
+            Vector2(0, 5): Knight(Color.BLACK, Direction.NORTH),
+            Vector2(2, 7): Knight(Color.RED, Direction.NORTH),
+            Vector2(5, 7): Knight(Color.ORANGE, Direction.NORTH),
+            Vector2(7, 5): Knight(Color.YELLOW, Direction.NORTH),
+            Vector2(7, 2): Knight(Color.GREEN, Direction.NORTH),
+            Vector2(5, 0): Knight(Color.BLUE, Direction.NORTH),
+            Vector2(2, 0): Knight(Color.PURPLE, Direction.NORTH),
+        })
 
         self.game.update_public_info([InfoButton('Start Game', self._start_game)])
 
-    def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
+    def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Iterable[Ply]:
         if self.game_started:
             piece = self.game.board[from_pos]
             if color == piece.color:

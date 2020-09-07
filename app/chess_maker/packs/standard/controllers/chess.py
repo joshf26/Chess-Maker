@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import List, Dict, Generator, TYPE_CHECKING, Optional
+from typing import List, Dict, Generator, TYPE_CHECKING, Iterable
 from itertools import filterfalse
 
 from color import Color
 from controller import Controller
-from info_elements import InfoText
+from info_elements import InfoText, InfoElement
 from packs.standard.helpers import next_color, threatened, find_pieces, print_color, OFFSETS, opposite, \
-    empty_along_axis
+    empty_along_axis, CARDINALS, ORDINALS
 from packs.standard.pieces.bishop import Bishop
 from packs.standard.pieces.king import King
 from packs.standard.pieces.knight import Knight
@@ -20,7 +20,6 @@ from vector2 import Vector2
 
 if TYPE_CHECKING:
     from piece import Piece
-    from info_elements import InfoElement
 
 
 # TODO: Make this a static method of Standard.
@@ -55,23 +54,24 @@ class Chess(Controller):
 
     def init_board(self, board: Dict[Vector2, Piece]) -> None:
         for color, direction, row in zip([Color.WHITE, Color.BLACK], [Direction.NORTH, Direction.SOUTH], [7, 0]):
-            board[Vector2(row, 0)] = Rook(color, direction)
-            board[Vector2(row, 1)] = Knight(color, direction)
-            board[Vector2(row, 2)] = Bishop(color, direction)
-            board[Vector2(row, 3)] = Queen(color, direction)
-            board[Vector2(row, 4)] = King(color, direction)
-            board[Vector2(row, 5)] = Bishop(color, direction)
-            board[Vector2(row, 6)] = Knight(color, direction)
-            board[Vector2(row, 7)] = Rook(color, direction)
+            board.update({
+                Vector2(row, 0): Rook(color, direction),
+                Vector2(row, 1): Knight(color, direction),
+                Vector2(row, 2): Bishop(color, direction),
+                Vector2(row, 3): Queen(color, direction),
+                Vector2(row, 4): King(color, direction),
+                Vector2(row, 5): Bishop(color, direction),
+                Vector2(row, 6): Knight(color, direction),
+                Vector2(row, 7): Rook(color, direction),
+            })
 
         for color, direction, row in zip([Color.WHITE, Color.BLACK], [Direction.NORTH, Direction.SOUTH], [6, 1]):
             for col in range(8):
                 board[Vector2(row, col)] = Pawn(color, direction)
 
-        with self.game.public_info_elements as info:
-            info.append(InfoText(f'Current Turn: {print_color(Color.WHITE)}'))
+        self._update_info()
 
-    def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
+    def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Iterable[Ply]:
         board = self.game.board
         piece = board[from_pos]
 
@@ -152,21 +152,15 @@ class Chess(Controller):
     def _update_info(self) -> None:
         color = next_color(self.game)
 
-        with self.game.public_info_elements as info:
-            info[0].text = f'Current Turn: {print_color(color)}'
+        def generate() -> Generator[InfoElement]:
+            yield InfoText(f'Current Turn: {print_color(color)}')
 
             # Check if their king is in check.
             king_position, king = next(find_pieces(self.game.board, King, color))
             if threatened(self.game, king_position, [opposite(color)]):
-                text = f'{print_color(color)} is in check!'
+                yield InfoText(f'{print_color(color)} is in check!')
 
-                if len(info) == 1:
-                    info.append(InfoText(''))
-
-                info[1].text = text
-            else:
-                if len(info) == 2:
-                    del info[1]
+        self.game.update_public_info(list(generate()))
 
     def _castling_over_check(self, ply: Ply) -> bool:
         if ply.name != 'Castle':
@@ -232,8 +226,8 @@ class Chess(Controller):
                     return True
 
             if isinstance(piece, Rook) or isinstance(piece, Queen):
-                for i in range(8):
-                    if self._is_legal(pos, Vector2(pos.row, i)) or self._is_legal(pos, Vector2(i, pos.col)):
+                for direction in CARDINALS:
+                    if self._is_legal(pos, pos + OFFSETS[direction]):
                         return True
 
             if isinstance(piece, Knight):
@@ -250,8 +244,8 @@ class Chess(Controller):
                     return True
 
             if isinstance(piece, Bishop) or isinstance(piece, Queen):
-                for i in range(-7, 8):
-                    if self._is_legal(pos, pos + Vector2(i, i)) or self._is_legal(pos, pos + Vector2(i, i)):
+                for direction in ORDINALS:
+                    if self._is_legal(pos, pos + OFFSETS[direction]):
                         return True
 
             if isinstance(piece, King):

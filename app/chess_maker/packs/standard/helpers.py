@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, TYPE_CHECKING, Optional, Tuple, Dict, Generator, Type, Any, Union, Hashable
+from typing import List, TYPE_CHECKING, Optional, Tuple, Dict, Generator, Type, Union, Hashable, Iterator
 
 from PIL import Image
 
@@ -25,6 +25,9 @@ OFFSETS = {
     Direction.WEST: Vector2(0, -1),
     Direction.NORTH_WEST: Vector2(-1, -1),
 }
+
+CARDINALS = [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST]
+ORDINALS = [Direction.NORTH_EAST, Direction.SOUTH_EAST, Direction.SOUTH_WEST, Direction.NORTH_WEST]
 
 
 def bidirectional_exclusive_range(start: int, end: int, step: int = 1) -> range:
@@ -168,9 +171,9 @@ def capture_or_move_if_empty(
 def find_pieces(
     board: Dict[Vector2, Piece],
     piece_type: Type[Piece] = None,
-    color: Color = None
-) -> Generator[Tuple[Vector2, Piece]]:
-    yield from filter(lambda piece_data: (
+    color: Color = None,
+) -> Iterator[Tuple[Vector2, Piece]]:
+    return filter(lambda piece_data: (
         (True if piece_type is None else isinstance(piece_data[1], piece_type))
         and (True if color is None else piece_data[1].color == color)
     ), board.items())

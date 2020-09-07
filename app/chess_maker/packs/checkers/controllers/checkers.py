@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Dict, Generator, Iterator, Type, List, Optional, Tuple
+from typing import Dict, Iterator, Type, List, Optional, Tuple, Iterable
 
 from color import Color
 from controller import Controller
-from game import Game
 from info_elements import InfoElement, InfoText
 from option import BoolOption
 from packs.checkers.pieces.king import King
@@ -81,7 +80,7 @@ class Checkers(Controller):
                     Direction.NORTH if row > 2 else Direction.SOUTH,
                 )
 
-    def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
+    def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Iterable[Ply]:
         piece = self.game.board[from_pos]
         plies = piece.get_plies(from_pos, to_pos, self.game.game_data)
         last_state = self.game.game_data.history[-1]

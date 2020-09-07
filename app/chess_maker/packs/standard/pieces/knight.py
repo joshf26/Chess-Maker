@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Iterable
 
 from packs.standard.helpers import capture_or_move
 from piece import Piece
@@ -16,7 +16,7 @@ class Knight(Piece):
     name = 'Knight'
     image = load_image('standard', 'images/knight.svg')
 
-    def get_plies(self, from_pos: Vector2, to_pos: Vector2, game_data: GameData) -> Generator[Ply]:
+    def get_plies(self, from_pos: Vector2, to_pos: Vector2, game_data: GameData) -> Iterable[Ply]:
         row_dist = abs(to_pos.row - from_pos.row)
         col_dist = abs(to_pos.col - from_pos.col)
 

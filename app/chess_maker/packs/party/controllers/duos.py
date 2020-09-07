@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List, Generator, Optional
+from typing import Dict, List, Iterable, Optional
 
 from color import Color
 from controller import Controller
@@ -73,7 +73,7 @@ class Duos(Chess, Controller):
 
         return result
 
-    def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Generator[Ply]:
+    def get_plies(self, color: Color, from_pos: Vector2, to_pos: Vector2) -> Iterable[Ply]:
         board = self.game.board
         piece = board[from_pos]
 
