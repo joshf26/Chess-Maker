@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Iterable
 
-from packs.standard.helpers import axis_direction, closest_piece_along_direction, OFFSETS, capture_or_move
+from packs.standard.helpers import axis_direction, closest_piece_along_axis, OFFSETS, capture_or_move
 from packs.standard.pieces.rook import Rook
 from piece import Piece
 from pack_util import load_image
@@ -29,21 +29,21 @@ class King(Piece):
                 or (row_dist == 0 and col_dist == 2)
                 or row_dist == col_dist == 2
             ):
-                return ()
+                return
 
             direction = axis_direction(from_pos, to_pos)
             if self.moves > 0 or direction is None:
-                return ()
+                return
 
-            piece_data = closest_piece_along_direction(game_data, from_pos, direction)
+            piece_data = closest_piece_along_axis(game_data, from_pos, direction)
             if piece_data is None:
-                return ()
+                return
 
             piece, position = piece_data
 
             if not isinstance(piece, Rook) or piece.moves > 0:
-                return ()
+                return
 
-            return Ply('Castle', [MoveAction(from_pos, to_pos), MoveAction(position, from_pos + OFFSETS[direction])]),
+            yield Ply('Castle', [MoveAction(from_pos, to_pos), MoveAction(position, from_pos + OFFSETS[direction])])
         else:
-            return capture_or_move(game_data.board, self.color, from_pos, to_pos)
+            yield capture_or_move(game_data.board, self.color, from_pos, to_pos)

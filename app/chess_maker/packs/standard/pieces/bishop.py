@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Iterable
 
 from packs.standard.helpers import capture_or_move_if_empty, axis_direction, ORDINALS
-from piece import Piece, Direction
+from piece import Piece
 from pack_util import load_image
 from ply import Ply
 

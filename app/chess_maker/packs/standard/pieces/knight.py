@@ -22,7 +22,7 @@ class Knight(Piece):
 
         # Check for valid knight move.
         if (row_dist == 2 and col_dist == 1) or (row_dist == 1 and col_dist == 2):
-            yield from capture_or_move(game_data.board, self.color, from_pos, to_pos)
+            yield capture_or_move(game_data.board, self.color, from_pos, to_pos)
 
 
 # TODO: Add unit tests.
