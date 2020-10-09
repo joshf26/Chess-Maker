@@ -184,7 +184,8 @@ export class Game implements Identifiable {
         return Object.keys(this.metadata.players).length;
     }
 
-    playerInGame(player: Player): boolean {
+    playerInGame(player?: Player): boolean {
+        if (player === undefined) return false;
         return !!Object.values(this.metadata.players).find(other_player => other_player.id == player.id);
     }
 }
