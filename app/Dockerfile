@@ -6,7 +6,8 @@ WORKDIR /app
 
 RUN pip install -r requirements.txt
 
-CMD watchmedo auto-restart \
-              --patterns="*.py;*.svg;*.yml" \
-              --recursive -- \
-              python -u chess_maker/main.py
+CMD python -u -m chessmaker.main
+#CMD watchmedo auto-restart \
+#              --patterns="*.py;*.svg;*.yml" \
+#              --recursive -- \
+#              python -u -m chessmaker.main

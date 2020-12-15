@@ -1,7 +1,7 @@
 ![Logo](web/chess-maker/src/assets/logo-small.png)
 # Chess Maker
 
-Chess Maker is a hackable chess server that allows for the creation of many different games.
+Chess Maker is a hackable chess server that allows for the creation of many games.
 
 ![Screenshot](branding/screenshot.png)
 
